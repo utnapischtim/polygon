@@ -1,0 +1,36 @@
+html {
+  background-color: white;
+}
+
+.pl-gui {
+  border-collapse: separate;
+  border-spacing: 10px;
+  display: table;
+}
+
+.pl-visualization {
+  border: 1px solid black;
+  border-radius: 15px;
+  display: table-cell;
+  margin: 10px;
+  width: 85%;
+}
+
+.pl-settings {
+  border: 1px solid black;
+  border-radius: 10px;
+  display: table-cell;
+  padding: 20px;
+  width: 15%;
+}
+
+.pl-filter {
+  border: 1px solid black;
+  border-radius: 10px;
+}
+
+.pl-generator {
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 5px;
+}
