@@ -3,9 +3,10 @@ define([
   'jquery',
   'backbone',
   'js/Collections/FilterList',
-  'js/Views/FilterView'
+  'js/Views/FilterView',
+  'hbs!tpl/t-filter-list'
 ],
-function (l, $, bb, FilterList, FilterView) {
+function (l, $, bb, FilterList, FilterView, tFilterList) {
 
   let FilterListView = bb.View.extend({
     tagName: 'div',
@@ -20,6 +21,7 @@ function (l, $, bb, FilterList, FilterView) {
     },
 
     render: function () {
+      this.$el.append(tFilterList());
       return this;
     },
 
@@ -29,6 +31,10 @@ function (l, $, bb, FilterList, FilterView) {
         this.$el.append(view.render().el);
       });
 
+    },
+
+    getActivatedFilters: function () {
+      return this.collection.filter(model => model.get("active"));
     }
   });
 

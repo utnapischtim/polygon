@@ -8,6 +8,10 @@ function (bb, Generator) {
 
     fetch: function () {
       bb.Collection.prototype.fetch.call(this, {job: 'generator'});
+    },
+
+    cleanActive: function () {
+      this.each(m => m.set("active", false));
     }
   });
 

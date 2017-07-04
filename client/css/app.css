@@ -3,34 +3,42 @@ html {
 }
 
 .pl-gui {
-  border-collapse: separate;
-  border-spacing: 10px;
-  display: table;
+  width: 100%;
 }
 
 .pl-visualization {
   border: 1px solid black;
   border-radius: 15px;
-  display: table-cell;
+  float: left;
   margin: 10px;
-  width: 85%;
+  width: 80%;
 }
 
 .pl-settings {
   border: 1px solid black;
   border-radius: 10px;
-  display: table-cell;
+  float: right;
+  margin: 10px;
   padding: 20px;
-  width: 15%;
+  vertical-align: top;
+  width: 14%;
 }
 
 .pl-filter {
-  border: 1px solid black;
-  border-radius: 10px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.pl-filter-input-number {
+  width: 45px;
 }
 
 .pl-generator {
-  border: 1px solid black;
-  border-radius: 10px;
+  cursor: pointer;
   padding: 5px;
 }
+
+.pl-settings-common {
+  margin-top: 20px;
+}
+

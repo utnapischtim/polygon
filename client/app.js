@@ -7,7 +7,8 @@ require.config({
     backbone: 'lib/backbone/backbone',
     handlebars: 'lib/handlebars/dist/handlebars',
     log: 'lib/loglevel/lib/loglevel',
-    hbs: 'lib/require-handlebars-plugin/hbs'
+    hbs: 'lib/require-handlebars-plugin/hbs',
+    d3: 'lib/d3/d3'
   }
 });
 

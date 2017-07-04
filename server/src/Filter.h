@@ -5,6 +5,14 @@
 
 namespace pl {
 
+struct Filter {
+  int key;
+};
+
+using FilterList = std::vector<Filter>;
+
+FilterList createFilterList(nlohmann::json activatedFilterKeys);
+
 nlohmann::json getListOfFilters();
 
 }

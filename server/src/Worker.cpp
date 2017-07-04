@@ -29,6 +29,9 @@ void pl::Worker::run() {
     else if (job == "generator")
       list = getListOfGenerators();
 
+    else if (job == "pointList")
+      list = generatePointList(request["opts"]);
+
     nlohmann::json resp;
     resp[sync_id] = list;
     websocket_server.addMessage(to_string(resp));
