@@ -1,5 +1,5 @@
-**/bin/*
-**/build/*
-**/lib/*
-**/logs/*
+server/bin/*
+server/build/*
+server/lib/*
+server/logs/*
 
