@@ -83,7 +83,18 @@ check-syntax:
 
 .PHONY: server
 server:
-	./$(EXE) $(WS_PORT)
+	@./$(EXE) $(WS_PORT) &
+
+init:
+	@echo "init library"
+	mkdir -p bin/
+	mkdir -p build/
+	mkdir -p lib/
+
+	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
+	test ! -d lib/websocketpp && cd lib/ && git clone git://github.com/zaphoyd/websocketpp
+	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
+	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp
 
 debugOut:
 	@echo 'srcs: ' $(SRCS)
