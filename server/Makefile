@@ -91,8 +91,9 @@ init:
 	mkdir -p build/
 	mkdir -p lib/
 
+# 9.89 is the last version of websocketpp as single header
+	test ! -d lib/websocketpp && cd lib/ && git clone git://github.com/zaphoyd/websocketpp && cd websocketpp/ && git checkout 9.89
 	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
-	test ! -d lib/websocketpp && cd lib/ && git clone git://github.com/zaphoyd/websocketpp
 	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
 	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp
 
