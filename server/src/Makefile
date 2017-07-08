@@ -1,4 +1,4 @@
-CPPFLAGS = -g -pg \
+CPPFLAGS = -g \
            -std=c++1z \
            -fconcepts \
            -Wshadow \

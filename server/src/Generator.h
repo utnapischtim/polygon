@@ -2,34 +2,36 @@
 #define GENERATOR_H_
 
 #include <vector>
+#include <string>
 
 #include "json.hpp"
 
 #include "Filter.h"
+#include "Point.h"
 
 namespace pl {
 
-template<typename T>
-struct Point {
-  T x;
-  T y;
-};
-
-using PointList = std::vector<Point<double>>;
 
 struct Generator {
   std::string name;
   std::string desc;
   int key;
+
+  Generator(std::string n, std::string d, int k)
+    : name(n), desc(d), key(k)
+    {}
+  Generator(nlohmann::json obj)
+    : Generator(obj["name"], obj["desc"], obj["key"])
+    {}
 };
 
 
 nlohmann::json getListOfGenerators();
 Generator createGenerator(nlohmann::json obj);
 
-nlohmann::json generatePointList(nlohmann::json opts);
+PointList generatePointList(Generator generator, FilterList local_filters);
 
-PointList randomTwoPeasants(FilterList activatedFilters);
+PointList randomTwoPeasants(FilterList local_filters);
 
 }
 

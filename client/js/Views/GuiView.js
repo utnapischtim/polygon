@@ -17,8 +17,8 @@ function (l, $, bb, PointList, VisualizationView, SettingsView) {
           visualizationView = new VisualizationView({collection: pointList}),
           settingsView = new SettingsView({pointList});
 
-      this.$el.append(visualizationView.render().el);
       this.$el.append(settingsView.render().el);
+      this.$el.append(visualizationView.render().el);
 
       return this;
     }

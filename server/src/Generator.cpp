@@ -5,9 +5,7 @@
 
 #include "Generator.h"
 #include "Filter.h"
-
-static nlohmann::json toJSON(pl::PointList point_list);
-
+#include "Point.h"
 
 nlohmann::json pl::getListOfGenerators() {
   nlohmann::json obj = {
@@ -24,23 +22,18 @@ nlohmann::json pl::getListOfGenerators() {
 }
 
 pl::Generator pl::createGenerator(nlohmann::json obj) {
-  return {obj["name"], obj["desc"], obj["key"]};
+  return pl::Generator(obj);
 }
 
-nlohmann::json pl::generatePointList(nlohmann::json opts) {
-  VLOG(3) << "generatePointList: " << opts;
-
-  pl::Generator chosenGenerator = pl::createGenerator(opts["chosenGenerator"]);
-  pl::FilterList activatedFilters = pl::createFilterList(opts["activatedFilters"]);
-
+pl::PointList pl::generatePointList(pl::Generator generator, pl::FilterList local_filters) {
   pl::PointList point_list;
 
   // it would be nice to imlement that without a switch statement!
   // a registration of function on compile time to select on dynamic
   // time would be nice!
-  switch (chosenGenerator.key) {
+  switch (generator.key) {
   case 0:
-    point_list = pl::randomTwoPeasants(activatedFilters);
+    point_list = pl::randomTwoPeasants(local_filters);
     break;
   case 1:
     break;
@@ -59,23 +52,13 @@ nlohmann::json pl::generatePointList(nlohmann::json opts) {
     // handle default ;)
   }
 
-  return toJSON(point_list);
+  return point_list;
 }
 
 
-pl::PointList pl::randomTwoPeasants(pl::FilterList activatedFilters) {
+pl::PointList pl::randomTwoPeasants(pl::FilterList local_filters) {
   // TODO to implement
   pl::PointList k;
   return k;
 }
 
-/**
- *
- * HELPERS
- *
- **/
-
-static nlohmann::json toJSON(pl::PointList point_list) {
-  // TODO to implement
-  return {};
-}

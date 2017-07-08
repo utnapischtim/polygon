@@ -38,7 +38,7 @@ FLYMAKE_TEMP_FILES = build/*flymake
 
 EXE = $(BIN_DIR)$(PROCESS)
 
-SRCS = $(wildcard src/*.cpp)
+SRCS = $(filter-out $(shell find src/ -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard src/*.cpp))
 OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(SRCS)))))
 DEPS = $(OBJS:.o=.d)
 
