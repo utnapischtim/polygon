@@ -8,6 +8,7 @@
 
 #include "Filter.h"
 #include "Point.h"
+#include "CommonSetting.h"
 
 namespace pl {
 
@@ -29,10 +30,10 @@ struct Generator {
 nlohmann::json getListOfGenerators();
 Generator createGenerator(nlohmann::json obj);
 
-PointList generatePointList(Generator generator, FilterList local_filters);
+PointList generatePointList(Generator generator, CommonSettingList common_settings, FilterList local_filters);
 
-PointList randomTwoPeasants(FilterList local_filters);
-
+PointList randomTwoPeasants(pl::CommonSettingList common_settings, FilterList local_filters);
+PointList random(CommonSettingList common_settings, FilterList local_filters);
 }
 
 #endif

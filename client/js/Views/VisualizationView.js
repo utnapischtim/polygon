@@ -5,13 +5,16 @@ define([
   'd3'
 ],
 function (l, $, bb, d3) {
-  let scaleX = d3.scaleLinear()
-        .domain([-30, 30])
-        .range([0, 600]);
+  // let scaleX = d3.scaleLinear()
+  //       .domain([-30, 30])
+  //       .range([0, 600]);
 
-  let scaleY = d3.scaleLinear()
-        .domain([0, 50])
-        .range([500, 0]);
+  // let scaleY = d3.scaleLinear()
+  //       .domain([0, 50])
+  //       .range([500, 0]);
+
+  const width = 1500, height = 800;
+
 
 
   let VisualizationView = bb.View.extend({
@@ -24,14 +27,23 @@ function (l, $, bb, d3) {
 
     render: function () {
       this.vis = d3.select(this.el).append("svg")
-        .attr("width", 1000)
-        .attr("height", 667);
+        .attr("width", width)
+        .attr("height", height);
 
       return this;
     },
 
     renderPolygon: function () {
+      // TODO:
+      // maybe there exists a nicer solution to do this, for moment it is enough
+      let scaleX = d3.scaleLinear().domain([0, this.collection.width]).range([0, width]),
+          scaleY = d3.scaleLinear().domain([0, this.collection.height]).range([0, height]);
+
       let points = this.collection.toPolygon(scaleX, scaleY);
+
+      // TODO
+      // there should be a possibility to do this with the d3 way to do it
+      this.vis.selectAll("polyline").remove();
 
       this.vis.selectAll("polyline")
         .data([points])

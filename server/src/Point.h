@@ -13,7 +13,7 @@ struct Point {
   T y;
 };
 
-using PointList = std::vector<Point<double>>;
+using PointList = std::vector<Point<int>>;
 
 nlohmann::json to_json(PointList point_list);
 

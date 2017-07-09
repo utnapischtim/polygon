@@ -62,8 +62,21 @@ html {
   padding: 5px;
 }
 
+.pl-common-setting-list {
+  border: 1px solid #e0d4d4;
+  border-radius: 10px;
+  float: left;
+  margin-right: 10px;
+  padding: 10px;
+}
+
+.pl-common-setting-input-number {
+  -moz-appearance: textfield;
+  margin-right: 3px;
+  width: 45px;
+}
+
 .pl-settings-common {
   clear: both;
   margin-top: 20px;
 }
-

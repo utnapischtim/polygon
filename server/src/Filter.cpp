@@ -25,12 +25,13 @@ nlohmann::json pl::getListOfFilters() {
     {{"name", "reflex points"}, {"desc", ""}, {"key", 0}, {"type", "number"}, {"art", "local"}},
     {{"name", "konvex points"}, {"desc", ""}, {"key", 1}, {"type", "number"}, {"art", "local"}},
     {{"name", "reflex edge chain"}, {"desc", ""}, {"key", 2}, {"type", "number"}, {"art", "global"}},
-    {{"name", "konvex edge chain"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"art", "global"}}
+    {{"name", "konvex edge chain"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"art", "global"}},
+    {{"name", "lights to illuminate"}, {"desc", ""}, {"key", 4}, {"type", "number"}, {"art", "global"}}
   };
 
   return obj;
 }
 
 pl::PointList pl::filter(const pl::PointList &point_list, const pl::FilterList &global_filter) {
-  return {};
+  return point_list;
 }

@@ -12,6 +12,7 @@ function (_, bb, Point) {
     },
 
     fetch: function (opts) {
+      this.reset();
       bb.Collection.prototype.fetch.call(this, {opts, job: 'pointList'});
     }
   });

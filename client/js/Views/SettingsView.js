@@ -1,11 +1,12 @@
 define([
   'log',
   'backbone',
+  'js/Views/CommonSettingListView',
   'js/Views/FilterListView',
   'js/Views/GeneratorListView',
   'hbs!tpl/t-settings'
 ],
-function (l, bb, FilterListView, GeneratorListView, tSettings) {
+function (l, bb, CommonSettingListView, FilterListView, GeneratorListView, tSettings) {
 
   let SettingsView = bb.View.extend({
     tagName: 'div',
@@ -20,6 +21,7 @@ function (l, bb, FilterListView, GeneratorListView, tSettings) {
 
       this.filterListView = new FilterListView();
       this.generatorListView = new GeneratorListView();
+      this.commonSettingListView = new CommonSettingListView();
     },
 
     render: function () {
@@ -29,15 +31,20 @@ function (l, bb, FilterListView, GeneratorListView, tSettings) {
 
       settingBoxes.append(this.filterListView.render().el);
       settingBoxes.append(this.generatorListView.render().el);
+      settingBoxes.append(this.commonSettingListView.render().el);
 
       return this;
     },
 
     generate: function () {
       let activatedFilters = this.filterListView.getActivatedFilters(),
-          chosenGenerator = this.generatorListView.getChosenGenerator();
+          chosenGenerator = this.generatorListView.getChosenGenerator(),
+          commonSettings = this.commonSettingListView.getCommonSettings();
 
-      this.pointList.fetch({activatedFilters, chosenGenerator});
+      this.pointList.width = this.commonSettingListView.getWidth();
+      this.pointList.height = this.commonSettingListView.getHeight();
+
+      this.pointList.fetch({activatedFilters, chosenGenerator, commonSettings});
     }
   });
 
