@@ -2,26 +2,25 @@ define([
   'log',
   'jquery',
   'backbone',
-  'js/Collections/FilterList',
   'js/Views/FilterView',
   'hbs!tpl/t-filter-list'
 ],
-function (l, $, bb, FilterList, FilterView, tFilterList) {
+function (l, $, bb, FilterView, tFilterList) {
 
   let FilterListView = bb.View.extend({
     tagName: 'div',
     className: 'pl-filter-list',
 
     initialize: function () {
-      this.collection = new FilterList();
-
       this.listenTo(this.collection, 'sync', this.addViews);
+
+      // to be sure that this is done before addViews
+      this.$el.append(tFilterList());
 
       this.collection.fetch();
     },
 
     render: function () {
-      this.$el.append(tFilterList());
       return this;
     },
 
@@ -42,10 +41,6 @@ function (l, $, bb, FilterList, FilterView, tFilterList) {
         globalListView.append(view.render().el);
       });
 
-    },
-
-    getActivatedFilters: function () {
-      return this.collection.filter(model => model.get("active"));
     }
   });
 

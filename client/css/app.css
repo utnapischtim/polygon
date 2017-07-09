@@ -6,6 +6,10 @@ html {
   width: 100%;
 }
 
+h1, h2, h3, h4, h5 {
+  text-align: center;
+}
+
 .pl-visualization {
   border: 1px solid black;
   border-radius: 15px;
@@ -37,16 +41,40 @@ html {
   margin-right: 10px;
   padding: 10px;
 }
-
-.pl-filter {
+.pl-common-setting,
+.pl-filter,
+.pl-generator {
   cursor: pointer;
   padding: 5px;
 }
 
-.pl-filter-input-number {
+.pl-input-checkbox {
+  margin-right: 7px;
+  padding: 0;
+  position: relative;
+  top: -2px;
+  vertical-align: bottom;
+}
+
+.pl-input-number {
   -moz-appearance: textfield;
-  margin-right: 3px;
+  margin-right: 6px;
+  position: relative;
   width: 45px;
+  top: -1px;
+}
+
+.pl-input-text {
+  margin-right: 6px;
+  position: relative;
+  width: 100px;
+  top: -2px;
+}
+
+.pl-input-radio {
+  margin-right: 6px;
+  position: relative;
+  top: 3px;
 }
 
 .pl-generator-list {
@@ -70,13 +98,8 @@ html {
   padding: 10px;
 }
 
-.pl-common-setting-input-number {
-  -moz-appearance: textfield;
-  margin-right: 3px;
-  width: 45px;
-}
-
-.pl-settings-common {
+.pl-menu {
   clear: both;
   margin-top: 20px;
 }
+

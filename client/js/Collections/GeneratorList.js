@@ -12,6 +12,10 @@ function (bb, Generator) {
 
     cleanActive: function () {
       this.each(m => m.set("active", false));
+    },
+
+    getChosenGenerator: function () {
+      return this.filter(model => model.get("active"))[0];
     }
   });
 

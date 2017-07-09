@@ -9,9 +9,9 @@ function (bb, tCommonSetting) {
     className: 'pl-common-setting',
 
     events: {
-      'click .pl-common-setting-input-checkbox': 'activate',
-      'blur .pl-common-setting-input-number': 'blur',
-      'blur .pl-common-setting-input-text': 'blur'
+      'click .pl-input-checkbox': 'activate',
+      'blur .pl-input-number': 'blur',
+      'blur .pl-input-text': 'blur'
     },
 
     render: function () {

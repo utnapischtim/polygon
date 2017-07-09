@@ -1,27 +1,37 @@
 define([
   'log',
   'backbone',
+  'js/Collections/CommonSettingList',
+  'js/Collections/FilterList',
+  'js/Collections/GeneratorList',
   'js/Views/CommonSettingListView',
   'js/Views/FilterListView',
   'js/Views/GeneratorListView',
+  'js/Views/MenuView',
   'hbs!tpl/t-settings'
 ],
-function (l, bb, CommonSettingListView, FilterListView, GeneratorListView, tSettings) {
+function (l, bb,
+          CommonSettingList, FilterList, GeneratorList,                        // Collections
+          CommonSettingListView, FilterListView, GeneratorListView, MenuView,  // Views
+          tSettings) {
 
   let SettingsView = bb.View.extend({
     tagName: 'div',
     className: 'pl-settings',
 
-    events: {
-      'click button': 'generate'
-    },
-
     initialize: function (attrs) {
       this.pointList = attrs.pointList;
 
-      this.filterListView = new FilterListView();
-      this.generatorListView = new GeneratorListView();
-      this.commonSettingListView = new CommonSettingListView();
+      let filterList = new FilterList(),
+          generatorList = new GeneratorList(),
+          commonSettingList = new CommonSettingList();
+
+      this.views = [
+        new FilterListView({collection: filterList}),
+        new GeneratorListView({collection: generatorList}),
+        new CommonSettingListView({collection: commonSettingList}),
+        new MenuView({filterList, generatorList, commonSettingList, pointList: attrs.pointList})
+      ];
     },
 
     render: function () {
@@ -29,22 +39,11 @@ function (l, bb, CommonSettingListView, FilterListView, GeneratorListView, tSett
 
       let settingBoxes = this.$el.find(".pl-settings-boxes");
 
-      settingBoxes.append(this.filterListView.render().el);
-      settingBoxes.append(this.generatorListView.render().el);
-      settingBoxes.append(this.commonSettingListView.render().el);
+      this.views.forEach((view) => {
+        settingBoxes.append(view.render().el);
+      });
 
       return this;
-    },
-
-    generate: function () {
-      let activatedFilters = this.filterListView.getActivatedFilters(),
-          chosenGenerator = this.generatorListView.getChosenGenerator(),
-          commonSettings = this.commonSettingListView.getCommonSettings();
-
-      this.pointList.width = this.commonSettingListView.getWidth();
-      this.pointList.height = this.commonSettingListView.getHeight();
-
-      this.pointList.fetch({activatedFilters, chosenGenerator, commonSettings});
     }
   });
 

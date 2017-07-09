@@ -8,6 +8,10 @@ function (bb, Filter) {
 
     fetch: function () {
       bb.Collection.prototype.fetch.call(this, {job: 'filter'});
+    },
+
+    getActivatedFilters: function () {
+      return this.filter(model => model.get("active"));
     }
   });
 

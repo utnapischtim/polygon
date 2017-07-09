@@ -11,8 +11,8 @@ function (l, $, bb, tFilter) {
     className: 'pl-filter',
 
     events: {
-      'click .pl-filter-input-checkbox': 'activateFilter',
-      'blur .pl-filter-input-number': 'blur'
+      'click .pl-input-checkbox': 'activateFilter',
+      'blur .pl-input-number': 'blur'
     },
 
     render: function () {
