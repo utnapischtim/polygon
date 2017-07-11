@@ -1,5 +1,7 @@
 WS_PORT =
 
+OPENCV_VERSION=3.2.0
+
 # -pg removed, causing problems when compiling with g++-7.1.0
 CPPFLAGS = -g \
            -std=c++1z \
@@ -18,7 +20,7 @@ CPPFLAGS = -g \
 
 LDFLAGS = -lboost_system \
           -lpthread -DELP_THREAD_SAFE \
-          lib/opencv2/libopencv_core.so.3.1.0
+          lib/opencv2/libopencv_core.so.$(OPENCV_VERSION)
 
 # -isystem instead of -I to supress warnings from this headers
 INCLUDE_DIRS = -isystem./lib/json/src \
@@ -99,7 +101,7 @@ init: COMPILER
 	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
 	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
 	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd easyloggingpp/ && git checkout 9.89
-	test ! -d lib/opencv2 && cd lib/ && git clone git://github.com/opencv/opencv && cd opencv/ && git checkout 3.1.0 && export CXX=$(CXX_COMPILER) && eval $(CONFIGURE_OPENCV2) && make && mkdir ../opencv2 && cp -r modules/core/include/opencv2/core/ ../opencv2/ && cp modules/core/include/opencv2/core.hpp ../opencv2/core.hpp && cp lib/libopencv_core.so.3.1.0 ../opencv2/libopencv_core.so.3.1.0 && cd ../opencv2 && ln -s libopencv_core.so.3.1.0 libopencv_core.so.3.1
+	test ! -d lib/opencv2 && cd lib/ && git clone git://github.com/opencv/opencv && cd opencv/ && git checkout $(OPENCV_VERSION) && export CXX=$(CXX_COMPILER) && eval $(CONFIGURE_OPENCV2) && make && mkdir ../opencv2 && cp -r modules/core/include/opencv2/core/ ../opencv2/ && cp modules/core/include/opencv2/core.hpp ../opencv2/core.hpp && cp lib/libopencv_core.so.$(OPENCV_VERSION) ../opencv2/libopencv_core.so.$(OPENCV_VERSION) && cd ../opencv2
 
 COMPILER:
 ifndef CXX_COMPILER
