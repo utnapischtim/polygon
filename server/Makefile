@@ -51,6 +51,9 @@ COMPILE := $(CXX) $(CPPFLAGS) $(INCLUDE_DIRS) -c
 DEPEND  := $(CXX) -MM $(CPPFLAGS) $(INCLUDE_DIRS)
 LINK    := $(CXX) $(CPPFLAGS)
 
+CXX_COMPILER := $(shell command -v $(CXX) 2> /dev/null)
+CONFIGURE_OPENCV2=cmake -DWITH_FFMPEG=OFF -DWITH_1394=OFF -DWITH_AVFFOUNDATION=OFF -DWITH_CARBON=OFF -DWITH_VTK=OFF -DWITH_EIGEN=ON -DWITH_VFW=OFF -DWITH_GSTREAMER=OFF -DWITH_GTK=ON -DWITH_GTK_2_X=ON -DWITH_GTK_3_X=ON -DWITH_GPHOTO2=OFF -DWITH_MATLAB=OFF -DWITH_DIRECTX=OFF -DWITH_OPENCLAMBLAS=OFF -DWITH_OPENCLAMDFFT=OFF -DWITH_DSHOW=OFF -DLIBV4L=OFF -DWITH_V4L=OFF -DWITH_WIN32UI=OFF -DWITH_GIGEAPI=OFF -DWITH_PVAPI=OFF -DWITH_OPENEXER=OFF -DWITH_WEBP=OFF -DWITH_JASPER=OFF -DWITH_IPP=OFF -DENABLE_PRECOMPILED_HEADERS=OFF .
+
 # Delete the default suffixes
 .SUFFIXES:
 
@@ -85,23 +88,30 @@ check-syntax:
 server:
 	@./$(EXE) $(WS_PORT) &
 
-init:
+init: COMPILER
 	@echo "init library"
 	mkdir -p bin/
 	mkdir -p build/
 	mkdir -p lib/
 
-# 9.89 is the last version of websocketpp as single header
-	test ! -d lib/websocketpp && cd lib/ && git clone git://github.com/zaphoyd/websocketpp && cd websocketpp/ && git checkout 9.89
+# 9.89 is the last version of easyloggingpp as single header
+	test ! -d lib/websocketpp && cd lib/ && git clone git://github.com/zaphoyd/websocketpp
 	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
 	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
-	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp
+	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd esayloggingpp/ && git checkout 9.89
+	test ! -d lib/opencv2 && cd lib/ && git clone git://github.com/opencv/opencv && cd opencv/ && git checkout 3.2.0 && export CXX=$(CXX_COMPILER) && eval $(CONFIGURE_OPENCV2) && make
+
+COMPILER:
+ifndef CXX_COMPILER
+		$(error $(CXX) does not exist)
+endif
 
 debugOut:
 	@echo 'srcs: ' $(SRCS)
 	@echo 'objs: ' $(OBJS)
 	@echo 'deps: ' $(DEPS)
 	@echo ''
-	@echo 'compile: ' $(COMPILE)
-	@echo 'depend:  ' $(DEPEND)
-	@echo 'link:    ' $(LINK)
+	@echo 'compile:      ' $(COMPILE)
+	@echo 'depend:       ' $(DEPEND)
+	@echo 'link:         ' $(LINK)
+	@echo 'CXX_COMPILER: ' $(CXX_COMPILER)
