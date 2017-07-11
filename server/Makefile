@@ -98,7 +98,7 @@ init: COMPILER
 	test ! -d lib/websocketpp && cd lib/ && git clone git://github.com/zaphoyd/websocketpp
 	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
 	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
-	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd esayloggingpp/ && git checkout 9.89
+	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd easyloggingpp/ && git checkout 9.89
 	test ! -d lib/opencv2 && cd lib/ && git clone git://github.com/opencv/opencv && cd opencv/ && git checkout 3.2.0 && export CXX=$(CXX_COMPILER) && eval $(CONFIGURE_OPENCV2) && make
 
 COMPILER:
