@@ -22,11 +22,11 @@ std::tuple<pl::FilterList, pl::FilterList> pl::createFilterList(nlohmann::json a
 
 nlohmann::json pl::getListOfFilters() {
   nlohmann::json obj = {
-    {{"name", "reflex points"}, {"desc", ""}, {"key", 0}, {"type", "number"}, {"art", "local"}},
-    {{"name", "konvex points"}, {"desc", ""}, {"key", 1}, {"type", "number"}, {"art", "local"}},
-    {{"name", "reflex edge chain"}, {"desc", ""}, {"key", 2}, {"type", "number"}, {"art", "global"}},
-    {{"name", "konvex edge chain"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"art", "global"}},
-    {{"name", "lights to illuminate"}, {"desc", ""}, {"key", 4}, {"type", "number"}, {"art", "global"}}
+    // {{"name", "reflex points"}, {"desc", ""}, {"key", 0}, {"type", "number"}, {"art", "local"}},
+    // {{"name", "konvex points"}, {"desc", ""}, {"key", 1}, {"type", "number"}, {"art", "local"}},
+    // {{"name", "reflex edge chain"}, {"desc", ""}, {"key", 2}, {"type", "number"}, {"art", "global"}},
+    // {{"name", "konvex edge chain"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"art", "global"}},
+    // {{"name", "lights to illuminate"}, {"desc", ""}, {"key", 4}, {"type", "number"}, {"art", "global"}}
   };
 
   return obj;
