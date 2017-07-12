@@ -4,8 +4,8 @@
 
 nlohmann::json pl::getCommonSettings() {
   nlohmann::json obj = {
-    {{"name", "nodes"}, {"desc", ""}, {"key", 0}, {"type", "number"}},
-    {{"name", "sampling grid"}, {"desc", ""}, {"key", 1}, {"type", "text"}}
+    {{"name", "nodes"}, {"desc", ""}, {"key", 0}, {"type", "number"}, {"val", "100"}},
+    {{"name", "sampling grid"}, {"desc", ""}, {"key", 1}, {"type", "text"}, {"val", "1500x800"}}
   };
 
   return obj;

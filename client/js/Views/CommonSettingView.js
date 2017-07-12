@@ -16,6 +16,8 @@ function (bb, tCommonSetting) {
 
     render: function () {
       this.$el.append(tCommonSetting(this.model.toJSON()));
+      if (this.model.has("val"))
+        this.activate();
       return this;
     },
 
