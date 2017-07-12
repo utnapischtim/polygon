@@ -29,10 +29,21 @@ function (bb, tMenu) {
           chosenGenerator = this.generatorList.getChosenGenerator(),
           commonSettings = this.commonSettingList.getCommonSettings();
 
-      this.pointList.width = this.commonSettingList.getWidth();
-      this.pointList.height = this.commonSettingList.getHeight();
+      if (!(chosenGenerator instanceof Object))
+        alert("a generator should be choosen");
 
-      this.pointList.fetch({activatedFilters, chosenGenerator, commonSettings});
+      else if (_.filter(commonSettings, o => o.get("name") == "nodes").length == 0)
+        alert("nodes should have a value and should be activated");
+
+      else if (_.filter(commonSettings, o => o.get("name") == "sampling grid").length == 0)
+        alert("sampling grid should have a value and should be activated");
+
+      else {
+        this.pointList.width = this.commonSettingList.getWidth();
+        this.pointList.height = this.commonSettingList.getHeight();
+
+        this.pointList.fetch({activatedFilters, chosenGenerator, commonSettings});
+      }
     }
   });
 
