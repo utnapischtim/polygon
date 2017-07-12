@@ -101,7 +101,7 @@ init: COMPILER
 	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
 	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
 	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd easyloggingpp/ && git checkout 9.89
-	test ! -d lib/opencv2 && cd lib/ && git clone git://github.com/opencv/opencv && cd opencv/ && git checkout $(OPENCV_VERSION) && export CXX=$(CXX_COMPILER) && eval $(CONFIGURE_OPENCV2) && make && mkdir ../opencv2 && cp -r modules/core/include/opencv2/core/ ../opencv2/ && cp modules/core/include/opencv2/core.hpp ../opencv2/core.hpp && cp lib/libopencv_core.so.$(OPENCV_VERSION) ../opencv2/libopencv_core.so.$(OPENCV_VERSION) && cd ../opencv2 && ln -s libopencv_core.so.3.2.0 libopencv_core.so.3.2
+	test ! -d lib/opencv2 && cd lib/ && git clone git://github.com/opencv/opencv && cd opencv/ && git checkout $(OPENCV_VERSION) && export CXX=$(CXX_COMPILER) && eval $(CONFIGURE_OPENCV2) && make && mkdir ../opencv2 && cp -r modules/core/include/opencv2/core/ ../opencv2/ && cp modules/core/include/opencv2/core.hpp ../opencv2/core.hpp && cp opencv2/opencv_modules.hpp ../opencv2/ && cp lib/libopencv_core.so.$(OPENCV_VERSION) ../opencv2/libopencv_core.so.$(OPENCV_VERSION) && cd ../opencv2 && ln -s libopencv_core.so.3.2.0 libopencv_core.so.3.2
 
 COMPILER:
 ifndef CXX_COMPILER

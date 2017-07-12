@@ -1,8 +1,9 @@
-ifeq ($(command -v firefox-bin), '')
-	FIREFOX = firefox
+ifneq ($(command -v firefox-bin 2>/dev/null),)
+	FIREFOX := firefox-bin
 else
-	FIREFOX = firefox-bin
+	FIREFOX := firefox
 endif
 
 start:
+	@echo 'firefox: ' $(FIREFOX)
 	@$(FIREFOX) index.html
