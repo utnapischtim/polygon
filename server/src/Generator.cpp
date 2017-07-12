@@ -71,16 +71,16 @@ pl::PointList pl::randomTwoPeasants(pl::CommonSettingList common_settings, pl::F
 pl::PointList pl::random(pl::CommonSettingList common_settings, pl::FilterList local_filters) {
   // TODO to implement
   pl::PointList point_list;
-  auto c_s_area = pl::find(common_settings, "area");
-  pl::Area area(c_s_area);
+  auto c_s_sampling_grid = pl::find(common_settings, "sampling grid");
+  pl::SamplingGrid sampling_grid(c_s_sampling_grid);
 
   auto c_s_nodes = pl::find(common_settings, "nodes");
 
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<>
-    dis_width(0, area.width),
-    dis_height(0, area.height);
+    dis_width(0, sampling_grid.width),
+    dis_height(0, sampling_grid.height);
 
 
   for (int i = 0; i < std::stoi(c_s_nodes.val); ++i) {

@@ -16,13 +16,13 @@ function (bb, CommonSetting) {
     },
 
     getWidth: function () {
-      let common_setting_area = this.filter({name: 'area'})[0];
-      return parseInt(common_setting_area.get("val").split("x")[0]);
+      let common_setting_sampling_grid = this.filter({name: 'sampling grid'})[0];
+      return parseInt(common_setting_sampling_grid.get("val").split("x")[0]);
     },
 
     getHeight: function () {
-      let common_setting_area = this.filter({name: 'area'})[0];
-      return parseInt(common_setting_area.get("val").split("x")[1]);
+      let common_setting_sampling_grid = this.filter({name: 'sampling grid'})[0];
+      return parseInt(common_setting_sampling_grid.get("val").split("x")[1]);
     }
   });
 

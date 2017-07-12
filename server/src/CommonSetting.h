@@ -32,16 +32,16 @@ struct CommonSetting {
 };
 
 
-struct Area {
+struct SamplingGrid {
   int width;
   int height;
 
-  Area() : width(0), height(0) {}
+  SamplingGrid() : width(0), height(0) {}
 
-  Area(CommonSetting common_setting) : Area() {
-    std::string area = common_setting.val;
+  SamplingGrid(CommonSetting common_setting) : SamplingGrid() {
+    std::string sampling_grid = common_setting.val;
 
-    auto t = pl::split(area, 'x');
+    auto t = pl::split(sampling_grid, 'x');
     width = std::stoi(t[0]);
     height = std::stoi(t[1]);
   }
