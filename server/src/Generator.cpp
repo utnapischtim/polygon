@@ -82,12 +82,18 @@ pl::PointList pl::random(pl::CommonSettingList common_settings, pl::FilterList l
     dis_width(0, sampling_grid.width),
     dis_height(0, sampling_grid.height);
 
+  pl::Triangle<int> triangle;
 
   for (int i = 0; i < std::stoi(c_s_nodes.val); ++i) {
     auto x = dis_width(gen);
     auto y = dis_height(gen);
 
-    point_list.push_back({x, y});
+    triangle.push({x, y});
+
+    if (isConvexTriangle(triangle))
+      point_list.push_back({x, y});
+    else
+      triangle.rollback();
   }
 
   // to close the polygon

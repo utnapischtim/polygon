@@ -23,10 +23,12 @@ LDFLAGS = -lboost_system \
           lib/opencv2/libopencv_core.so.$(OPENCV_VERSION)
 
 # -isystem instead of -I to supress warnings from this headers
-INCLUDE_DIRS = -isystem./lib/json/src \
+INCLUDE_DIRS = -isystem./lib/Catch/single_include \
+               -isystem./lib/json/src \
                -isystem./lib/easyloggingpp/src \
                -isystem./lib/websocketpp \
-               -isystem./lib/
+               -isystem./lib/ \
+               -isystem./src/
 
 LIB_DIRS = -Llib/opencv2/ \
            -Wl,-rpath=lib/opencv2/
@@ -35,6 +37,7 @@ PROCESS = polygon
 BIN_DIR = bin/
 BUILD_DIR = build/
 SRC_DIR = src/
+TEST_DIR = unittests/
 
 FLYMAKE_TEMP_FILES = build/*flymake
 
@@ -43,6 +46,11 @@ EXE = $(BIN_DIR)$(PROCESS)
 SRCS = $(filter-out $(shell find src/ -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard src/*.cpp))
 OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(SRCS)))))
 DEPS = $(OBJS:.o=.d)
+
+TEST_EXE  = $(BIN_DIR)tests
+TEST_SRCS = $(filter-out $(shell find unittests -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard unittests/*.cpp))
+TEST_OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(TEST_SRCS)))))
+TEST_DEPS = $(TEST_OBJS:.o=.d)
 
 
 
@@ -70,6 +78,15 @@ $(EXE): $(OBJS)
 # help from
 # http://scottmcpeak.com/autodepend/autodepend.html
 $(BUILD_DIR)%.o: $(SRC_DIR)%.cpp
+	@echo "build "$(PROCESS)" file: "$<
+	@$(COMPILE) $< -o $@ $(LIB_DIRS)
+	@$(DEPEND)	$< > $(BUILD_DIR)$*.d
+	@mv -f $(BUILD_DIR)$*.d $(BUILD_DIR)$*.d.tmp
+	@sed -e 's|.*:|$*.o:|' < $(BUILD_DIR)$*.d.tmp > $(BUILD_DIR)$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILD_DIR)$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILD_DIR)$*.d
+	@rm -f $(BUILD_DIR)$*.d.tmp
+
+$(BUILD_DIR)%.o: $(TEST_DIR)%.cpp
 	@echo "build "$(PROCESS)" file: "$<
 	@$(COMPILE) $< -o $@ $(LIB_DIRS)
 	@$(DEPEND)	$< > $(BUILD_DIR)$*.d
@@ -107,6 +124,17 @@ COMPILER:
 ifndef CXX_COMPILER
 		$(error $(CXX) does not exist)
 endif
+
+run-test:
+	$(TEST_EXE)
+
+build-test: $(TEST_EXE)
+
+clean-test:
+	$(RM) $(TEST_DEPS) $(TEST_OBJS) $(TEST_EXE) $(FLYMAKE_TEMP_FILES)
+
+$(TEST_EXE): $(TEST_OBJS)
+	@$(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS)
 
 debugOut:
 	@echo 'srcs: ' $(SRCS)
