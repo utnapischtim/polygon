@@ -1,9 +1,15 @@
 #ifndef POINT_H_
 #define POINT_H_
 
+#include <limits>
 #include <vector>
+#include <cmath>
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include "json.hpp"
+
+using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 namespace pl {
 
@@ -16,12 +22,18 @@ struct Point {
   Point(T k, T l) : x{k}, y{l} {}
 };
 
-using PointList = std::vector<Point<int>>;
+using PointList = std::vector<Point<double>>;
 
 template<typename T>
 struct Vector {
   T x;
   T y;
+
+  Point<T> &operator=(const Point<T> &a) {
+    x = a.x;
+    y = a.y;
+    return *this;
+  }
 };
 
 template<typename T>
@@ -91,6 +103,32 @@ template<class T>
 bool operator==(const Point<T> &a, const Point<T> &b) {
   return a.x == b.x && a.y == b.y;
 }
+
+template<class T>
+bool operator==(const cgal::Point_2 &a, const Point<T> &b) {
+  auto diff_x = std::fabs(a.x() - b.x);
+  auto diff_y = std::fabs(a.y() - b.y);
+  auto epsilon = std::numeric_limits<T>::epsilon();
+
+  return diff_x < epsilon && diff_y < epsilon;
+}
+
+template<class T>
+bool operator==(const Point<T> &a, const cgal::Point_2 &b) {
+  return b == a;
+}
+
+template<class T>
+bool operator!=(const cgal::Point_2 &a, const Point<T> &b) {
+  return !(a == b);
+}
+
+template<class T>
+bool operator!=(const Point<T> &a, const cgal::Point_2 &b) {
+  return !(b == a);
+}
+
+
 
 template<class T>
 Vector<T> operator-(const Point<T> &a, const Point<T> &b) {

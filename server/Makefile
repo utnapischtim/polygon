@@ -20,6 +20,8 @@ CPPFLAGS = -g \
 
 LDFLAGS = -lboost_system \
           -lpthread -DELP_THREAD_SAFE \
+          -lCGAL \
+          -lgmp \
           lib/opencv2/libopencv_core.so.$(OPENCV_VERSION)
 
 # -isystem instead of -I to supress warnings from this headers

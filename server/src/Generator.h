@@ -33,6 +33,7 @@ Generator createGenerator(nlohmann::json obj);
 PointList generatePointList(Generator generator, CommonSettingList common_settings, FilterList local_filters);
 
 PointList randomTwoPeasants(pl::CommonSettingList common_settings, FilterList local_filters);
+PointList convexBottom(CommonSettingList common_settings);
 PointList random(CommonSettingList common_settings, FilterList local_filters);
 }
 
