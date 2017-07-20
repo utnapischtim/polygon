@@ -8,7 +8,7 @@ function (_, bb, Point) {
     model: Point,
 
     toPolygon: function (scaleX, scaleY) {
-      return this.map(point => point.scale(scaleX, scaleY)).join(" ");
+      return this.map(point => point.scale(scaleX, scaleY, this.height)).join(" ");
     },
 
     fetch: function (opts) {

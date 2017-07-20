@@ -2,9 +2,9 @@ define([
   'backbone'
 ], function (bb) {
   let Point = bb.Model.extend({
-    scale: function (scaleX, scaleY) {
+    scale: function (scaleX, scaleY, height) {
       const x = scaleX(this.get("x")),
-            y = scaleY(this.get("y"));
+            y = height - scaleY(this.get("y"));
 
       return `${x} ${y}`;
     }

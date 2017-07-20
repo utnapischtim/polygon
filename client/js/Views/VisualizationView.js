@@ -26,24 +26,25 @@ function (l, $, bb, d3) {
     },
 
     render: function () {
-      this.vis = d3.select(this.el).append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
       return this;
     },
 
     renderPolygon: function () {
       // TODO:
       // maybe there exists a nicer solution to do this, for moment it is enough
-      let scaleX = d3.scaleLinear().domain([0, this.collection.width]).range([0, width]),
-          scaleY = d3.scaleLinear().domain([0, this.collection.height]).range([0, height]);
+      let scaleX = d3.scaleLinear().domain([0, this.collection.width]).range([0, this.collection.width]),
+          scaleY = d3.scaleLinear().domain([0, this.collection.height]).range([0, this.collection.height]);
 
       let points = this.collection.toPolygon(scaleX, scaleY);
 
       // TODO
       // there should be a possibility to do this with the d3 way to do it
-      this.vis.selectAll("polyline").remove();
+      if (this.vis)
+        this.vis.selectAll("svg").remove();
+
+      this.vis = d3.select(this.el).append("svg")
+        .attr("width", this.collection.width)
+        .attr("height", this.collection.height);
 
       this.vis.selectAll("polyline")
         .data([points])
