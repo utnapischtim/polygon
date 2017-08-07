@@ -16,6 +16,14 @@ h1, h2, h3, h4, h5 {
   margin: 10px;
 }
 
+.pl-polygon {
+  border: 1px solid #e7dddd;
+  border-radius: 10px;
+  display: block;
+  margin: 20px auto;
+  width: 1500px;
+}
+
 .pl-settings {
   border: 1px solid black;
   border-radius: 10px;

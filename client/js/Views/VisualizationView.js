@@ -44,7 +44,8 @@ function (l, $, bb, d3) {
 
       this.vis = d3.select(this.el).append("svg")
         .attr("width", this.collection.width)
-        .attr("height", this.collection.height);
+        .attr("height", this.collection.height)
+        .attr("class", "pl-polygon");
 
       this.vis.selectAll("polyline")
         .data([points])
