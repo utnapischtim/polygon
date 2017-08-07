@@ -32,7 +32,7 @@ nlohmann::json pl::getListOfFilters() {
   return obj;
 }
 
-pl::PointList pl::filter(const pl::PointList &point_list, const pl::FilterList &global_filter) {
+pl::PointList pl::filter(const pl::PointList &point_list, const pl::FilterList &/*global_filter*/) {
   return point_list;
 }
 

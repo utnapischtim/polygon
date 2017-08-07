@@ -3,7 +3,7 @@ WS_PORT =
 OPENCV_VERSION=3.2.0
 
 # -pg removed, causing problems when compiling with g++-7.1.0
-CPPFLAGS = -g \
+CPPFLAGS = $(CFLAGS) -g \
            -std=c++1z \
            -fconcepts \
            -Wshadow \
@@ -45,7 +45,7 @@ FLYMAKE_TEMP_FILES = build/*flymake
 
 EXE = $(BIN_DIR)$(PROCESS)
 
-SRCS = $(filter-out $(shell find src/ -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard src/*.cpp))
+SRCS = $(filter-out $(shell find src/ -name '*flymake*.cpp'), $(wildcard src/*.cpp))
 OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(SRCS)))))
 DEPS = $(OBJS:.o=.d)
 
@@ -74,7 +74,6 @@ all: $(EXE)
 
 $(EXE): $(OBJS)
 	@echo 'link the object files'
-	@echo $(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS)
 	@$(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS)
 
 # help from

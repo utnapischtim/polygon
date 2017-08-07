@@ -34,7 +34,7 @@ PointList generatePointList(Generator generator, CommonSettingList common_settin
 
 PointList randomTwoPeasants(pl::CommonSettingList common_settings, FilterList local_filters);
 PointList convexBottom(CommonSettingList common_settings);
-PointList random(CommonSettingList common_settings, FilterList local_filters);
+
 }
 
 #endif

@@ -1,9 +1,11 @@
 #ifndef POINT_H_
 #define POINT_H_
 
+#include <iostream>
 #include <limits>
 #include <vector>
 #include <cmath>
+#include <list>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -23,6 +25,7 @@ struct Point {
 };
 
 using PointList = std::vector<Point<double>>;
+using PointDList = std::list<Point<double>>;
 
 template<typename T>
 struct Vector {
@@ -101,7 +104,16 @@ double calculateIncludedAngle(const Triangle<T> &triangle) {
 
 template<class T>
 bool operator==(const Point<T> &a, const Point<T> &b) {
-  return a.x == b.x && a.y == b.y;
+  auto diff_x = std::fabs(a.x - b.x);
+  auto diff_y = std::fabs(a.y - b.y);
+  auto epsilon = std::numeric_limits<T>::epsilon();
+
+  return diff_x < epsilon && diff_y < epsilon;
+}
+
+template<class T>
+bool operator!=(const Point<T> &a, const Point<T> &b) {
+  return !(a == b);
 }
 
 template<class T>
@@ -144,6 +156,19 @@ template<class T>
 double length(const Vector<T> &a) {
   return std::sqrt(a.x * a.x + a.y * a.y);
 }
+
+template<class T>
+bool isCollinear(const Point<T> &a, const Point<T> &b, const Point<T> &c) {
+  cgal::Point_2 p(a.x, a.y), q(b.x, b.y), r(c.x, c.y);
+  return CGAL::collinear(p, q, r);
+}
+
+template<class T>
+std::ostream &operator<<(std::ostream &out, const Point<T> &p) {
+  return out << "(" << p.x << "," << p.y << ")";
+}
+
+std::ostream &operator<<(std::ostream &out, const PointList &point_list);
 
 }
 

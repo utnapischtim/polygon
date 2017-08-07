@@ -1,17 +1,25 @@
 #include <algorithm>
 #include <vector>
 #include <random>
+#include <list>
+#include <cstdlib>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/convex_hull_2.h>
 
 #include "json.hpp"
-//#include "easylogging++.h"
+#include "easylogging++.h"
 
 #include "Generator.h"
 #include "Filter.h"
 #include "Point.h"
 #include "CommonSetting.h"
+#include "SpacePartitioning.h"
+#include "random.h"
+
+#ifdef DEBUG
+#include "deterministic.h"
+#endif
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 using CGALPoints = std::vector<cgal::Point_2>;
@@ -23,7 +31,7 @@ nlohmann::json pl::getListOfGenerators() {
     // {{"name", "two opt"}, {"desc", ""}, {"key", 2}},
     // {{"name", "convex layers"}, {"desc", ""}, {"key", 3}},
     {{"name", "convex bottom"}, {"desc", ""}, {"key", 4}},
-    // {{"name", "space partitioning"}, {"desc", ""}, {"key", 5}},
+    {{"name", "space partitioning"}, {"desc", ""}, {"key", 5}},
     // {{"name", "permute and reject"}, {"desc", ""}, {"key", 6}},
     {{"name", "random"}, {"desc", ""}, {"key", 7}}
   };
@@ -36,6 +44,12 @@ pl::Generator pl::createGenerator(nlohmann::json obj) {
 }
 
 pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingList common_settings, pl::FilterList local_filters) {
+#ifdef DEBUG
+  pl::PointList random_point_list = pl::det::deterministic(common_settings, {});
+#else
+  pl::PointList random_point_list = pl::random(common_settings, {});
+#endif
+
   pl::PointList point_list;
 
   // it would be nice to imlement that without a switch statement!
@@ -55,11 +69,13 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     point_list = pl::convexBottom(common_settings);
     break;
   case 5:
+    point_list = pl::spacePartitioning(random_point_list);
     break;
   case 6:
     break;
   case 7:
     point_list = pl::random(common_settings, local_filters);
+    point_list.push_back(point_list[0]);
     break;
 
     // TODO
@@ -70,14 +86,14 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
 }
 
 
-pl::PointList pl::randomTwoPeasants(pl::CommonSettingList common_settings, pl::FilterList local_filters) {
+pl::PointList pl::randomTwoPeasants(pl::CommonSettingList /*common_settings*/, pl::FilterList /*local_filters*/) {
   // TODO to implement
   pl::PointList k;
   return k;
 }
 
 pl::PointList pl::convexBottom(pl::CommonSettingList common_settings) {
-  pl::PointList point_list = random(common_settings, {});
+  pl::PointList point_list = pl::random(common_settings, {});
 
   std::sort(point_list.begin(), point_list.end(), [](auto a, auto b) { return a.x < b.x; });
   auto min_x = point_list[0];
@@ -128,51 +144,4 @@ pl::PointList pl::convexBottom(pl::CommonSettingList common_settings) {
   final_list.push_back({point_list[1].x, point_list[1].y});
 
   return final_list;
-}
-
-pl::PointList pl::random(pl::CommonSettingList common_settings, pl::FilterList local_filters) {
-  // TODO to implement
-  pl::PointList point_list;
-  auto c_s_sampling_grid = pl::find(common_settings, "sampling grid");
-  pl::SamplingGrid sampling_grid(c_s_sampling_grid);
-
-  auto c_s_nodes = pl::find(common_settings, "nodes");
-
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<>
-    dis_width(0, sampling_grid.width),
-    dis_height(0, sampling_grid.height);
-
-  pl::Triangle<int> triangle;
-
-  for (int i = 0; i < std::stoi(c_s_nodes.val); ++i) {
-    auto x = dis_width(gen);
-    auto y = dis_height(gen);
-
-    point_list.push_back({x, y});
-  }
-
-  // to close the polygon
-  point_list.push_back(point_list[0]);
-
-
-  // there for debugging, to have a point list that is not random!
-  // point_list = {
-  //   {1, 11},
-  //   {5, 40},
-  //   {10, 20},
-  //   {21, 10},
-  //   {20, 18},
-  //   {20, 41},
-  //   {33, 15},
-  //   {39, 22},
-  //   {48, 9},
-  //   {55, 17},
-  //   {60, 50},
-  //   {68, 19},
-  //   {75, 33}
-  // };
-
-  return point_list;
 }
