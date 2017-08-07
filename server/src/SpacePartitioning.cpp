@@ -20,7 +20,6 @@ static bool areOnSameSide(const pl::Line<double> &l, const pl::Point<double> &s_
 pl::PointList pl::spacePartitioning(pl::PointList point_list) {
   VLOG(1) << "spacePartitioning";
 
-  //pl::PointList point_list = pl::random(common_settings, {});
   pl::PointList final_list;
   pl::random_selector<> selector{};
 
@@ -84,9 +83,6 @@ void recursiveDivide(pl::PointList &S, const pl::Point<double> &s_f, const pl::P
   }
 
   else if (S.size() == 2) {
-    // TODO:
-    // i think this part is wrong, this could not be right!
-    // C.push_front(s_f);
     C.push_back(s_l);
   }
   else if (S.size() == 3) {
@@ -104,12 +100,6 @@ void recursiveDivide(pl::PointList &S, const pl::Point<double> &s_f, const pl::P
     auto s = calculateRandomPoint(S, s_f, s_l);
 
     VLOG(2) << " s: " << s.value();
-
-    // TODO:
-    // how to do it, when s is empty, within
-    // heuristic_for_generation_of_random_polygons.pdf it is not
-    // writen how to act with that problem! maybe it is obvious but i
-    // don't see it!
 
     auto l = calculateRandomLine(s.value(), s_f, s_l);
 
