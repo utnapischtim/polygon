@@ -1,8 +1,9 @@
 define([
+  'underscore',
   'backbone',
   'hbs!tpl/t-menu'
 ],
-function (bb, tMenu) {
+function (_, bb, tMenu) {
 
   let MenuView = bb.View.extend({
     tagName: 'div',
