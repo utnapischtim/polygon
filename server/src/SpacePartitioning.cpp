@@ -164,9 +164,9 @@ std::optional<pl::Line<double>> calculateRandomLine(const pl::Point<double> &s, 
     auto epsilon = std::numeric_limits<double>::epsilon();
     if (std::abs(delta_x) < epsilon) {
       if (std::abs(delta_y) > epsilon)
-        y = pl::randomValueOfRange(0, delta_y);
+        y = pl::randomValueOfRange(0.0, delta_y);
     } else {
-      x = pl::randomValueOfRange(0, delta_x);
+      x = pl::randomValueOfRange(0.0, delta_x);
       y = (x * delta_y) / delta_x;
     }
     VLOG(3) << "  delta_x: " << delta_x << " delta_y: " << delta_y;
