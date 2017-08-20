@@ -170,6 +170,21 @@ std::ostream &operator<<(std::ostream &out, const Point<T> &p) {
 
 std::ostream &operator<<(std::ostream &out, const PointList &point_list);
 
+template<class T>
+std::vector<T> operator+(const std::vector<T> &v, Point<T> p) {
+  auto k = v;
+  k.push_back(p);
+  return k;
+}
+
+template<class T>
+std::vector<T> &operator+=(std::vector<T> &v, Point<T> p) {
+  v.push_back(p);
+  return v;
+}
+
+void convert(std::vector<cgal::Point_2> &point_2_list, const PointList &point_list);
+
 }
 
 #endif
