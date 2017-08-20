@@ -14,6 +14,7 @@
 #include "CommonSetting.h"
 #include "SpacePartitioning.h"
 #include "ConvexBottom.h"
+#include "SteadyGrowth.h"
 #include "random.h"
 
 #ifdef DEBUG
@@ -24,7 +25,7 @@
 nlohmann::json pl::getListOfGenerators() {
   nlohmann::json obj = {
     // {{"name", "random two peasants"}, {"desc", ""}, {"key", 0}},
-    // {{"name", "steady growth"}, {"desc", ""}, {"key", 1}},
+    {{"name", "steady growth"}, {"desc", ""}, {"key", 1}},
     // {{"name", "two opt"}, {"desc", ""}, {"key", 2}},
     // {{"name", "convex layers"}, {"desc", ""}, {"key", 3}},
     {{"name", "convex bottom"}, {"desc", ""}, {"key", 4}},
@@ -57,6 +58,7 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     point_list = pl::randomTwoPeasants(common_settings, local_filters);
     break;
   case 1:
+    point_list = pl::steadyGrowth(random_point_list);
     break;
   case 2:
     break;
