@@ -6,10 +6,27 @@
 #include "Point.h"
 #include "random.h"
 
+
 double pl::randomValueOfRange(double start, double end) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> dis(start, end);
+
+  return dis(gen);
+}
+
+int pl::randomValueOfRange(int start, int end) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(start, end);
+
+  return dis(gen);
+}
+
+unsigned randomValueOfRange(unsigned start, unsigned end) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(start, end);
 
   return dis(gen);
 }

@@ -38,6 +38,8 @@ private:
 };
 
 double randomValueOfRange(double start, double end);
+int randomValueOfRange(int start, int end);
+unsigned randomValueOfRange(unsigned start, unsigned end);
 PointList random(CommonSettingList common_settings, FilterList local_filters);
 
 }
