@@ -23,5 +23,17 @@ pl::PointList pl::det::deterministic(pl::CommonSettingList /*common_settings*/, 
     {75, 33}
   };
 
+  // two opt moves
+  // pl::PointList point_list = {
+  //   {7, 12},
+  //   {13, 20},
+  //   {21, 7},
+  //   {29, 13},
+  //   {20, 16},
+  //   {25, 22},
+  //   {26, 18},
+  //   {10, 8}
+  // };
+
   return point_list;
 }

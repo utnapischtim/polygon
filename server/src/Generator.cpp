@@ -15,6 +15,7 @@
 #include "SpacePartitioning.h"
 #include "ConvexBottom.h"
 #include "SteadyGrowth.h"
+#include "TwoOptMoves.h"
 #include "random.h"
 
 #ifdef DEBUG
@@ -26,7 +27,7 @@ nlohmann::json pl::getListOfGenerators() {
   nlohmann::json obj = {
     // {{"name", "random two peasants"}, {"desc", ""}, {"key", 0}},
     {{"name", "steady growth"}, {"desc", ""}, {"key", 1}},
-    // {{"name", "two opt"}, {"desc", ""}, {"key", 2}},
+    {{"name", "two opt moves"}, {"desc", ""}, {"key", 2}},
     // {{"name", "convex layers"}, {"desc", ""}, {"key", 3}},
     {{"name", "convex bottom"}, {"desc", ""}, {"key", 4}},
     {{"name", "space partitioning"}, {"desc", ""}, {"key", 5}},
@@ -60,7 +61,20 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
   case 1:
     point_list = pl::steadyGrowth(random_point_list);
     break;
-  case 2:
+  case 2: {
+    // TODO rewrite this part, exception should not be used that way
+    bool exit;
+    size_t counter = 0;
+    while (!exit)
+    try {
+      point_list = pl::twoOptMoves(random_point_list);
+      exit = true;
+    } catch (const std::runtime_error &e) {
+      random_point_list = pl::random(common_settings, {});
+      counter += 1;
+    }
+    VLOG(2) << "two opt moves counter: " << counter;
+  }
     break;
   case 3:
     break;
