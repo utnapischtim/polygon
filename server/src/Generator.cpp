@@ -62,18 +62,16 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     point_list = pl::steadyGrowth(random_point_list);
     break;
   case 2: {
-    // TODO rewrite this part, exception should not be used that way
-    bool exit;
     size_t counter = 0;
-    while (!exit)
-    try {
-      point_list = pl::twoOptMoves(random_point_list);
-      exit = true;
-    } catch (const std::runtime_error &e) {
-      random_point_list = pl::random(common_settings, {});
-      counter += 1;
-    }
-    VLOG(2) << "two opt moves counter: " << counter;
+    for (bool exit = false; !exit;)
+      try {
+        point_list = pl::twoOptMoves(random_point_list);
+        exit = true;
+      } catch (const std::runtime_error &e) {
+        random_point_list = pl::random(common_settings, {});
+        counter += 1;
+      }
+    VLOG(2) << "Generator generatePointList two opt moves counter: " << counter;
   }
     break;
   case 3:
