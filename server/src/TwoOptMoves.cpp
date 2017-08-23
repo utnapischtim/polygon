@@ -5,8 +5,6 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangle_2.h>
 
-#include "easylogging++.h"
-
 #include "TwoOptMoves.h"
 #include "Point.h"
 #include "random.h"
@@ -19,7 +17,6 @@ pl::PointList calculateFinalList(std::vector<cgal::Segment_2> &segments);
 static void goingInDepth(std::vector<cgal::Segment_2> &segments, cgal::Point_2 current, pl::PointList &final_list);
 
 pl::PointList pl::twoOptMoves(pl::PointList point_list) {
-  VLOG(3) << "twoOptMoves";
   pl::PointList final_list;
   pl::random_selector<> selector{};
 
@@ -33,28 +30,10 @@ pl::PointList pl::twoOptMoves(pl::PointList point_list) {
   // close the polygon
   segments.push_back({point_2_list[point_2_list.size() - 1], point_2_list[0]});
 
-  VLOG(4) << "  segments.size(): " << segments.size();
-  if (VLOG_IS_ON(5)) {
-    VLOG(5) << "  segments:";
-    for (auto s : segments)
-      VLOG(5) << "    s: " << s;
-  }
-
   auto intersection_segments = calculateIntersections(segments);
 
-  VLOG(4) << "  intersection_segments.size(): " << intersection_segments.size();
-  if (VLOG_IS_ON(5)) {
-    VLOG(5) << "  intersections_segments:";
-    for (auto i_s : intersection_segments)
-      VLOG(5) << "      intersection_segments: (" << std::get<0>(i_s) << " cross " << std::get<1>(i_s) << ")";
-  }
-
   for (; 0 < intersection_segments.size();) {
-    VLOG(5) << "    intersection_segments.size(): " << intersection_segments.size();
-
     auto [f_1, f_2] = selector(intersection_segments);
-
-    VLOG(5) << "    choosen_intersection: (f_1: " << f_1 << " cross f_2: " << f_2 << ")";
 
     // remove the intersections that have f1 or f2 same as the choosen
     // current intersection
@@ -70,20 +49,11 @@ pl::PointList pl::twoOptMoves(pl::PointList point_list) {
 
     auto [e_1, e_2] = calculateNewSegments(segments, f_1, f_2);
 
-
     auto it_f_1 = std::find_if(segments.begin(), segments.end(), [&](auto seg){ return seg == f_1; });
     segments.erase(it_f_1);
-    // segments.insert(it_f_1, e_1);
+
     auto it_f_2 = std::find_if(segments.begin(), segments.end(), [&](auto seg){ return seg == f_2; });
     segments.erase(it_f_2);
-    // segments.insert(it_f_2, e_2);
-
-    VLOG(5) << "    e_1: " << e_1 << " e_2: " << e_2;
-    if (VLOG_IS_ON(6)) {
-      VLOG(6) << "   segments: ";
-      for (auto s : segments)
-        VLOG(6) << "    s: " << s;
-    }
 
     for (auto s : segments) {
       if (s != e_1 &&
@@ -104,24 +74,9 @@ pl::PointList pl::twoOptMoves(pl::PointList point_list) {
     segments.insert(it_f_2, e_2);
 
     // with this it would be O(n^3) i don't know if the above approach
-    //is correct, it would be to simple to reduce it to O(n^2)
-    //intersection_segments = calculateIntersections(segments);
+    // is correct, it would be to simple to reduce it to O(n^2)
+    // intersection_segments = calculateIntersections(segments);
 
-    VLOG(5) << "    intersection_segments.size(): " << intersection_segments.size();
-    if (VLOG_IS_ON(6)) {
-      for (auto i_s : intersection_segments)
-        VLOG(6) << "      i_s: (" << std::get<0>(i_s) << " cross " << std::get<1>(i_s) << ")";
-    }
-
-    if (VLOG_IS_ON(9)) {
-      std::exit(0);
-    }
-  }
-
-  if (VLOG_IS_ON(3)) {
-    VLOG(3) << "segments: ";
-    for (auto s : segments)
-      VLOG(3) << "  s: " << s;
   }
 
   final_list = calculateFinalList(segments);
@@ -130,7 +85,6 @@ pl::PointList pl::twoOptMoves(pl::PointList point_list) {
 }
 
 std::vector<std::tuple<cgal::Segment_2, cgal::Segment_2>> calculateIntersections(const std::vector<cgal::Segment_2> &segments) {
-  VLOG(3) << "calculateIntersections";
   std::vector<std::tuple<cgal::Segment_2, cgal::Segment_2>> intersection_segments;
 
   // s_1 != s_2
@@ -195,8 +149,6 @@ pl::PointList calculateFinalList(std::vector<cgal::Segment_2> &segments) {
 
 // maybe it is possible to rewrite it with fold expressions
 void goingInDepth(std::vector<cgal::Segment_2> &segments, cgal::Point_2 current, pl::PointList &final_list) {
-  VLOG(6) << "goingInDepth segments.size: " << segments.size();
-
   for (auto it = segments.begin(); it != segments.end(); ++it) {
     auto p = (*it).source(), q = (*it).target();
 
