@@ -17,6 +17,7 @@
 #include "SteadyGrowth.h"
 #include "TwoOptMoves.h"
 #include "RandomTwoPeasants.h"
+#include "BouncingVertices.h"
 #include "random.h"
 
 #ifdef DEBUG
@@ -33,7 +34,8 @@ nlohmann::json pl::getListOfGenerators() {
     {{"name", "convex bottom"}, {"desc", ""}, {"key", 4}},
     {{"name", "space partitioning"}, {"desc", ""}, {"key", 5}},
     // {{"name", "permute and reject"}, {"desc", ""}, {"key", 6}},
-    {{"name", "random"}, {"desc", ""}, {"key", 7}}
+    {{"name", "random"}, {"desc", ""}, {"key", 7}},
+    {{"name", "bouncing vertices"}, {"desc", ""}, {"key", 8}}
   };
 
   return obj;
@@ -89,7 +91,19 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     point_list = pl::random(common_settings, local_filters);
     point_list.push_back(point_list[0]);
     break;
+  case 8:
 
+    common_settings.push_back(CommonSetting(std::string{"phases"}, std::string{""}, 2, std::string{"number"}, std::string("10")));
+    common_settings.push_back(CommonSetting(std::string{"radius"}, std::string{""}, 3, std::string{"number"}, std::string("60")));
+
+#ifdef DEBUG
+    point_list = pl::det::deterministic(common_settings, {});
+#else
+    point_list = pl::convexBottom(random_point_list);
+#endif
+
+    point_list = pl::bouncingVertices(point_list, common_settings);
+    break;
     // TODO
     // handle default ;)
   }
