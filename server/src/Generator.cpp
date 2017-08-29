@@ -4,7 +4,6 @@
 #include <list>
 #include <cstdlib>
 
-
 #include "json.hpp"
 #include "easylogging++.h"
 
@@ -20,7 +19,6 @@
 #include "BouncingVertices.h"
 #include "random.h"
 
-#define DEBUG
 #ifdef DEBUG
 #include "deterministic.h"
 #endif
@@ -102,6 +100,9 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
 #else
     point_list = pl::convexBottom(random_point_list);
 #endif
+
+    // remove the last point, it is the same as the beginning.
+    point_list.pop_back();
 
     point_list = pl::bouncingVertices(point_list, common_settings);
     break;
