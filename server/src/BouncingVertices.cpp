@@ -4,14 +4,10 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "easylogging++.h"
-
 #include "BouncingVertices.h"
 #include "Point.h"
 #include "CommonSetting.h"
 #include "random.h"
-
-#include <boost/optional/optional_io.hpp>
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
@@ -95,37 +91,19 @@ pl::PointList pl::bouncingVertices(pl::PointList point_list, pl::CommonSettingLi
           //   both directions, clockwise and anti-clockwise
 
           for (auto ssit = segments.begin(); ssit != segments.end() && !intersection_occur; ++ssit)
-            if (*ssit != old_e_1 && *ssit != old_e_2 && !intersection_occur) {
-	      if (ssit->target() != e_1.source()) {
-		VLOG(5) << "first test";
-		intersection_occur = intersection_occur || CGAL::do_intersect(*ssit, e_1);
-	      }
-	      if (ssit->source() != e_2.target()) {
-		VLOG(5) << "second test";
-		intersection_occur = intersection_occur || CGAL::do_intersect(*ssit, e_2);
-	      }
-	      // if (intersection_occur) {
-	      // 	VLOG(5) << "found intersection for segment (sit): " << *sit;
-	      // 	VLOG(5) << "intersection (ssit, e_1): " << CGAL::intersection(*ssit, e_1);
-	      // 	VLOG(5) << "intersection (ssit, e_2): " << CGAL::intersection(*ssit, e_2);
+            if (*ssit != old_e_1 && *ssit != old_e_2) {
+              if (ssit->target() != e_1.source())
+                intersection_occur = intersection_occur || CGAL::do_intersect(*ssit, e_1);
 
-	      // 	for (auto s : segments)
-	      // 	  VLOG(5) << s;
-	      // }
-	    }
+              if (ssit->source() != e_2.target())
+                intersection_occur = intersection_occur || CGAL::do_intersect(*ssit, e_2);
+            }
         }
       } while (outside_boundary_box || intersection_occur);
-
 
       // set the new segments;
       *sit = cgal::Segment_2(sit->source(), target);
       *sitn = cgal::Segment_2(target, sitn->target());
-
-      VLOG(5) << "----------------------------------------- START ------------------------------";
-      	for (auto s : segments)
-		  VLOG(5) << s;
-	      VLOG(5) << "----------------------------------------- END ------------------------------";
-
     }
   }
 
