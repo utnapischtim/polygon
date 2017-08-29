@@ -20,6 +20,7 @@
 #include "BouncingVertices.h"
 #include "random.h"
 
+#define DEBUG
 #ifdef DEBUG
 #include "deterministic.h"
 #endif
