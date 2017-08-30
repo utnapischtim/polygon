@@ -1,11 +1,11 @@
 #include <algorithm>
 #include <random>
+#include <string>
 
 #include "CommonSetting.h"
 #include "Filter.h"
 #include "Point.h"
 #include "random.h"
-
 
 double pl::randomValueOfRange(double start, double end) {
   std::random_device rd;
@@ -32,12 +32,21 @@ unsigned randomValueOfRange(unsigned start, unsigned end) {
 }
 
 pl::PointList pl::random(pl::CommonSettingList common_settings, pl::FilterList /*local_filters*/) {
-  // TODO to implement
   pl::PointList point_list;
-  auto c_s_sampling_grid = pl::find(common_settings, "sampling grid");
-  pl::SamplingGrid sampling_grid(c_s_sampling_grid);
+  pl::CommonSetting c_s_sampling_grid, c_s_nodes;
 
-  auto c_s_nodes = pl::find(common_settings, "nodes");
+  try {
+    c_s_sampling_grid = pl::find(common_settings, "sampling grid");
+    c_s_nodes = pl::find(common_settings, "nodes");
+  } catch (const std::runtime_error error) {
+    std::string msg = std::string("essential common setting not set to generate random pointList: ") + error.what();
+    throw std::runtime_error(msg);
+  }
+
+  // TODO:
+  // make it robust
+  pl::SamplingGrid sampling_grid(c_s_sampling_grid);
+  unsigned node_count = std::stoi(c_s_nodes.val);
 
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -45,7 +54,7 @@ pl::PointList pl::random(pl::CommonSettingList common_settings, pl::FilterList /
     dis_width(0, sampling_grid.width),
     dis_height(0, sampling_grid.height);
 
-  for (int i = 0; i < std::stoi(c_s_nodes.val); ++i) {
+  for (size_t i = 0; i < node_count; ++i) {
     auto x = dis_width(gen);
     auto y = dis_height(gen);
 

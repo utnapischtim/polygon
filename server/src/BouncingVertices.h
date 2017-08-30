@@ -3,10 +3,11 @@
 
 #include "Point.h"
 #include "CommonSetting.h"
+#include "Filter.h"
 
 namespace pl {
 
-PointList bouncingVertices(PointList point_list, CommonSettingList common_settings);
+PointList bouncingVertices(const PointList &point_list, const CommonSettingList &common_settings, const FilterList &filter);
 
 }
 

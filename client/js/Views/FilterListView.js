@@ -25,22 +25,10 @@ function (l, $, bb, FilterView, tFilterList) {
     },
 
     addViews: function () {
-      let localListView = this.$el.find(".pl-filter-list-local"),
-          globalListView = this.$el.find(".pl-filter-list-global");
-
-      let localFilters = this.collection.filter({art: "local"}),
-          globalFilters = this.collection.filter({art: "global"});
-
-      localFilters.forEach((model) => {
+      this.collection.forEach((model) => {
         let view = new FilterView({model});
-        localListView.append(view.render().el);
+        this.$el.append(view.render().el);
       });
-
-      globalFilters.forEach((model) => {
-        let view = new FilterView({model});
-        globalListView.append(view.render().el);
-      });
-
     }
   });
 

@@ -39,10 +39,9 @@ void pl::Worker::run() {
       else if (job == "pointList") {
         pl::Generator chosen_generator = pl::createGenerator(opts["chosenGenerator"]);
         pl::CommonSettingList common_setting_list = pl::createCommonSettingList(opts["commonSettings"]);
-        auto [local_filters, global_filters] = pl::createFilterList(opts["activatedFilters"]);
+        auto filters = pl::createFilterList(opts["activatedFilters"]);
 
-        pl::PointList list = pl::generatePointList(chosen_generator, common_setting_list, local_filters);
-        list = pl::filter(list, global_filters);
+        pl::PointList list = pl::generatePointList(chosen_generator, common_setting_list, filters);
 
         resp[sync_id] = pl::to_json(list);
       }

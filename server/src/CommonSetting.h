@@ -22,6 +22,10 @@ struct CommonSetting {
   std::string type;
   std::string val;
 
+  CommonSetting()
+    : name{}, desc{}, key{}, type{}, val{}
+    {}
+
   CommonSetting(std::string n, std::string d, int k, std::string t, std::string v)
     : name(n), desc(d), key(k), type(t), val(v)
     {}

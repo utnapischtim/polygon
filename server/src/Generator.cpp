@@ -92,9 +92,6 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     break;
   case 8:
 
-    common_settings.push_back(CommonSetting(std::string{"phases"}, std::string{""}, 2, std::string{"number"}, std::string("10")));
-    common_settings.push_back(CommonSetting(std::string{"radius"}, std::string{""}, 3, std::string{"number"}, std::string("60")));
-
 #ifdef DEBUG
     point_list = pl::det::deterministic(common_settings, {});
 #else
@@ -104,7 +101,7 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     // remove the last point, it is the same as the beginning.
     point_list.pop_back();
 
-    point_list = pl::bouncingVertices(point_list, common_settings);
+    point_list = pl::bouncingVertices(point_list, common_settings, local_filters);
     break;
     // TODO
     // handle default ;)

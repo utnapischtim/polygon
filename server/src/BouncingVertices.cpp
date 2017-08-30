@@ -7,13 +7,14 @@
 #include "BouncingVertices.h"
 #include "Point.h"
 #include "CommonSetting.h"
+#include "Filter.h"
 #include "random.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 static std::vector<cgal::Segment_2>::iterator next(std::vector<cgal::Segment_2> &segments, const std::vector<cgal::Segment_2>::iterator &it);
 
-pl::PointList pl::bouncingVertices(pl::PointList point_list, pl::CommonSettingList common_settings) {
+pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
   pl::PointList final_list;
 
   std::vector<cgal::Segment_2> segments;
@@ -27,21 +28,21 @@ pl::PointList pl::bouncingVertices(pl::PointList point_list, pl::CommonSettingLi
   // close the polygon
   segments.push_back({segments[segments.size() - 1].target(), segments[0].source()});
 
+  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius;
+
+  try {
+    c_s_sampling_grid= pl::find(common_settings, "sampling grid");
+    c_s_phases = pl::find(common_settings, "phases");
+    c_s_radius = pl::find(common_settings, "radius");
+  } catch (const std::runtime_error error) {
+    std::string msg = std::string("essential common setting not set for BouncingVertices: ") + error.what();
+    throw std::runtime_error(msg);
+  }
+
   // TODO:
-  // implement it little more passiv
-  auto c_s_sampling_grid = pl::find(common_settings, "sampling grid");
+  // make it robust!
   pl::SamplingGrid sampling_grid(c_s_sampling_grid);
-  unsigned width = sampling_grid.width;
-  unsigned height = sampling_grid.height;
-
-  // TODO:
-  // implement it little more passiv
-  auto c_s_phases = pl::find(common_settings, "phases");
   unsigned phases = std::stoi(c_s_phases.val);
-
-  // TODO:
-  // implement it little more passiv
-  auto c_s_radius = pl::find(common_settings, "radius");
   double radius = std::stod(c_s_radius.val);
 
   for (size_t i = 0; i < phases; ++i) {
@@ -67,7 +68,7 @@ pl::PointList pl::bouncingVertices(pl::PointList point_list, pl::CommonSettingLi
         // have to be checked, because it is clear that if the target is
         // inside also the next source which is equal to target is inside.
         target = {sit->target().x() + velocity.x(), sit->target().y() + velocity.y()};
-        outside_boundary_box = target.x() < 0 || width < target.x() || target.y() < 0 || height < target.y();
+        outside_boundary_box = target.x() < 0 || sampling_grid.width < target.x() || target.y() < 0 || sampling_grid.height < target.y();
 
         // check only if the new point is inside, the following check
         // is more complex and hence more cpu consuming

@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "json.hpp"
 
 #include "CommonSetting.h"
@@ -5,7 +7,9 @@
 nlohmann::json pl::getCommonSettings() {
   nlohmann::json obj = {
     {{"name", "nodes"}, {"desc", ""}, {"key", 0}, {"type", "number"}, {"val", "100"}},
-    {{"name", "sampling grid"}, {"desc", ""}, {"key", 1}, {"type", "text"}, {"val", "1500x800"}}
+    {{"name", "sampling grid"}, {"desc", ""}, {"key", 1}, {"type", "text"}, {"val", "1500x800"}},
+    {{"name", "phases"}, {"desc", ""}, {"key", 2}, {"type", "number"}, {"val", "10"}},
+    {{"name", "radius"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"val", "60"}}
   };
 
   return obj;
@@ -20,7 +24,13 @@ pl::CommonSettingList pl::createCommonSettingList(nlohmann::json common_settings
   return common_setting_list;
 }
 
-// TODO make it robust ;)
 pl::CommonSetting pl::find(pl::CommonSettingList common_settings, std::string name) {
-  return *std::find_if(common_settings.begin(), common_settings.end(), [&](auto c) { return c.name == name; });
+  auto it = std::find_if(common_settings.begin(), common_settings.end(), [&](auto c) { return c.name == name; });
+
+  if (it == common_settings.end()) {
+    std::string msg = "name '" + name + "' could not be found in common_settings";
+    throw std::runtime_error(msg);
+  }
+
+  return *it;
 }
