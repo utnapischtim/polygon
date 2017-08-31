@@ -17,6 +17,7 @@
 #include "TwoOptMoves.h"
 #include "RandomTwoPeasants.h"
 #include "BouncingVertices.h"
+#include "RegularPolygon.h"
 #include "random.h"
 
 #ifdef DEBUG
@@ -34,7 +35,8 @@ nlohmann::json pl::getListOfGenerators() {
     {{"name", "space partitioning"}, {"desc", ""}, {"key", 5}},
     // {{"name", "permute and reject"}, {"desc", ""}, {"key", 6}},
     {{"name", "random"}, {"desc", ""}, {"key", 7}},
-    {{"name", "bouncing vertices"}, {"desc", ""}, {"key", 8}}
+    {{"name", "bouncing vertices"}, {"desc", ""}, {"key", 8}},
+    {{"name", "regular polygon"}, {"desc", ""}, {"key", 9}}
   };
 
   return obj;
@@ -95,13 +97,18 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
 #ifdef DEBUG
     point_list = pl::det::deterministic(common_settings, {});
 #else
-    point_list = pl::convexBottom(random_point_list);
+    // TODO would be nice to have a choice here!
+    //point_list = pl::convexBottom(random_point_list);
+    point_list = pl::regularPolygon(common_settings);
 #endif
 
     // remove the last point, it is the same as the beginning.
     point_list.pop_back();
 
     point_list = pl::bouncingVertices(point_list, common_settings, local_filters);
+    break;
+  case 9:
+    point_list = pl::regularPolygon(common_settings);
     break;
     // TODO
     // handle default ;)
