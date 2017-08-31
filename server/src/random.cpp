@@ -35,11 +35,17 @@ pl::PointList pl::random(pl::CommonSettingList common_settings, pl::FilterList /
   pl::PointList point_list;
   pl::CommonSetting c_s_sampling_grid, c_s_nodes;
 
-  try {
-    c_s_sampling_grid = pl::find(common_settings, "sampling grid");
-    c_s_nodes = pl::find(common_settings, "nodes");
-  } catch (const std::runtime_error error) {
-    std::string msg = std::string("essential common setting not set to generate random pointList: ") + error.what();
+  if (auto t = pl::find(common_settings, "sampling grid"))
+    c_s_sampling_grid = *t;
+  else {
+    std::string msg = std::string("essential common setting 'sampling grid' not set to generate random pointList");
+    throw std::runtime_error(msg);
+  }
+
+  if (auto t = pl::find(common_settings, "nodes"))
+    c_s_nodes = *t;
+  else {
+    std::string msg = std::string("essential common setting 'nodes not set to generate random pointList");
     throw std::runtime_error(msg);
   }
 

@@ -1,6 +1,7 @@
 #ifndef COMMONSETTINGS_H_
 #define COMMONSETTINGS_H_
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -58,7 +59,7 @@ nlohmann::json getCommonSettings();
 
 CommonSettingList createCommonSettingList(nlohmann::json common_settings);
 
-CommonSetting find(CommonSettingList common_settings, std::string name);
+std::optional<CommonSetting> find(CommonSettingList common_settings, std::string name);
 
 }
 

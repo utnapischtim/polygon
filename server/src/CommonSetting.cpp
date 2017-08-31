@@ -1,3 +1,4 @@
+#include <optional>
 #include <vector>
 
 #include "json.hpp"
@@ -9,7 +10,8 @@ nlohmann::json pl::getCommonSettings() {
     {{"name", "nodes"}, {"desc", ""}, {"key", 0}, {"type", "number"}, {"val", "100"}},
     {{"name", "sampling grid"}, {"desc", ""}, {"key", 1}, {"type", "text"}, {"val", "1500x800"}},
     {{"name", "phases"}, {"desc", ""}, {"key", 2}, {"type", "number"}, {"val", "10"}},
-    {{"name", "radius"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"val", "60"}}
+    {{"name", "radius"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"val", "60"}},
+    {{"name", "segment length"}, {"desc", ""}, {"key", 4}, {"type", "number"}, {"val", "20"}}
   };
 
   return obj;
@@ -24,12 +26,13 @@ pl::CommonSettingList pl::createCommonSettingList(nlohmann::json common_settings
   return common_setting_list;
 }
 
-pl::CommonSetting pl::find(pl::CommonSettingList common_settings, std::string name) {
+std::optional<pl::CommonSetting> pl::find(pl::CommonSettingList common_settings, std::string name) {
   auto it = std::find_if(common_settings.begin(), common_settings.end(), [&](auto c) { return c.name == name; });
 
   if (it == common_settings.end()) {
-    std::string msg = "name '" + name + "' could not be found in common_settings";
-    throw std::runtime_error(msg);
+    // std::string msg = "name '" + name + "' could not be found in common_settings";
+    // throw std::runtime_error(msg);
+    return {};
   }
 
   return *it;

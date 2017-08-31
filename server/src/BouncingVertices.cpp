@@ -1,6 +1,8 @@
+#include <tuple>
 #include <limits>
 #include <cstdlib>
 #include <iterator>
+#include <vector>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -13,6 +15,7 @@
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 static std::vector<cgal::Segment_2>::iterator next(std::vector<cgal::Segment_2> &segments, const std::vector<cgal::Segment_2>::iterator &it);
+static std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList &common_settings);
 
 pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
   pl::PointList final_list;
@@ -28,22 +31,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   // close the polygon
   segments.push_back({segments[segments.size() - 1].target(), segments[0].source()});
 
-  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius;
-
-  try {
-    c_s_sampling_grid= pl::find(common_settings, "sampling grid");
-    c_s_phases = pl::find(common_settings, "phases");
-    c_s_radius = pl::find(common_settings, "radius");
-  } catch (const std::runtime_error error) {
-    std::string msg = std::string("essential common setting not set for BouncingVertices: ") + error.what();
-    throw std::runtime_error(msg);
-  }
-
-  // TODO:
-  // make it robust!
-  pl::SamplingGrid sampling_grid(c_s_sampling_grid);
-  unsigned phases = std::stoi(c_s_phases.val);
-  double radius = std::stod(c_s_radius.val);
+  auto [sampling_grid, phases, radius] = init(common_settings);
 
   for (size_t i = 0; i < phases; ++i) {
     // not use next or prev because this would cause a endles loop
@@ -124,4 +112,35 @@ std::vector<cgal::Segment_2>::iterator next(std::vector<cgal::Segment_2> &segmen
     it_n = segments.begin();
 
   return it_n;
+}
+
+std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList &common_settings) {
+    pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius;
+
+  if (auto t = pl::find(common_settings, "sampling grid"))
+    c_s_sampling_grid = *t;
+  else {
+    std::string msg = std::string("essential common setting 'sampling grid' not set to generate random pointList");
+    throw std::runtime_error(msg);
+  }
+
+  if (auto t = pl::find(common_settings, "nodes"))
+    c_s_phases = *t;
+  else {
+    std::string msg = std::string("essential common setting 'nodes' not set to generate random pointList");
+    throw std::runtime_error(msg);
+  }
+
+  if (auto t = pl::find(common_settings, "radius"))
+    c_s_radius = *t;
+  else
+    c_s_radius = pl::CommonSetting("radius", "", 3, "number", "60");
+
+  // TODO:
+  // make it robust!
+  pl::SamplingGrid sampling_grid(c_s_sampling_grid);
+  unsigned phases = std::stoi(c_s_phases.val);
+  double radius = std::stod(c_s_radius.val);
+
+  return {sampling_grid, phases, radius};
 }
