@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <tuple>
 
@@ -39,6 +40,10 @@ pl::PointList pl::regularPolygon(const pl::CommonSettingList &common_settings) {
 
     final_list.push_back({x, y});
   }
+
+  // reverse it, to be in same order as the other algorithm, which
+  // build there polygon in clockwise direction
+  std::reverse(final_list.begin(), final_list.end());
 
   final_list.push_back(final_list[0]);
 
