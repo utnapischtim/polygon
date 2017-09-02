@@ -5,10 +5,14 @@
 #include <string>
 #include <vector>
 
-#include "json.hpp"
-#include "easylogging++.h"
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
+#include "json.hpp"
+
+#include "Point.h"
 #include "utilities.h"
+
+using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 namespace pl {
 
@@ -50,6 +54,10 @@ struct SamplingGrid {
     width = std::stoi(t[0]);
     height = std::stoi(t[1]);
   }
+
+  bool isOutOfArea(const cgal::Point_2 p) {
+    return p.x() < 0 || width < p.x() || p.y() < 0 || height < p.y();
+  }
 };
 
 
@@ -59,7 +67,7 @@ nlohmann::json getCommonSettings();
 
 CommonSettingList createCommonSettingList(nlohmann::json common_settings);
 
-std::optional<CommonSetting> find(CommonSettingList common_settings, std::string name);
+std::optional<CommonSetting> find(const CommonSettingList &common_settings, std::string name);
 
 }
 

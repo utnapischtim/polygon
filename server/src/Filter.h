@@ -17,15 +17,14 @@ struct Filter {
   std::string desc;
   int key;
   std::string type;
-  std::string art;
   int val;
 
-  Filter(std::string n, std::string d, int k, std::string t, std::string a, int v)
-    : name(n), desc(d), key(k), type(t), art(a), val(v)
+  Filter(std::string n, std::string d, int k, std::string t, int v)
+    : name(n), desc(d), key(k), type(t), val(v)
     {}
 
   Filter(nlohmann::json obj)
-    : Filter(obj["name"], obj["desc"], obj["key"], obj["type"], obj["art"], obj["val"])
+    : Filter(obj["name"], obj["desc"], obj["key"], obj["type"], obj["val"])
     {}
 };
 
@@ -35,7 +34,7 @@ FilterList createFilterList(nlohmann::json activated_filters);
 
 nlohmann::json getListOfFilters();
 
-Filter find(FilterList filters, std::string name);
+std::optional<Filter> find(const FilterList &filters, std::string name);
 
 }
 

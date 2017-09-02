@@ -26,7 +26,7 @@ pl::CommonSettingList pl::createCommonSettingList(nlohmann::json common_settings
   return common_setting_list;
 }
 
-std::optional<pl::CommonSetting> pl::find(pl::CommonSettingList common_settings, std::string name) {
+std::optional<pl::CommonSetting> pl::find(const pl::CommonSettingList &common_settings, std::string name) {
   auto it = std::find_if(common_settings.begin(), common_settings.end(), [&](auto c) { return c.name == name; });
 
   if (it == common_settings.end()) {
