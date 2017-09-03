@@ -49,7 +49,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
 
   // if there is a chain, then above number list should be overriden
 
-  for (size_t i = 0; i < phases; ++i) {
+  for (size_t phase = 0; phase < phases; ++phase) {
     // not use next or prev because this would cause a endles loop
     for (auto [sit, k] = std::tuple{segments.begin(), 0}; sit != segments.end(); ++sit, ++k) {
       bool
@@ -117,9 +117,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
 
         // additional filters
         if (!outside_boundary_box && !intersection_occur) {
-
           if (convex_filter) {
-
             bool next_angle_still_convex = true;
             if (int l = (k+1 == static_cast<int>(N) ? 0 : k+1); convex_point_vec[l]) {
               auto sitnn = next(segments, sitn);
@@ -147,10 +145,28 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
               convex_flag = true;
           }
 
-          if (reflex_flag)
-            reflex_flag = CGAL::angle(e_1.source(), shifted_point, e_2.source()) != CGAL::ACUTE  || !CGAL::left_turn(e_1.source(), shifted_point, e_2.source());
+          if (reflex_filter) {
+            // not look in front if the phase is equal to 0 because it
+            // could not be a reflex point. because the init algorithm
+            // is the regular n-gon algorithm
+            bool next_angle_still_reflex = true;
+            if (int l = (k+1 == static_cast<int>(N) ? 0 : k+1); 0 < phase && reflex_point_vec[l]) {
+              auto sitnn = next(segments, sitn);
+              next_angle_still_reflex = CGAL::angle(shifted_point, sitn->target(), sitnn->target()) == CGAL::ACUTE && CGAL::left_turn(shifted_point, sitn->target(), sitnn->target());
+            }
 
+            bool prev_angle_still_reflex = true;
+            if (size_t l = (k == 0 ? N : k); next_angle_still_reflex && reflex_point_vec[l-1]) {
+              auto sitp = prev(segments, sit);
+              prev_angle_still_reflex = CGAL::angle(sitp->source(), sitp->target(), shifted_point) == CGAL::ACUTE && CGAL::left_turn(sitp->source(), sitp->target(), shifted_point);
+            }
 
+            if (prev_angle_still_reflex && next_angle_still_reflex && reflex_flag)
+              reflex_flag = CGAL::angle(e_1.source(), shifted_point, e_2.target()) != CGAL::ACUTE  || !CGAL::left_turn(e_1.source(), shifted_point, e_2.target());
+
+            if ((!prev_angle_still_reflex || !next_angle_still_reflex) && !reflex_flag)
+              reflex_flag = true;
+          }
         }
       } while (outside_boundary_box || intersection_occur || convex_flag || reflex_flag);
 
