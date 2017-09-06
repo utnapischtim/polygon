@@ -22,18 +22,18 @@ LDFLAGS = -lboost_system \
           -lpthread -DELP_THREAD_SAFE \
           -lCGAL \
           -lgmp \
-          lib/opencv2/libopencv_core.so.$(OPENCV_VERSION)
+          -ldocopt
 
 # -isystem instead of -I to supress warnings from this headers
 INCLUDE_DIRS = -isystem./lib/Catch/single_include \
                -isystem./lib/json/src \
                -isystem./lib/easyloggingpp/src \
                -isystem./lib/websocketpp \
-               -isystem./lib/ \
+               -isystem./lib/docopt \
                -isystem./src/
 
-LIB_DIRS = -Llib/opencv2/ \
-           -Wl,-rpath=lib/opencv2/
+# LIB_DIRS = -Llib/docopt \
+#            -Wl,-rpath=lib/docopt
 
 PROCESS = polygon
 BIN_DIR = bin/
@@ -64,7 +64,6 @@ DEPEND  := $(CXX) -MM $(CPPFLAGS) $(INCLUDE_DIRS)
 LINK    := $(CXX) $(CPPFLAGS)
 
 CXX_COMPILER := $(shell command -v $(CXX) 2> /dev/null)
-CONFIGURE_OPENCV2=cmake -DWITH_1394=OFF -DWITH_AVFOUNDATION=OFF -DWITH_CARBON=OFF -DWITH_CAROTENE=OFF -DWITH_CPUFEATURES=OFF -DWITH_VTK=OFF -DWITH_CUDA=OFF -DWITH_CUFFT=OFF -DWITH_CUBLAS=OFF -DWITH_NVCUVID=OFF -DWITH_EIGEN=OFF -DWITH_VFW=OFF -DWITH_FFMPEG=OFF -DWITH_GSTREAMER=OFF -DWITH_GSTREAMER_0_10=OFF -DWITH_GTK=OFF -DWITH_GTK_2_X=OFF -DWITH_IPP=OFF -DWITH_HALIDE=OFF -DWITH_JASPER=OFF -DWITH_JPEG=OFF -DWITH_WEBP=OFF -DWITH_OPENEXR=OFF -DWITH_OPENGL=OFF -DWITH_OPENVX=OFF -DWITH_OPENNI=OFF -DWITH_OPENNI2=OFF -DWITH_PNG=OFF -DWITH_GDCM=OFF -DWITH_PVAPI=OFF -DWITH_GIGEAPI=OFF -DWITH_ARAVIS=OFF -DWITH_QT=OFF -DWITH_WIN32UI=OFF -DWITH_QUICKTIME=OFF -DWITH_QTKIT=OFF -DWITH_TBB=OFF -DWITH_OPENMP=OFF -DWITH_CSTRIPES=OFF -DWITH_PTHREADS_PF=OFF -DWITH_TIFF=OFF -DWITH_UNICAP=OFF -DWITH_V4L=OFF -DWITH_LIBV4L=OFF -DWITH_DSHOW=OFF -DWITH_MSMF=OFF -DWITH_XIMEA=OFF -DWITH_XINE=OFF -DWITH_CLP=OFF -DWITH_OPENCL=OFF -DWITH_OPENCL_SVM=OFF -DWITH_OPENCLAMDFFT=OFF -DWITH_OPENCLAMDBLAS=OFF -DWITH_DIRECTX=OFF -DWITH_INTELPERC=OFF -DWITH_IPP_A=OFF -DWITH_MATLAB=OFF -DWITH_VA=OFF -DWITH_VA_INTEL=OFF -DWITH_MFX=OFF -DWITH_GDAL=OFF -DWITH_GPHOTO2=OFF -DWITH_LAPACK=OFF -DWITH_ITT=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_opencv_apps=OFF -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_DOCS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_PACKAGE=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_TESTS=OFF -DBUILD_WITH_DEBUG_INFO=OFF -DBUILD_WITH_STATIC_CRT=OFF -DBUILD_WITH_DYNAMIC_IPP=OFF -DBUILD_FAT_JAVA_LIB=OFF -DBUILD_ANDROID_SERVICE=OFF -DBUILD_CUDA_STUBS=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_java=OFF -DBUILD_opencv_calib3d=OFF -DBUILD_opencv_cudaarithm=OFF -DBUILD_opencv_cudabgsegm=OFF -DBUILD_opencv_cudacodec=OFF -DBUILD_opencv_cudafeatures2d=OFF -DBUILD_opencv_cudafilters=OFF -DBUILD_opencv_cudaimgproc=OFF -DBUILD_opencv_cudalegacy=OFF -DBUILD_opencv_cudaobjdetect=OFF -DBUILD_opencv_cudaoptflow=OFF -DBUILD_opencv_cudastereo=OFF -DBUILD_opencv_cudawarping=OFF -DBUILD_opencv_cudev=OFF -DBUILD_opencv_features2d=OFF -DBUILD_opencv_flann=OFF -DBUILD_opencv_highgui=OFF -DBUILD_opencv_imgcodecs=OFF -DBUILD_opencv_imgproc=OFF -DBUILD_opencv_java=OFF -DBUILD_opencv_ml=OFF -DBUILD_opencv_objdetect=OFF -DBUILD_opencv_photo=OFF -DBUILD_opencv_python=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_shape=OFF -DBUILD_opencv_stitching=OFF -DBUILD_opencv_superres=OFF -DBUILD_opencv_ts=OFF -DBUILD_opencv_video=OFF -DBUILD_opencv_videoio=OFF -DBUILD_opencv_videostab=OFF -DBUILD_opencv_viz=OFF -DBUILD_opencv_world=OFF
 
 # Delete the default suffixes
 .SUFFIXES:
@@ -119,7 +118,7 @@ init: COMPILER
 	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
 	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
 	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd easyloggingpp/ && git checkout 9.89
-	test ! -d lib/opencv2 && cd lib/ && git clone git://github.com/opencv/opencv && cd opencv/ && git checkout $(OPENCV_VERSION) && export CXX=$(CXX_COMPILER) && eval $(CONFIGURE_OPENCV2) && make && mkdir ../opencv2 && cp -r modules/core/include/opencv2/core/ ../opencv2/ && cp modules/core/include/opencv2/core.hpp ../opencv2/core.hpp && cp opencv2/opencv_modules.hpp ../opencv2/ && cp lib/libopencv_core.so.$(OPENCV_VERSION) ../opencv2/libopencv_core.so.$(OPENCV_VERSION) && cd ../opencv2 && ln -s libopencv_core.so.3.2.0 libopencv_core.so.3.2
+	test ! -d lib/docopt && cd lib/ && git clone git://github.com/docopt/docopt.cpp docopt && cd docopt/ && cmake . && make
 
 COMPILER:
 ifndef CXX_COMPILER

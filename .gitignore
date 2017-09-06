@@ -1,5 +1,7 @@
-server/bin/*
+server/bin/polygon
+server/bin/tests
 server/build/*
 server/lib/*
 server/logs/*
+server/*.dat
 

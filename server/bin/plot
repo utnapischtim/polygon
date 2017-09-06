@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ "$1" == "gnuplot" ]; then
+  gnuplot -persist <<-EOF
+    set title "plot the polygon"
+    plot "$2" using 1:2:(sprintf("(%d,%d)", \$1, \$2)) with labels notitle, "$2" with lines
+EOF
+fi

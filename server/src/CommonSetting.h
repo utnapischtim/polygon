@@ -4,10 +4,12 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include "json.hpp"
+#include "docopt.h"
 
 #include "Point.h"
 #include "utilities.h"
@@ -21,6 +23,7 @@ namespace pl {
 // depending of the type of the commonSetting writen in
 // getCommonSetings
 struct CommonSetting {
+  std::string arg;
   std::string name;
   std::string desc;
   int key;
@@ -28,15 +31,19 @@ struct CommonSetting {
   std::string val;
 
   CommonSetting()
-    : name{}, desc{}, key{}, type{}, val{}
+    : arg{}, name{}, desc{}, key{}, type{}, val{}
     {}
 
   CommonSetting(std::string n, std::string d, int k, std::string t, std::string v)
-    : name(n), desc(d), key(k), type(t), val(v)
+    : arg(""), name(n), desc(d), key(k), type(t), val(v)
+    {}
+
+  CommonSetting(std::string a, std::string n, std::string d, int k, std::string t, std::string v)
+    : arg(a), name(n), desc(d), key(k), type(t), val(v)
     {}
 
   CommonSetting(nlohmann::json obj)
-    : CommonSetting(obj["name"], obj["desc"], obj["key"], obj["type"], obj["val"])
+    : CommonSetting(obj["arg"], obj["name"], obj["desc"], obj["key"], obj["type"], obj["val"])
     {}
 };
 
@@ -64,8 +71,10 @@ struct SamplingGrid {
 using CommonSettingList = std::vector<CommonSetting>;
 
 nlohmann::json getCommonSettings();
+void printCommonSettings();
 
 CommonSettingList createCommonSettingList(nlohmann::json common_settings);
+CommonSettingList createCommonSettingList(const std::map<std::string, docopt::value> &args);
 
 std::optional<CommonSetting> find(const CommonSettingList &common_settings, std::string name);
 

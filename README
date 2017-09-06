@@ -3,9 +3,7 @@
 * build
   make server-init
   NOTE: catch, websocketpp and json are header libraries and cloned
-  from github. opencv2 has to be compiled another place for the
-  moment. it is necessary to copy core/ core.hpp and libopencv
-  _core.so.3.1.0 to the opencv2 directory created in lib/ (notenote: this is done by the makefile)
+  from github.
 
   make server-build
 

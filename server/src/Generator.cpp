@@ -1,8 +1,11 @@
+#include <iostream>
 #include <algorithm>
 #include <vector>
 #include <random>
 #include <list>
 #include <cstdlib>
+#include <string>
+#include <iomanip>
 
 #include "json.hpp"
 #include "easylogging++.h"
@@ -40,6 +43,33 @@ nlohmann::json pl::getListOfGenerators() {
   };
 
   return obj;
+}
+
+void pl::printGenerators() {
+  nlohmann::json generators = pl::getListOfGenerators();
+
+  size_t max_length_name = 0;
+
+  for (auto generator : generators)
+    if (size_t length = generator["name"].get<std::string>().length(); max_length_name < length)
+      max_length_name = length;
+
+  std::cout << "max_length_name : " << max_length_name << "\n";
+
+  size_t fill_length = max_length_name + 4;
+
+  std::cout << "list of generators\n";
+  std::cout << std::setw(fill_length) << "name"
+            << std::setw(5) << "key"
+            << std::setw(5) << "desc" << "\n";
+
+  for (auto generator : generators) {
+    std::string name = generator["name"].get<std::string>();
+
+    std::cout << std::setw(fill_length) << name
+              << std::setw(5) << generator["key"].get<int>()
+              << std::setw(5) << generator["desc"].get<std::string>() << "\n";
+  }
 }
 
 pl::Generator pl::createGenerator(nlohmann::json obj) {

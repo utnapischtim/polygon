@@ -24,10 +24,14 @@ struct Generator {
   Generator(nlohmann::json obj)
     : Generator(obj["name"], obj["desc"], obj["key"])
     {}
+  Generator(int k)
+    : Generator("", "", k)
+    {}
 };
 
 
 nlohmann::json getListOfGenerators();
+void printGenerators();
 Generator createGenerator(nlohmann::json obj);
 
 PointList generatePointList(Generator generator, CommonSettingList common_settings, FilterList local_filters);
