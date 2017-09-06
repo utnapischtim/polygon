@@ -32,8 +32,8 @@ INCLUDE_DIRS = -isystem./lib/Catch/single_include \
                -isystem./lib/docopt \
                -isystem./src/
 
-# LIB_DIRS = -Llib/docopt \
-#            -Wl,-rpath=lib/docopt
+LIB_DIRS = -Llib/docopt \
+           -Wl,-rpath=lib/docopt
 
 PROCESS = polygon
 BIN_DIR = bin/
