@@ -38,6 +38,10 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
 
   // if reflex: choose random which point should transform to reflex,
   // choose not the same, as above!
+  // TODO:
+  // there are more conditions for the filter. because if there
+  // exists a convex point between two reflex points, the reflex point
+  // could not be fulfiled or vis versa.
   if (reflex_filter = pl::find(filters, "reflex points"))
     for (int i = 0; i < (*reflex_filter).val; ++i) {
       int random_val = pl::randomValueOfRange(0, N);
@@ -79,10 +83,10 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
         // also set the new source of the next segment
         cgal::Point_2 velocity = {pl::randomValueOfRange(-radius, radius), pl::randomValueOfRange(-radius, radius)};
 
-        // check if the new target of the segment is inside of the
-        // boundary box, the new source of the next segment does not
-        // have to be checked, because it is clear that if the target is
-        // inside also the next source which is equal to target is inside.
+        // check if the shifted_point of the current segment is inside
+        // of the boundary box, the shifted_point is also the source
+        // of the next segment, therefore the next segment does not
+        // have to be checked.
         shifted_point = {sit->target().x() + velocity.x(), sit->target().y() + velocity.y()};
         outside_boundary_box = sampling_grid.isOutOfArea(shifted_point);
 
@@ -103,13 +107,23 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
           // but all elements which are not e_1 respectively e_2
           //   should be checked. because if not a intersection
           //   between e_1 respectively e_2 could be overlooked
+          // ssit->target != e_1.source() is not enough, because e_1
+          //   could also lie on ssit and this is also not acceptable
+          //   therefore if those two are connected, than the
+          //   intersection_occur variable has to be set with the two
+          //   collinearity checks
+          // ssit->source != e_2.target the same as with e_1
 
           for (auto ssit = segments.begin(); ssit != segments.end() && !intersection_occur; ++ssit)
             if (*ssit != old_e_1 && *ssit != old_e_2) {
-              if (ssit->target() != e_1.source())
+              if (ssit->target() == e_1.source())
+                intersection_occur = intersection_occur || CGAL::orientation(e_1.target(), (*ssit).source(), e_1.source()) == CGAL::COLLINEAR || CGAL::orientation((*ssit).source(), e_1.target(), e_1.source()) == CGAL::COLLINEAR;
+              else
                 intersection_occur = intersection_occur || CGAL::do_intersect(*ssit, e_1);
 
-              if (ssit->source() != e_2.target())
+              if (ssit->source() == e_2.target())
+                intersection_occur = intersection_occur || CGAL::orientation(e_2.source(), e_2.target(), (*ssit).target()) == CGAL::COLLINEAR || CGAL::orientation(e_2.source(), (*ssit).target(), e_2.target()) == CGAL::COLLINEAR;
+              else
                 intersection_occur = intersection_occur || CGAL::do_intersect(*ssit, e_2);
             }
         }
