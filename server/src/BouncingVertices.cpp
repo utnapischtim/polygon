@@ -224,7 +224,7 @@ std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList 
     throw std::runtime_error(msg);
   }
 
-  if (auto t = pl::find(common_settings, "nodes"))
+  if (auto t = pl::find(common_settings, "phases"))
     c_s_phases = *t;
   else {
     std::string msg = std::string("essential common setting 'nodes' not set to generate random pointList");
