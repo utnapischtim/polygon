@@ -62,7 +62,7 @@ struct SamplingGrid {
     height = std::stoi(t[1]);
   }
 
-  bool isOutOfArea(const cgal::Point_2 p) {
+  bool isOutOfArea(const cgal::Point_2 p) const {
     return p.x() < 0 || width < p.x() || p.y() < 0 || height < p.y();
   }
 };
