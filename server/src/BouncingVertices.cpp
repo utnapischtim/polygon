@@ -82,8 +82,8 @@ static Segments::iterator prev(Segments &segments, const Segments::iterator &it)
 static std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList &common_settings);
 static Segments init(const pl::PointList &point_list);
 
-static ConvexFilter calculateConvexFilter(const pl::FilterList &filters, size_t N);
-static ReflexFilter calculateReflexFilter(const pl::FilterList &filters, size_t N);
+static ConvexFilter buildConvexFilter(const pl::FilterList &filters, size_t N);
+static ReflexFilter buildReflexFilter(const pl::FilterList &filters, size_t N);
 
 static void calculateConvexPoints(ConvexFilter &convex_filter, const ReflexFilter &/*reflex_filter*/);
 static void calculateReflexPoints(ReflexFilter &reflex_filter, Segments &segments, const pl::SamplingGrid &sampling_grid, const double radius, const ConvexFilter &convex_filter);
@@ -104,8 +104,8 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   Segments segments = init(point_list);
   auto [sampling_grid, phases, radius] = init(common_settings);
 
-  ConvexFilter convex_filter = calculateConvexFilter(filters, N);
-  ReflexFilter reflex_filter = calculateReflexFilter(filters, N);
+  ConvexFilter convex_filter = buildConvexFilter(filters, N);
+  ReflexFilter reflex_filter = buildReflexFilter(filters, N);
 
   if (convex_filter)
     calculateConvexPoints(convex_filter, reflex_filter);
@@ -236,7 +236,7 @@ Segments init(const pl::PointList &point_list) {
   return segments;
 }
 
-ConvexFilter calculateConvexFilter(const pl::FilterList &filters, size_t N) {
+ConvexFilter buildConvexFilter(const pl::FilterList &filters, size_t N) {
   // -1 means no matter what number of convex points finally appear
   int convex_points = -1;
 
@@ -250,7 +250,7 @@ ConvexFilter calculateConvexFilter(const pl::FilterList &filters, size_t N) {
   return {N, convex_points, convex_chains};
 }
 
-ReflexFilter calculateReflexFilter(const pl::FilterList &filters, size_t N) {
+ReflexFilter buildReflexFilter(const pl::FilterList &filters, size_t N) {
   int reflex_points = -1;
   if (auto reflex_point_filter = pl::find(filters, "reflex points"); reflex_point_filter)
     reflex_points = (*reflex_point_filter).val;
