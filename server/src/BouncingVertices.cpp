@@ -265,8 +265,14 @@ ReflexFilter calculateReflexFilter(const pl::FilterList &filters, size_t N) {
 // it is not necessary for the moment, that this function does use
 // reflex_filter, because this function get's called after calculateReflexPoints
 void calculateConvexPoints(ConvexFilter &convex_filter, const ReflexFilter &/*reflex_filter*/) {
-  for (int i = 0; i < convex_filter.point_max; ++i)
-    convex_filter.set(pl::randomValueOfRange(0, convex_filter.N));
+  for (int i = 0; i < convex_filter.point_max; ++i) {
+    int random_val;
+    do {
+      random_val = pl::randomValueOfRange(0, convex_filter.N);
+    } while (convex_filter.isSet(random_val));
+
+    convex_filter.set(random_val);
+  }
 }
 
 // convex_filter is used to be sure, that the reflex points are not
@@ -277,7 +283,7 @@ void calculateReflexPoints(ReflexFilter &reflex_filter, Segments &segments, cons
     int random_val;
     do {
       random_val = pl::randomValueOfRange(0, reflex_filter.N);
-    } while (convex_filter.isSet(random_val));
+    } while (convex_filter.isSet(random_val) || reflex_filter.isSet(random_val));
 
     reflex_filter.set(random_val);
   }
