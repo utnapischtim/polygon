@@ -85,8 +85,8 @@ static Segments init(const pl::PointList &point_list);
 static ConvexFilter buildConvexFilter(const pl::FilterList &filters, size_t N);
 static ReflexFilter buildReflexFilter(const pl::FilterList &filters, size_t N);
 
-static void calculateConvexPoints(ConvexFilter &convex_filter, const ReflexFilter &/*reflex_filter*/);
-static void calculateReflexPoints(ReflexFilter &reflex_filter, Segments &segments, const pl::SamplingGrid &sampling_grid, const double radius, const ConvexFilter &convex_filter);
+static void calculatePositionOfConvexPoints(ConvexFilter &convex_filter, const ReflexFilter &/*reflex_filter*/);
+static void calculatePositionOfReflexPoints(ReflexFilter &reflex_filter, Segments &segments, const pl::SamplingGrid &sampling_grid, const double radius, const ConvexFilter &convex_filter);
 
 static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit);
 
@@ -108,10 +108,10 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   ReflexFilter reflex_filter = buildReflexFilter(filters, N);
 
   if (convex_filter)
-    calculateConvexPoints(convex_filter, reflex_filter);
+    calculatePositionOfConvexPoints(convex_filter, reflex_filter);
 
   if (reflex_filter)
-    calculateReflexPoints(reflex_filter, segments, sampling_grid, radius, convex_filter);
+    calculatePositionOfReflexPoints(reflex_filter, segments, sampling_grid, radius, convex_filter);
 
   // if there is a chain, then above number list should be overriden
 
@@ -264,7 +264,7 @@ ReflexFilter buildReflexFilter(const pl::FilterList &filters, size_t N) {
 
 // it is not necessary for the moment, that this function does use
 // reflex_filter, because this function get's called after calculateReflexPoints
-void calculateConvexPoints(ConvexFilter &convex_filter, const ReflexFilter &/*reflex_filter*/) {
+void calculatePositionOfConvexPoints(ConvexFilter &convex_filter, const ReflexFilter &/*reflex_filter*/) {
   for (int i = 0; i < convex_filter.point_max; ++i) {
     int random_val;
     do {
@@ -278,7 +278,7 @@ void calculateConvexPoints(ConvexFilter &convex_filter, const ReflexFilter &/*re
 // convex_filter is used to be sure, that the reflex points are not
 // set on the same index as the convex index. and that the reflex
 // points are far enough away.
-void calculateReflexPoints(ReflexFilter &reflex_filter, Segments &segments, const pl::SamplingGrid &sampling_grid, const double radius, const ConvexFilter &convex_filter) {
+void calculatePositionOfReflexPoints(ReflexFilter &reflex_filter, Segments &segments, const pl::SamplingGrid &sampling_grid, const double radius, const ConvexFilter &convex_filter) {
   for (int i = 0; i < reflex_filter.point_max; ++i) {
     int random_val;
     do {
