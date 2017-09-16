@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# from all algorithms 20 polygons with 10,50,100,500, 1000 points
+
+phase=2
+
+generators="0 2 4 5 7 8 9"
+
+
+list_of_nodes="10 50 100 500 1000"
+
+for key in $generators
+do
+  for nodes in $list_of_nodes
+  do
+    for index in {1..20}
+    do
+      ./bin/polygon --generator=$key --output-format=gnuplot --file-base=polygon-$index --nodes=$nodes --phases=$phase --output-dir=out
+    done
+  done
+done
