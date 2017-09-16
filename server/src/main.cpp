@@ -2,6 +2,7 @@
 #include <thread>
 #include <string>
 #include <csignal>
+#include <algorithm>
 
 #include "docopt.h"
 #include "easylogging++.h"
@@ -27,6 +28,7 @@ static void initWebsocketServer(int port);
 static void initWorker();
 static void terminate(int);
 static void server(docopt::Arguments &args);
+static std::string buildCustomFilename(docopt::Arguments &args);
 
 // ATTENTION
 // no empty line allowed between options, therefore no grouping possible
@@ -35,7 +37,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --segment-length=L --output-format=FORMAT --file=FILE --v=K]
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --segment-length=L --output-format=FORMAT --v=K] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
@@ -64,7 +66,8 @@ R"(polygon generation
     --radius=R                the distance to move a random point from old to new point.
                               [default: 60]
     --output-format=FORMAT    set the output format. [default: gnuplot]
-    --file=FILE               set the file. [default: STDOUT]
+    --file=FILE               set the file.
+    --file-base=FILE_BASE     set the file base. file format is base-generator-nodes.file_extension
 
     --v=K                     set the verbosity level. [default: 0]
 )";
@@ -97,7 +100,15 @@ int main(int argc, char *argv[]) {
     pl::FilterList filters = pl::createFilterList(args);
     pl::PointList list = pl::generatePointList(chosen_generator, common_settings, filters);
 
-    pl::output(list, args["--output-format"].asString(), args["--file"].asString());
+    std::string filename;
+    if (args["--file"])
+      filename = args["--file"].asString();
+    else {
+      filename = buildCustomFilename(args);
+    }
+
+
+    pl::output(list, args["--output-format"].asString(), filename);
   }
 
   return 0;
@@ -131,4 +142,21 @@ void initWorker() {
 
 void terminate(int) {
   std::terminate();
+}
+
+std::string buildCustomFilename(docopt::Arguments &args) {
+  pl::Generator generator = pl::createGenerator(args["--generator"].asLong());
+
+  std::string
+    base = args["--file-base"].asString(),
+    method = generator.name,
+    nodes = args["--nodes"].asString(),
+    file_extension;
+
+  std::replace(method.begin(), method.end(), ' ', '-');
+
+  if (args["--output-format"].asString() == "gnuplot")
+    file_extension = "dat";
+
+  return base + "-" + method + "-" + nodes + "." + file_extension;
 }

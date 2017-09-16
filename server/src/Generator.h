@@ -18,6 +18,10 @@ struct Generator {
   std::string desc;
   int key;
 
+  Generator()
+    : name{}, desc{}, key{}
+    {}
+
   Generator(std::string n, std::string d, int k)
     : name(n), desc(d), key(k)
     {}
@@ -33,6 +37,7 @@ struct Generator {
 nlohmann::json getListOfGenerators();
 void printGenerators();
 Generator createGenerator(nlohmann::json obj);
+Generator createGenerator(int key);
 
 PointList generatePointList(Generator generator, CommonSettingList common_settings, FilterList local_filters);
 

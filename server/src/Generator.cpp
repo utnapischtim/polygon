@@ -76,6 +76,17 @@ pl::Generator pl::createGenerator(nlohmann::json obj) {
   return pl::Generator(obj);
 }
 
+pl::Generator pl::createGenerator(int key) {
+  nlohmann::json generators = pl::getListOfGenerators();
+  pl::Generator generator;
+
+  for (auto const& g : generators)
+    if (g["key"] == key)
+      generator = pl::Generator(g);
+
+  return generator;
+}
+
 pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingList common_settings, pl::FilterList local_filters) {
 #ifdef DEBUG
   pl::PointList random_point_list = pl::det::deterministic(common_settings, {});
