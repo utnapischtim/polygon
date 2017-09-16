@@ -19,6 +19,7 @@ CPPFLAGS = $(CFLAGS) -g \
            -Wextra
 
 LDFLAGS = -lboost_system \
+          -lstdc++fs \
           -lpthread -DELP_THREAD_SAFE \
           -lCGAL \
           -lgmp \

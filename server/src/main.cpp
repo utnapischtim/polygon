@@ -3,6 +3,7 @@
 #include <string>
 #include <csignal>
 #include <algorithm>
+#include <experimental/filesystem>
 
 #include "docopt.h"
 #include "easylogging++.h"
@@ -18,6 +19,8 @@
 namespace docopt {
   using Arguments = std::map<std::string, docopt::value>;
 }
+
+namespace fs = std::experimental::filesystem;
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -37,7 +40,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --segment-length=L --output-format=FORMAT --v=K] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
@@ -66,8 +69,10 @@ R"(polygon generation
     --radius=R                the distance to move a random point from old to new point.
                               [default: 60]
     --output-format=FORMAT    set the output format. [default: gnuplot]
+    --output-dir=DIR          set the output dir. [default: .]
     --file=FILE               set the file.
     --file-base=FILE_BASE     set the file base. file format is base-generator-nodes.file_extension
+
 
     --v=K                     set the verbosity level. [default: 0]
 )";
@@ -94,6 +99,11 @@ int main(int argc, char *argv[]) {
     pl::printOutputFormats();
 
   else {
+    if (auto dir = fs::status(args["--output-dir"].asString()); !fs::is_directory(dir)) {
+      std::cout << "the directory given by --output-dir is not a existing directory\n";
+      return -1;
+    }
+
     // it is guaranted by docopt that --generator has a value
     pl::Generator chosen_generator = pl::Generator(args["--generator"].asLong());
     pl::CommonSettingList common_settings = pl::createCommonSettingList(args);
@@ -107,6 +117,7 @@ int main(int argc, char *argv[]) {
       filename = buildCustomFilename(args);
     }
 
+    filename = args["--output-dir"].asString() + "/" + filename;
 
     pl::output(list, args["--output-format"].asString(), filename);
   }
