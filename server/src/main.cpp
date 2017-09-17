@@ -15,6 +15,7 @@
 #include "Generator.h"
 #include "CommonSetting.h"
 #include "Output.h"
+#include "Statistics.h"
 
 namespace docopt {
   using Arguments = std::map<std::string, docopt::value>;
@@ -31,7 +32,10 @@ static void initWebsocketServer(int port);
 static void initWorker();
 static void terminate(int);
 static void server(docopt::Arguments &args);
+static void run(docopt::Arguments &args);
 static std::string buildCustomFilename(docopt::Arguments &args);
+static void collectSimpleStats(std::function<void(docopt::Arguments &)> func, docopt::Arguments &args);
+
 
 // ATTENTION
 // no empty line allowed between options, therefore no grouping possible
@@ -40,12 +44,13 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
   OPTIONS:
     -h --help                 Show this screen.
+    --server                  use the program as a server
     --port=PORT               port to run the server [default: 9000]
     --list-generator          list all generators
     --list-filter             list all filters
@@ -72,7 +77,7 @@ R"(polygon generation
     --output-dir=DIR          set the output dir. [default: .]
     --file=FILE               set the file.
     --file-base=FILE_BASE     set the file base. file format is base-generator-nodes.file_extension
-
+    --statistics              output of simple statistics.
 
     --v=K                     set the verbosity level. [default: 0]
 )";
@@ -104,25 +109,32 @@ int main(int argc, char *argv[]) {
       return -1;
     }
 
-    // it is guaranted by docopt that --generator has a value
-    pl::Generator chosen_generator = pl::Generator(args["--generator"].asLong());
-    pl::CommonSettingList common_settings = pl::createCommonSettingList(args);
-    pl::FilterList filters = pl::createFilterList(args);
-    pl::PointList list = pl::generatePointList(chosen_generator, common_settings, filters);
-
-    std::string filename;
-    if (args["--file"])
-      filename = args["--file"].asString();
-    else {
-      filename = buildCustomFilename(args);
-    }
-
-    filename = args["--output-dir"].asString() + "/" + filename;
-
-    pl::output(list, args["--output-format"].asString(), filename);
+    if (args["--statistics"].asBool())
+      collectSimpleStats(run, args);
+    else
+      run(args);
   }
 
   return 0;
+}
+
+void run(docopt::Arguments &args) {
+  // it is guaranted by docopt that --generator has a value
+  pl::Generator chosen_generator = pl::Generator(args["--generator"].asLong());
+  pl::CommonSettingList common_settings = pl::createCommonSettingList(args);
+  pl::FilterList filters = pl::createFilterList(args);
+  pl::PointList list = pl::generatePointList(chosen_generator, common_settings, filters);
+
+  std::string filename;
+  if (args["--file"])
+    filename = args["--file"].asString();
+  else {
+    filename = buildCustomFilename(args);
+  }
+
+  filename = args["--output-dir"].asString() + "/" + filename;
+
+  pl::output(list, args["--output-format"].asString(), filename);
 }
 
 void server(docopt::Arguments &args) {
@@ -170,4 +182,11 @@ std::string buildCustomFilename(docopt::Arguments &args) {
     file_extension = "dat";
 
   return base + "-" + method + "-" + nodes + "." + file_extension;
+}
+
+void collectSimpleStats(std::function<void(docopt::Arguments &)> func, docopt::Arguments &args) {
+  TIME_START
+  func(args);
+  TIME_END
+  TIME_PARSE
 }

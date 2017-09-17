@@ -19,6 +19,7 @@ LDFLAGS =
 INCLUDE_DIRS = -isystem../lib/json/src \
                -isystem../lib/easyloggingpp/src \
                -isystem../lib/websocketpp \
+               -isystem./lib/docopt \
                -isystem../lib/
 
 LIB_DIRS =
