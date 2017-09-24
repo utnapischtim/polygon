@@ -21,6 +21,7 @@
 #include "RandomTwoPeasants.h"
 #include "BouncingVertices.h"
 #include "RegularPolygon.h"
+#include "FixLocalOrientation.h"
 #include "random.h"
 
 #ifdef DEBUG
@@ -39,7 +40,8 @@ nlohmann::json pl::getListOfGenerators() {
     // {{"name", "permute and reject"}, {"desc", ""}, {"key", 6}},
     {{"name", "random"}, {"desc", ""}, {"key", 7}},
     {{"name", "bouncing vertices"}, {"desc", ""}, {"key", 8}},
-    {{"name", "regular polygon"}, {"desc", ""}, {"key", 9}}
+    {{"name", "regular polygon"}, {"desc", ""}, {"key", 9}},
+    {{"name", "fix local orientation"}, {"desc", ""}, {"key", 10}}
   };
 
   return obj;
@@ -150,6 +152,9 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     break;
   case 9:
     point_list = pl::regularPolygon(common_settings);
+    break;
+  case 10:
+    point_list = pl::fixLocalOrientation(common_settings, local_filters);
     break;
     // TODO
     // handle default ;)
