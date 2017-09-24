@@ -141,8 +141,9 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     point_list = pl::det::deterministic(common_settings, {});
 #else
     // TODO would be nice to have a choice here!
-    //point_list = pl::convexBottom(random_point_list);
-    point_list = pl::regularPolygon(common_settings);
+    // point_list = pl::convexBottom(random_point_list);
+    // point_list = pl::regularPolygon(common_settings);
+    point_list = pl::fixLocalOrientation(common_settings, local_filters);
 #endif
 
     // remove the last point, it is the same as the beginning.
