@@ -10,7 +10,7 @@
 
 static std::tuple<pl::SamplingGrid, unsigned, double, double> init(const pl::CommonSettingList &common_settings);
 
-pl::PointList pl::regularPolygon(const pl::CommonSettingList &common_settings) {
+pl::PointList pl::regularPolygon(pl::CommonSettingList &common_settings) {
   pl::PointList final_list;
 
   auto [sampling_grid, node_count, radius, segment_length] = init(common_settings);
@@ -23,6 +23,7 @@ pl::PointList pl::regularPolygon(const pl::CommonSettingList &common_settings) {
   // the center could only be placed at a position where it is enough
   // place for the radius
   pl::Point<double> center = {pl::randomValueOfRange(radius, sampling_grid.width-radius), pl::randomValueOfRange(radius, sampling_grid.height-radius)};
+  common_settings.push_back({"center", pl::to_string(center)});
 
   // the centre and the radius are also dependent from the segment
   // length, if the segment length is given, then the rest has to be
@@ -30,13 +31,17 @@ pl::PointList pl::regularPolygon(const pl::CommonSettingList &common_settings) {
 
   // https://de.wikipedia.org/wiki/Regelm%C3%A4%C3%9Figes_Polygon
 
-  double t = 0; // rotation angle
-  double m = 1.0; // winding number
-  auto w = 2 * M_PI * m/node_count; // center angle
+
+  double winding_number = 1.0;
+  double gamma = 2 * M_PI * winding_number/node_count;
+
+  // this has the effect, that the middle line of the first segment
+  // lies on the positive x-axis
+  double rotation_angle = -gamma / 2;
 
   for (size_t k = 1; k <= node_count; ++k) {
-    auto x = radius * std::cos(k*w+t) + center.x;
-    auto y = radius * std::sin(k*w+t) + center.y;
+    auto x = radius * std::cos(k * gamma + rotation_angle) + center.x;
+    auto y = radius * std::sin(k * gamma + rotation_angle) + center.y;
 
     final_list.push_back({x, y});
   }
@@ -46,7 +51,6 @@ pl::PointList pl::regularPolygon(const pl::CommonSettingList &common_settings) {
   std::reverse(final_list.begin(), final_list.end());
 
   final_list.push_back(final_list[0]);
-
 
   return final_list;
 }

@@ -34,6 +34,10 @@ struct CommonSetting {
     : arg{}, name{}, desc{}, key{}, type{}, val{}
     {}
 
+  CommonSetting(std::string n, std::string v)
+    : arg{}, name(n), desc{}, key{}, type{}, val(v)
+    {}
+
   CommonSetting(std::string n, std::string d, int k, std::string t, std::string v)
     : arg(""), name(n), desc(d), key(k), type(t), val(v)
     {}

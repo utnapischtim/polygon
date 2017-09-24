@@ -6,7 +6,7 @@
 
 namespace pl {
 
-PointList regularPolygon(const CommonSettingList &common_settings);
+PointList regularPolygon(CommonSettingList &common_settings);
 
 }
 

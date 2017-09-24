@@ -186,6 +186,11 @@ std::vector<T> &operator+=(std::vector<T> &v, Point<T> p) {
 void convert(std::vector<cgal::Point_2> &point_2_list, const PointList &point_list);
 void convert(const std::vector<cgal::Segment_2> &segments, PointList &point_list);
 
+template <typename T>
+std::string to_string(Point<T> p)  {
+  return std::to_string(p.x) + "," + std::to_string(p.y);
+}
+
 }
 
 #endif

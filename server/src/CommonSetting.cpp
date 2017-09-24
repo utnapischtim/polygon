@@ -14,7 +14,8 @@ nlohmann::json pl::getCommonSettings() {
     {{"arg", "--sampling-grid"}, {"name", "sampling grid"}, {"desc", ""}, {"key", 1}, {"type", "text"}, {"val", "1500x800"}},
     {{"arg", "--phases"}, {"name", "phases"}, {"desc", ""}, {"key", 2}, {"type", "number"}, {"val", "10"}},
     {{"arg", "--radius"}, {"name", "radius"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"val", "60"}},
-    {{"arg", "--segment-length"}, {"name", "segment length"}, {"desc", ""}, {"key", 4}, {"type", "number"}, {"val", "20"}}
+    {{"arg", "--segment-length"}, {"name", "segment length"}, {"desc", ""}, {"key", 4}, {"type", "number"}, {"val", "20"}}// ,
+    // {{"arg", "--center"}, {"name", "center"}, {"desc", ""}, {"key", 5}, {"type", "text"}, {"val", "-1,-1"}}
   };
 
   return obj;
