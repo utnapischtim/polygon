@@ -7,8 +7,6 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "easylogging++.h"
-
 #include "BouncingVertices.h"
 #include "Point.h"
 #include "CommonSetting.h"
@@ -32,14 +30,12 @@ static bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segmen
 static bool isIntersection(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, Segments &segments, const Segments::iterator &sit);
 
 pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &/*filters*/) {
-  VLOG(3) << "bouncing vertices";
   pl::PointList final_list;
 
   Segments segments = init(point_list);
   auto [sampling_grid, phases, radius] = init(common_settings);
 
   for (size_t phase = 0; phase < phases; ++phase) {
-    VLOG(3) << "  phases: " << phases;
     // not use next or prev because this would cause a endles loop
     for (auto sit = segments.begin(); sit != segments.end(); ++sit) {
       bool
@@ -51,7 +47,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
       Segments::iterator
         sitp = prev(segments, sit),
         sitn = next(segments, sit),
-        sitnn = next(segments, sitnn);
+        sitnn = next(segments, sitn);
 
       cgal::Segment_2 e_1, e_2, e_1_old = *sit, e_2_old = *sitn;
 
@@ -75,10 +71,6 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
       *sit = e_1;
       *sitn = e_2;
     }
-
-    pl::PointList list;
-    pl::convert(segments, list);
-    pl::output(list, "gnuplot", "bouncing-vertices-phases-" + std::to_string(phase) + ".dat");
   }
 
   pl::convert(segments, final_list);
