@@ -4,8 +4,6 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "easylogging++.h"
-
 #include "FixLocalOrientation.h"
 #include "RegularPolygon.h"
 #include "Point.h"
@@ -44,17 +42,14 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
     node_counts = std::stoi((*t).val);
 
   int reflex_counts = (*reflex_points).val;
-  VLOG(3) << "reflex_counts: " << reflex_counts;
 
   // the segment angle
   double gamma = 2 * M_PI * 1/node_counts;
-  VLOG(3) << "gamma: " << gamma;
 
   // calculate distance from center of the regular polygon center to
   // point K. the point for the circle center on which resides the new
   // reflex points
   cgal::Vector_2 d(radius / std::cos(gamma / 2.0), 0.0);
-  VLOG(3) << "d: " << d;
 
   // to calculate the point K the center is necessary
   pl::Point center(-1, -1);
@@ -70,12 +65,9 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
     throw std::runtime_error("center has no meaningfull value");
   }
 
-  VLOG(3) << "center: " << center;
-
   // to do this, the given regular polygon has to have a vertical
   // segment on between first and last point.
   cgal::Point_2 K(center.x + d.x(), center.y + d.y());
-  VLOG(3) << "K: " << K;
 
   std::map<int, bool> segments_used;
   for (int i = 0; i < node_counts; ++i)
@@ -91,11 +83,8 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
 
     segments_used[random_segment] = true;
 
-    VLOG(3) << "  random_segment: " << random_segment;
-
     // the rotation angle to rotate the vector from C to K = d
     double omega = gamma * random_segment;
-    VLOG(3) << "  omega: " << omega;
 
     // this rotation has to be clockwise
     CGAL::Aff_transformation_2<cgal> rotate_clockwise(CGAL::ROTATION, std::sin(-omega), std::cos(-omega));
@@ -103,13 +92,10 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
     // the random point L around which the reflex points are rotated,
     // e is the vector from center to L
     cgal::Vector_2 e = rotate_clockwise(d);
-    VLOG(3) << "  e: " << e;
     cgal::Point_2 L(center.x + e.x(), center.y + e.y());
-    VLOG(3) << "  L: " << L;
 
     // the point P is the source of the segment where L is between
     cgal::Point_2 P(point_list[random_segment].x, point_list[random_segment].y);
-    VLOG(3) << "  P: " << P;
 
     // this is necessary, because if the new segment is after one,
     // that is just processed, then the offset with final_list.begin()
@@ -118,34 +104,26 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
 
     // the vector l is the vector from L to the random point P
     cgal::Vector_2 l = P - L;
-    VLOG(3) << "  l: " << l;
 
     // choose number on reflex points to put in this segment
     int reflex_counts_for_this_run = pl::randomValueOfRange(1, reflex_counts);
-    VLOG(3) << "  reflex_counts_for_this_run: " << reflex_counts_for_this_run;
 
     reflex_counts -= reflex_counts_for_this_run;
-    VLOG(3) << "  reflex_counts: " << reflex_counts;
 
     // the angle where new points could be added
     double iota = gamma;
 
     // while number of reflex points
     while (0 < reflex_counts_for_this_run) {
-      VLOG(3) << "    iota: " << iota;
-
       // choose a random angle between 0 and iota
       double mu = pl::randomValueOfRange(0.1, iota);
-      VLOG(3) << "    mu: " << mu;
 
       // rotate clockwise around point L
       CGAL::Aff_transformation_2<cgal> rotate_clockwise_l(CGAL::ROTATION, std::sin(-mu), std::cos(-mu));
       l = rotate_clockwise_l(l);
-      VLOG(3) << "    l: " << l;
 
       // calculate next reflex point position
       cgal::Point_2 P_r = L + l;
-      VLOG(3) << "    P_r: " << P_r;
 
       // add point P_r to final_list between P and P+1
       insert_it = final_list.insert(insert_it, {P_r.x(), P_r.y()});
@@ -153,9 +131,6 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
       reflex_counts_for_this_run -= 1;
       iota -= mu;
     }
-
-
-    VLOG(3) << "-------------------------------------------";
   }
 
   final_list.push_back(final_list[0]);
