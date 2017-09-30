@@ -19,6 +19,7 @@ CPPFLAGS = $(CFLAGS) -g \
            -Wextra
 
 LDFLAGS = -lboost_system \
+          -lboost_iostreams \
           -lstdc++fs \
           -lpthread -DELP_THREAD_SAFE \
           -lCGAL \
@@ -27,6 +28,7 @@ LDFLAGS = -lboost_system \
 
 # -isystem instead of -I to supress warnings from this headers
 INCLUDE_DIRS = -isystem./lib/Catch/single_include \
+               -isystem./lib/gnuplot-iostream \
                -isystem./lib/json/src \
                -isystem./lib/easyloggingpp/src \
                -isystem./lib/websocketpp \
@@ -120,6 +122,8 @@ init: COMPILER
 	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
 	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd easyloggingpp/ && git checkout 9.89
 	test ! -d lib/docopt && cd lib/ && git clone git://github.com/docopt/docopt.cpp docopt && cd docopt/ && cmake . && make
+	test ! -d lib/gnuplot-iostream && cd lib/ && git clone git://github.com/dstahlke/gnuplot-iostream
+
 
 COMPILER:
 ifndef CXX_COMPILER

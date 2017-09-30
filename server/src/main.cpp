@@ -181,6 +181,9 @@ std::string buildCustomFilename(docopt::Arguments &args) {
   if (args["--output-format"].asString() == "gnuplot")
     file_extension = "dat";
 
+  if (args["--output-format"].asString() == "png")
+    file_extension = "png";
+
   return base + "-" + method + "-" + nodes + "." + file_extension;
 }
 

@@ -17,9 +17,10 @@ LDFLAGS =
 
 # -isystem instead of -I to supress warnings from this headers
 INCLUDE_DIRS = -isystem../lib/json/src \
+               -isystem../lib/gnuplot-iostream \
                -isystem../lib/easyloggingpp/src \
                -isystem../lib/websocketpp \
-               -isystem./lib/docopt \
+               -isystem../lib/docopt \
                -isystem../lib/
 
 LIB_DIRS =
