@@ -19,6 +19,8 @@ using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 using Segments = std::vector<cgal::Segment_2>;
 
+const size_t MAX_CYCLES = 100000;
+
 static Segments::iterator next(Segments &segments, const Segments::iterator &it);
 static Segments::iterator prev(Segments &segments, const Segments::iterator &it);
 
@@ -89,7 +91,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
         // this construct has the benefit, that the search does not
         // run in an endless loop if it not find a valid point, and
         // skip this point and redo it on the next phase
-        if (100 < count_cycles) {
+        if (MAX_CYCLES < count_cycles) {
           outside_orientation_area = false;
           out_of_angle_range = false;
           intersection_occur = false;
@@ -99,7 +101,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
 
       } while (outside_orientation_area || out_of_angle_range || intersection_occur);
 
-      if (count_cycles <= 100) {
+      if (count_cycles <= MAX_CYCLES) {
         // set the new segments;
         *sit = e_1;
         *sitn = e_2;
