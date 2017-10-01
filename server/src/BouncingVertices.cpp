@@ -44,7 +44,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   // it could be possible that in future there has to be a distinction
   // between convex and reflex orientation, but for that, the
   // insideOrientationArea has to be rewritten too!
-  bool do_orientation_filter = pl::find(filters, "reflex points").has_value();
+  bool do_orientation_filter = pl::find(filters, "reflex points").value().val > 0;
 
   // the same as do_orientation_filter
   bool do_angle_filter = pl::find(filters, "reflex angle range").has_value();
@@ -77,9 +77,11 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
         e_1 = {sit->source(), shifted_point};
         e_2 = {shifted_point, sitn->target()};
 
-        outside_orientation_area = !do_orientation_filter || !insideOrientationArea(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp);
+        if (do_orientation_filter)
+          outside_orientation_area = !insideOrientationArea(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp);
 
-        out_of_angle_range = !do_angle_filter || !insideAngleRange(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp, filters);
+        if (do_angle_filter)
+          out_of_angle_range = !insideAngleRange(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp, filters);
 
         if (!outside_orientation_area && !out_of_angle_range)
           intersection_occur = isIntersection(e_1, e_2, segments, sit);
