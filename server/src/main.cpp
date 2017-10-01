@@ -179,6 +179,8 @@ std::string buildCustomFilename(docopt::Arguments &args) {
     base = args["--file-base"].asString(),
     method = generator.name,
     nodes = args["--nodes"].asString(),
+    reflex = args["--reflex-points"].asString(),
+    convex = args["--convex-points"].asString(),
     file_extension;
 
   std::replace(method.begin(), method.end(), ' ', '-');
@@ -189,7 +191,7 @@ std::string buildCustomFilename(docopt::Arguments &args) {
   if (args["--output-format"].asString() == "png")
     file_extension = "png";
 
-  return base + "-" + method + "-" + nodes + "." + file_extension;
+  return base + "-" + method + "-" + nodes + "-" + reflex + "-" + convex + "." + file_extension;
 }
 
 void collectSimpleStats(std::function<void(docopt::Arguments &)> func, docopt::Arguments &args) {
