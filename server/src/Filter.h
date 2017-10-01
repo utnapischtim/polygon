@@ -21,9 +21,15 @@ struct Filter {
   int key;
   std::string type;
   int val;
+  int lower_bound;
+  int upper_bound;
+
+  Filter()
+    : arg{}, name{}, desc{}, key{}, type{}, val{}, lower_bound{}, upper_bound{}
+    {}
 
   Filter(std::string a, std::string n, std::string d, int k, std::string t, int v)
-    : arg(a), name(n), desc(d), key(k), type(t), val(v)
+    : arg(a), name(n), desc(d), key(k), type(t), val(v), lower_bound(0), upper_bound(0)
     {}
 
   Filter(nlohmann::json obj)

@@ -4,6 +4,7 @@
 #include <iterator>
 #include <vector>
 #include <string>
+#include <cmath>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -27,20 +28,34 @@ static Segments init(const pl::PointList &point_list);
 static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit);
 
 static bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev);
+static bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters);
 static bool isIntersection(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, Segments &segments, const Segments::iterator &sit);
 
-pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &/*filters*/) {
+static double calculateAngle(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2);
+
+pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
   pl::PointList final_list;
 
   Segments segments = init(point_list);
-  auto [sampling_grid, phases, radius] = init(common_settings);
+  auto [sampling_grid, phases, bouncing_radius] = init(common_settings);
+
+  // mainly the orientation filter is done, because of the reflex
+  // points, because they are more interessting, then convex points.
+  // it could be possible that in future there has to be a distinction
+  // between convex and reflex orientation, but for that, the
+  // insideOrientationArea has to be rewritten too!
+  bool do_orientation_filter = pl::find(filters, "reflex points").has_value();
+
+  // the same as do_orientation_filter
+  bool do_angle_filter = pl::find(filters, "reflex angle range").has_value();
 
   for (size_t phase = 0; phase < phases; ++phase) {
     // not use next or prev because this would cause a endles loop
     for (auto sit = segments.begin(); sit != segments.end(); ++sit) {
       bool
         intersection_occur = false,
-        outside_orientation_area = false;
+        outside_orientation_area = false,
+        out_of_angle_range = false;
 
       cgal::Point_2 shifted_point;
 
@@ -51,25 +66,42 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
 
       cgal::Segment_2 e_1, e_2, e_1_old = *sit, e_2_old = *sitn;
 
+      size_t count_cycles = 0;
+
       do {
         // reset to false, because point search starts new
         intersection_occur = false;
 
-        shifted_point = createPointInsideArea(sampling_grid, radius, sit);
+        shifted_point = createPointInsideArea(sampling_grid, bouncing_radius, sit);
 
         e_1 = {sit->source(), shifted_point};
         e_2 = {shifted_point, sitn->target()};
 
-        outside_orientation_area = !insideOrientationArea(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp);
+        outside_orientation_area = !do_orientation_filter || !insideOrientationArea(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp);
 
-        if (!outside_orientation_area)
+        out_of_angle_range = !do_angle_filter || !insideAngleRange(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp, filters);
+
+        if (!outside_orientation_area && !out_of_angle_range)
           intersection_occur = isIntersection(e_1, e_2, segments, sit);
 
-      } while (outside_orientation_area || intersection_occur);
+        // this construct has the benefit, that the search does not
+        // run in an endless loop if it not find a valid point, and
+        // skip this point and redo it on the next phase
+        if (100 < count_cycles) {
+          outside_orientation_area = false;
+          out_of_angle_range = false;
+          intersection_occur = false;
+        }
+        else
+          count_cycles += 1;
 
-      // set the new segments;
-      *sit = e_1;
-      *sitn = e_2;
+      } while (outside_orientation_area || out_of_angle_range || intersection_occur);
+
+      if (count_cycles <= 100) {
+        // set the new segments;
+        *sit = e_1;
+        *sitn = e_2;
+      }
     }
   }
 
@@ -98,7 +130,7 @@ Segments::iterator prev(Segments &segments, const Segments::iterator &it) {
 }
 
 std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList &common_settings) {
-    pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius;
+  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius;
 
   if (auto t = pl::find(common_settings, "sampling grid"))
     c_s_sampling_grid = *t;
@@ -114,10 +146,10 @@ std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList 
     throw std::runtime_error(msg);
   }
 
-  if (auto t = pl::find(common_settings, "radius"))
+  if (auto t = pl::find(common_settings, "bouncing_radius"))
     c_s_radius = *t;
   else
-    c_s_radius = pl::CommonSetting("radius", "", 3, "number", "60");
+    c_s_radius = pl::CommonSetting("bouncing radius", "", 3, "number", "60");
 
   // TODO:
   // make it robust!
@@ -165,6 +197,67 @@ bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_
     CGAL::orientation(prev.source(), e_1.source(), e_1.target()) == CGAL::orientation(prev.source(), e_1_old.source(), e_1_old.target()) &&
     CGAL::orientation(e_1.source(), e_1.target(), e_2.target()) == CGAL::orientation(e_1_old.source(), e_1_old.target(), e_2_old.target()) &&
     CGAL::orientation(e_2.source(), e_2.target(), next.target()) == CGAL::orientation(e_2_old.source(), e_2_old.target(), next.target());
+}
+
+bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters) {
+  bool is_inside = true;
+
+  pl::Filter reflex_angle_range, convex_angle_range;
+
+  if (auto t = pl::find(filters, "reflex angle range"))
+    reflex_angle_range = *t;
+
+  if (auto t = pl::find(filters, "convex angle range"))
+    convex_angle_range = *t;
+
+  // it could only be left or right turn, because
+  // insideOrientationArea allows only that!
+  auto isInBoundaries = [&](CGAL::Orientation orientation, double angle) {
+    double lower_bound, upper_bound;
+
+    if (orientation == CGAL::LEFT_TURN) {
+      angle += 180;
+      lower_bound = reflex_angle_range.lower_bound;
+      upper_bound = reflex_angle_range.upper_bound;
+    } else {
+      lower_bound = convex_angle_range.lower_bound;
+      upper_bound = convex_angle_range.upper_bound;
+    }
+
+    return lower_bound < angle && angle < upper_bound;
+  };
+
+  CGAL::Orientation orientation;
+  double angle;
+
+  orientation = CGAL::orientation(prev.source(), prev.target(), e_1_old.target());
+  angle = calculateAngle(prev, e_1);
+  is_inside = isInBoundaries(orientation, angle);
+
+  if (is_inside) {
+    orientation = CGAL::orientation(e_1_old.source(), e_1_old.target(), e_2_old.target());
+    angle = calculateAngle(e_1, e_2);
+    is_inside = isInBoundaries(orientation, angle);
+  }
+
+  if (is_inside) {
+    orientation = CGAL::orientation(e_2_old.source(), e_2_old.target(), next.target());
+    angle = calculateAngle(e_2, next);
+    is_inside = isInBoundaries(orientation, angle);
+  }
+
+  return is_inside;
+}
+
+double calculateAngle(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2) {
+  cgal::Vector_2
+    u = e_1.source() - e_1.target(),
+    v = e_2.target() - e_2.source();
+
+  // angle = arccos((u * v) / (||u|| * ||v||))
+  double radian_angle = std::acos((u*v) / (std::sqrt(u.squared_length()) * std::sqrt(v.squared_length())));
+
+  return (radian_angle * 180) / M_PI;
 }
 
 // *ssit != old_e_1 && *ssit != old_e_2, the new segments

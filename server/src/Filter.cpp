@@ -11,6 +11,7 @@
 
 #include "Filter.h"
 #include "Point.h"
+#include "utilities.h"
 
 nlohmann::json pl::getListOfFilters() {
   nlohmann::json obj = {
@@ -18,7 +19,9 @@ nlohmann::json pl::getListOfFilters() {
     {{"arg", "--convex-points"}, {"name", "convex points"}, {"desc", ""}, {"key", 1}, {"type", "number"}},
     {{"arg", "--reflex-chain"}, {"name", "reflex chain"}, {"desc", ""}, {"key", 2}, {"type", "number"}},
     {{"arg", "--convex-chain"}, {"name", "convex chain"}, {"desc", ""}, {"key", 3}, {"type", "number"}},
-    {{"arg", "--lights-to-illuminate"}, {"name", "lights to illuminate"}, {"desc", ""}, {"key", 4}, {"type", "number"}}
+    {{"arg", "--lights-to-illuminate"}, {"name", "lights to illuminate"}, {"desc", ""}, {"key", 4}, {"type", "number"}},
+    {{"arg", "--reflex-angle-range"}, {"name", "reflex angle range"}, {"desc", ""}, {"key", 5}, {"type", "text"}},
+    {{"arg", "--convex-angle-range"}, {"name", "convex angle range"}, {"desc", ""}, {"key", 6}, {"type", "text"}}
   };
 
   return obj;
@@ -70,7 +73,17 @@ pl::FilterList pl::createFilterList(std::map<std::string, docopt::value> args) {
 
   for (auto const& arg : args)
     if (auto it = pl::find(list, arg.first)) {
-      it->val = arg.second.asLong();
+      if (it->type == "text") {
+        // it should be .. as delimiter, but split is only implemented
+        // with char, and this is a simple
+        auto vec = pl::split(arg.second.asString(), '.');
+        it->lower_bound = std::stoi(*(vec.begin()));
+        it->upper_bound = std::stoi(*(vec.end() - 1));
+      }
+
+      else
+        it->val = arg.second.asLong();
+
       filters.push_back(*it);
     }
 

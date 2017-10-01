@@ -44,7 +44,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
@@ -66,12 +66,17 @@ R"(polygon generation
                               [default: 0]
     --convex-chain=K          the same as in --reflex-points-in-chain but with convex points.
                               [default: 0]
+    --reflex-angle-range=R    set the range of the reflex angle. the angle is interpreted as open
+                              in mathematical sense (180..360). [default: 180..360]
+    --convex-angle-range=R    set the range of the convex angle. the angle is interpreted as open
+                              in mathematical sense (0..180). [default: 0..180]
     --lights-to-illuminate=K  don't know what i meant. [default: 0]
     --nodes=NODES             how many nodes the polygon have to have. [default: 100]
     --sampling-grid=AREA      the area within the polygon could grow. [default: 1500x800]
     --segment-length=L        set the segment length. [default: 0]
     --phases=P                how many phases a random algorithm should run. [default: 10]
-    --radius=R                the distance to move a random point from old to new point.
+    --radius=R                the radius for regular polygon. [default: 60]
+    --bouncing-radius=R       the distance to move a random point from old to new point.
                               [default: 60]
     --output-format=FORMAT    set the output format. [default: gnuplot]
     --output-dir=DIR          set the output dir. [default: .]
