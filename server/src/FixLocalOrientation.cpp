@@ -37,7 +37,7 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
 
   pl::PointList point_list = final_list;
 
-  int node_counts = 0;
+  size_t node_counts = 0;
   if (auto t = pl::find(regular_polygon_settings, "nodes"))
     node_counts = std::stoi((*t).val);
 
@@ -70,8 +70,10 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
   cgal::Point_2 K(center.x + d.x(), center.y + d.y());
 
   std::map<int, bool> segments_used;
-  for (int i = 0; i < node_counts; ++i)
+  for (size_t i = 0; i < node_counts; ++i)
     segments_used[i] = false;
+
+  size_t segments_count_used = 0;
 
   // while there are reflex points to init
   while (0 < reflex_counts) {
@@ -82,6 +84,7 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
     } while (segments_used[random_segment]);
 
     segments_used[random_segment] = true;
+    segments_count_used += 1;
 
     // the rotation angle to rotate the vector from C to K = d
     double omega = gamma * random_segment;
@@ -107,6 +110,12 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
 
     // choose number on reflex points to put in this segment
     int reflex_counts_for_this_run = pl::randomValueOfRange(1, reflex_counts);
+
+    // overrule the random function, because it could be possible,
+    // that the random function does not put all possible reflex
+    // points automatically in the last segment.
+    if (segments_count_used == node_counts)
+      reflex_counts_for_this_run = reflex_counts;
 
     reflex_counts -= reflex_counts_for_this_run;
 
