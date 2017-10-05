@@ -82,6 +82,9 @@ CommonSettingList createCommonSettingList(const std::map<std::string, docopt::va
 
 std::optional<CommonSetting> find(const CommonSettingList &common_settings, std::string name);
 
+void setValue(CommonSettingList &common_settings, const CommonSetting &common_setting);
+void setValue(CommonSettingList &common_settings, const std::string name, const std::string val);
+
 }
 
 #endif

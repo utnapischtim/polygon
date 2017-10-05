@@ -39,6 +39,15 @@ pl::PointList pl::regularPolygon(pl::CommonSettingList &common_settings) {
   // lies on the positive x-axis
   double rotation_angle = -gamma / 2;
 
+  // TODO: maybe there is a better place to do that
+  // the segment length is calculated in this function, because it
+  // belongs to regularPolygon and it could be possible that this
+  // function could be extended to calculated the radius with a
+  // segment length and the node counts
+  // it is also here, because of the winding_number!!
+  segment_length = 2 * radius * std::sin(gamma/2);
+  setValue(common_settings, "segment length", std::to_string(segment_length));
+
   for (size_t k = 1; k <= node_count; ++k) {
     auto x = radius * std::cos(k * gamma + rotation_angle) + center.x;
     auto y = radius * std::sin(k * gamma + rotation_angle) + center.y;
@@ -94,4 +103,3 @@ std::tuple<pl::SamplingGrid, unsigned, double, double> init(const pl::CommonSett
 
   return {sampling_grid, node_count, radius, segment_length};
 }
-

@@ -14,9 +14,9 @@
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 static std::tuple<double> init(const pl::CommonSettingList &common_settings);
-pl::CommonSettingList buildRegularPolygonSettings(const pl::CommonSettingList &common_settings, const pl::Filter &reflex_points);
+static pl::CommonSettingList buildRegularPolygonSettings(const pl::CommonSettingList &common_settings, const pl::Filter &reflex_points);
 
-pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
+pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
   pl::PointList final_list;
 
   auto [radius] = init(common_settings);
@@ -30,6 +30,9 @@ pl::PointList pl::fixLocalOrientation(const pl::CommonSettingList &common_settin
 
   // TODO: this should be possible to regulate with a parameter
   final_list = pl::regularPolygon(regular_polygon_settings);
+
+  if (auto t = pl::find(regular_polygon_settings, "segment length"))
+    setValue(common_settings, *t);
 
   // the last element is the same as the first element, this is
   // because of closing the polygon!

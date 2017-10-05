@@ -19,7 +19,7 @@ using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 using Segments = std::vector<cgal::Segment_2>;
 
-const size_t MAX_CYCLES = 100000;
+const size_t MAX_CYCLES = 1000;
 
 static Segments::iterator next(Segments &segments, const Segments::iterator &it);
 static Segments::iterator prev(Segments &segments, const Segments::iterator &it);
@@ -150,7 +150,7 @@ std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList 
     throw std::runtime_error(msg);
   }
 
-  if (auto t = pl::find(common_settings, "bouncing_radius"))
+  if (auto t = pl::find(common_settings, "bouncing radius"))
     c_s_radius = *t;
   else
     c_s_radius = pl::CommonSetting("bouncing radius", "", 3, "number", "60");
@@ -160,6 +160,9 @@ std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList 
   pl::SamplingGrid sampling_grid(c_s_sampling_grid);
   unsigned phases = std::stoi(c_s_phases.val);
   double radius = std::stod(c_s_radius.val);
+
+  if (auto t = pl::find(common_settings, "segment length"); t && radius < 1)
+    radius = std::stod(t->val) / 2;
 
   return {sampling_grid, phases, radius};
 }

@@ -6,7 +6,7 @@
 
 namespace pl {
 
-PointList fixLocalOrientation(const CommonSettingList &common_settings, const FilterList &filters);
+PointList fixLocalOrientation(CommonSettingList &common_settings, const FilterList &filters);
 
 }
 

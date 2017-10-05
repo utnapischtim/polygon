@@ -87,3 +87,19 @@ std::optional<pl::CommonSetting> pl::find(const pl::CommonSettingList &common_se
 
   return *it;
 }
+
+void pl::setValue(pl::CommonSettingList &common_settings, const pl::CommonSetting &common_setting) {
+  pl::setValue(common_settings, common_setting.name, common_setting.val);
+}
+
+void pl::setValue(pl::CommonSettingList &common_settings, const std::string name, const std::string val) {
+  bool is_changed = false;
+  for (auto &common_setting : common_settings)
+    if (common_setting.name == name) {
+      is_changed = true;
+      common_setting.val = val;
+    }
+
+  if (!is_changed)
+    common_settings.push_back({name, val});
+}
