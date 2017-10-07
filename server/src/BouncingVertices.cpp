@@ -223,7 +223,7 @@ bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, co
     double lower_bound, upper_bound;
 
     if (orientation == CGAL::LEFT_TURN) {
-      angle += 180;
+      angle = 360 - angle;
       lower_bound = reflex_angle_range.lower_bound;
       upper_bound = reflex_angle_range.upper_bound;
     } else {
