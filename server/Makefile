@@ -139,7 +139,7 @@ clean-test:
 	$(RM) $(TEST_DEPS) $(TEST_OBJS) $(TEST_EXE) $(FLYMAKE_TEMP_FILES)
 
 $(TEST_EXE): $(TEST_OBJS)
-	@$(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS)
+	@$(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS) build/Filter.o build/utilities.o
 
 debugOut:
 	@echo 'srcs: ' $(SRCS)
