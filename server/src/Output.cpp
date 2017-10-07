@@ -28,13 +28,16 @@ void pl::output(pl::PointList point_list, std::string format, std::string filena
     for (auto point : point_list)
       image.push_back({point.x, point.y});
 
+    // '-' using 1:2:(sprintf(\"(%d,%d)\", $1, $2)) with labels notitle,
+    // gp.send1d(image); // necessary to have values for the second '-'
+
     Gnuplot gp;
     gp << "set title 'plot the polygon'\n";
     gp << "set terminal pngcairo \n";
     gp << "set output '" << filename << "'\n";
-    gp << "plot '-' using 1:2:(sprintf(\"(%d,%d)\", $1, $2)) with labels notitle, '-' with lines\n";
+    gp << "plot '-' with lines\n";
     gp.send1d(image);
-    gp.send1d(image); // necessary to have values for the second '-'
+
   }
 }
 
