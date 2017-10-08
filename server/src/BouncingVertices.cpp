@@ -223,7 +223,6 @@ bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, co
     double lower_bound, upper_bound;
 
     if (orientation == CGAL::LEFT_TURN) {
-      angle = 360 - angle;
       lower_bound = reflex_angle_range.lower_bound;
       upper_bound = reflex_angle_range.upper_bound;
     } else {
@@ -234,23 +233,33 @@ bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, co
     return lower_bound < angle && angle < upper_bound;
   };
 
-  CGAL::Orientation orientation;
-  double angle;
+  // the old_orientation is to get the correct boundaries for the new angle
+  CGAL::Orientation old_orientation;
+  double new_angle;
 
-  orientation = CGAL::orientation(prev.source(), prev.target(), e_1_old.target());
-  angle = calculateAngle(prev, e_1);
-  is_inside = isInBoundaries(orientation, angle);
+  old_orientation = CGAL::orientation(prev.source(), prev.target(), e_1_old.target());
+  new_angle = calculateAngle(prev, e_1);
+
+  // this new orientation is, to calculate the correct new angle
+  if (CGAL::left_turn(prev.source(), prev.target(), e_1.target()))
+    new_angle = 360 - new_angle;
+
+  is_inside = isInBoundaries(old_orientation, new_angle);
 
   if (is_inside) {
-    orientation = CGAL::orientation(e_1_old.source(), e_1_old.target(), e_2_old.target());
-    angle = calculateAngle(e_1, e_2);
-    is_inside = isInBoundaries(orientation, angle);
+    old_orientation = CGAL::orientation(e_1_old.source(), e_1_old.target(), e_2_old.target());
+    new_angle = calculateAngle(e_1, e_2);
+    if (CGAL::left_turn(e_1.source(), e_1.target(), e_2.target()))
+      new_angle = 360 - new_angle;
+    is_inside = isInBoundaries(old_orientation, new_angle);
   }
 
   if (is_inside) {
-    orientation = CGAL::orientation(e_2_old.source(), e_2_old.target(), next.target());
-    angle = calculateAngle(e_2, next);
-    is_inside = isInBoundaries(orientation, angle);
+    old_orientation = CGAL::orientation(e_2_old.source(), e_2_old.target(), next.target());
+    new_angle = calculateAngle(e_2, next);
+    if (CGAL::left_turn(e_2.source(), e_2.target(), next.target()))
+      new_angle = 360 - new_angle;
+    is_inside = isInBoundaries(old_orientation, new_angle);
   }
 
   return is_inside;
