@@ -2,13 +2,43 @@
 
 phases=1000
 
-for nodes in {100..200..1}
-do
-  free_nodes=$nodes-5
-  for (( reflex=1; reflex<$free_nodes; reflex++ ))
+if [ "$1" = "sequential" ]
+then
+  for nodes in {100..200..1}
   do
-    echo "nodes: $nodes, reflex: $reflex"
-    ./bin/polygon --generator=8 --nodes=$nodes --reflex-points=$reflex --convex-angle-range=80..180 --reflex-angle-range=180..300 --phases=$phases --sampling-grid=150000x80000 --radius=10000 --bouncing-radius=0 --file-base=polygon --output-format=gnuplot --output-dir=out/fix_bouncing
+    free_nodes=$nodes-5
+    for (( reflex=1; reflex<$free_nodes; reflex++ ))
+    do
+      echo "nodes: $nodes, reflex: $reflex"
+      ./bin/polygon --generator=8 \
+                    --nodes=$nodes \
+                    --reflex-points=$reflex \
+                    --convex-angle-range=80..180 \
+                    --reflex-angle-range=180..300 \
+                    --phases=$phases \
+                    --sampling-grid=150000x80000 \
+                    --radius=10000 \
+                    --bouncing-radius=0 \
+                    --file-base=polygon \
+                    --output-format=gnuplot \
+                    --output-dir=out/fix_bouncing
 
+    done
   done
-done
+elif [ "$1" = "parallel" ]
+then
+  parallel -j ${2:-4} ./bin/polygon --generator=8 \
+                                  --nodes={1} \
+                                  --reflex-points={=2 '$arg[1]-5 < $arg[2] and $job->skip();' =} \
+                                  --convex-angle-range=80..180 \
+                                  --reflex-angle-range=180..300 \
+                                  --phases=$phases \
+                                  --sampling-grid=150000x80000 \
+                                  --radius=10000 \
+                                  --bouncing-radius=0 \
+                                  --file-base=polygon \
+                                  --output-format=gnuplot \
+                                  --output-dir=out/fix_bouncing ::: $(seq 100 200) ::: $(seq 1 200)
+else
+  echo "not implemented parameter"
+fi
