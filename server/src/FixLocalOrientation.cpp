@@ -123,7 +123,7 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
     reflex_counts -= reflex_counts_for_this_run;
 
     // the angle where new points could be added
-    double iota = gamma;
+    double iota = (2*M_PI) - M_PI - gamma;
 
     // while number of reflex points
     while (0 < reflex_counts_for_this_run) {
