@@ -69,8 +69,11 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
   }
 
   // to do this, the given regular polygon has to have a vertical
-  // segment on between first and last point.
-  cgal::Point_2 K(center.x + d.x(), center.y + d.y());
+  // segment on between first and last point. this point is not
+  // necessary, because the vector d is rotated. but this comment is
+  // important because of the first sentence. this sentence says the
+  // precondition of this algorithm!
+  // cgal::Point_2 K(center.x + d.x(), center.y + d.y());
 
   std::map<int, bool> segments_used;
   for (size_t i = 0; i < node_counts; ++i)
@@ -100,12 +103,13 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
     cgal::Vector_2 e = rotate_clockwise(d);
     cgal::Point_2 L(center.x + e.x(), center.y + e.y());
 
-    // the point P is the source of the segment where L is between
+    // the point P is the target of the segment where L is between
     cgal::Point_2 P(point_list[random_segment].x, point_list[random_segment].y);
 
-    // this is necessary, because if the new segment is after one,
-    // that is just processed, then the offset with final_list.begin()
-    // + random_segment is wrong
+    // this ensures that the current segment, which could be behind
+    // a just processed segment, would be found correctly. the
+    // calculation with "final_list.begin() + random_segment" is not
+    // enough because of the added reflex nodes of those segments
     auto insert_it = std::find_if(final_list.begin(), final_list.end(), [&](auto p) { return p == P; });
 
     // the vector l is the vector from L to the random point P
@@ -145,6 +149,7 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
     }
   }
 
+  // this is necessary to close the polygon
   final_list.push_back(final_list[0]);
 
   return final_list;
