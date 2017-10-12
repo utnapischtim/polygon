@@ -129,10 +129,16 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
     // the angle where new points could be added
     double iota = (2*M_PI) - M_PI - gamma;
 
+    // it has to be one more, because there are k points, but k+1
+    // segments to add, therefore k + 1 angles
+    double mu = iota / (reflex_counts_for_this_run + 1);
+
     // while number of reflex points
     while (0 < reflex_counts_for_this_run) {
-      // choose a random angle between 0 and iota
-      double mu = pl::randomValueOfRange(0.1, iota);
+      // the angle could be calculated randomly. there is only the
+      // problem to calculate the angle randomly in such a way that
+      // reflex_counts_for_this_run + 1 angles could be calculated.
+      // the sum off all angles (mu) has to be less than iota
 
       // rotate clockwise around point L
       CGAL::Aff_transformation_2<cgal> rotate_clockwise_l(CGAL::ROTATION, std::sin(-mu), std::cos(-mu));
@@ -145,7 +151,6 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
       insert_it = final_list.insert(insert_it, {P_r.x(), P_r.y()});
 
       reflex_counts_for_this_run -= 1;
-      iota -= mu;
     }
   }
 
