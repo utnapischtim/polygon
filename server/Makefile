@@ -2,6 +2,16 @@ WS_PORT =
 
 OPENCV_VERSION=3.2.0
 
+# the problem is, with this step is, the warnings for the magick
+# headers were displayed, but those are useless for this project
+# IM_CPPFLAGS = `Magick++-config --cxxflags`
+
+IM_CPPFLAGS = -DMAGICKCORE_HDRI_ENABLE=0 \
+              -DMAGICKCORE_QUANTUM_DEPTH=16 \
+              -isystem/usr/include/ImageMagick-7
+
+IM_LDFLAGS = `Magick++-config --ldflags`
+
 # -pg removed, causing problems when compiling with g++-7.1.0
 CPPFLAGS = $(CFLAGS) -g \
            -std=c++1z \
@@ -16,7 +26,8 @@ CPPFLAGS = $(CFLAGS) -g \
            -Wall \
            -pedantic \
            -Wfatal-errors \
-           -Wextra
+           -Wextra \
+           $(IM_CPPFLAGS)
 
 LDFLAGS = -lboost_system \
           -lboost_iostreams \
@@ -24,7 +35,8 @@ LDFLAGS = -lboost_system \
           -lpthread -DELP_THREAD_SAFE \
           -lCGAL \
           -lgmp \
-          -ldocopt
+          -ldocopt \
+          $(IM_LDFLAGS)
 
 # -isystem instead of -I to supress warnings from this headers
 INCLUDE_DIRS = -isystem./lib/Catch/single_include \
@@ -150,3 +162,7 @@ debugOut:
 	@echo 'depend:       ' $(DEPEND)
 	@echo 'link:         ' $(LINK)
 	@echo 'CXX_COMPILER: ' $(CXX_COMPILER)
+	@echo 'CPPFLAGS: ' $(CPPFLAGS)
+	@echo 'LDFLAGS:  ' $(LDFLAGS)
+
+

@@ -3,12 +3,17 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <experimental/filesystem>
+
+#include <Magick++.h>
 
 #include "json.hpp"
 #include "gnuplot-iostream.h"
 
 #include "Output.h"
 #include "Point.h"
+
+namespace fs = std::experimental::filesystem;
 
 void pl::output(pl::PointList point_list, std::string format, std::string filename) {
   std::ofstream file;
@@ -37,7 +42,20 @@ void pl::output(pl::PointList point_list, std::string format, std::string filena
     gp << "set output '" << filename << "'\n";
     gp << "plot '-' with lines\n";
     gp.send1d(image);
+  }
 
+  if (format == "animation") {
+    std::vector<Magick::Image> frames;
+
+    for (auto png : fs::directory_iterator("out/animation")) {
+      Magick::Image img;
+      img.read(png.path().string());
+      img.animationDelay(100);
+      frames.push_back(img);
+      fs::remove(png.path().string());
+    }
+
+    Magick::writeImages(frames.begin(), frames.end(), filename);
   }
 }
 

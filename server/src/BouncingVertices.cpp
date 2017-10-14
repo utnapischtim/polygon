@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <Magick++.h>
 
 #include "BouncingVertices.h"
 #include "Point.h"
@@ -24,7 +25,7 @@ const size_t MAX_CYCLES = 1000;
 static Segments::iterator next(Segments &segments, const Segments::iterator &it);
 static Segments::iterator prev(Segments &segments, const Segments::iterator &it);
 
-static std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList &common_settings);
+static std::tuple<pl::SamplingGrid, unsigned, double, bool> init(const pl::CommonSettingList &common_settings);
 static Segments init(const pl::PointList &point_list);
 
 static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit);
@@ -39,7 +40,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   pl::PointList final_list;
 
   Segments segments = init(point_list);
-  auto [sampling_grid, phases, bouncing_radius] = init(common_settings);
+  auto [sampling_grid, phases, bouncing_radius, animation] = init(common_settings);
 
   // mainly the orientation filter is done, because of the reflex
   // points, because they are more interessting, then convex points.
@@ -107,6 +108,13 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
         *sitn = e_2;
       }
     }
+
+    if (animation) {
+      std::string filename = "out/animation/" + std::to_string(phase) + ".png";
+      pl::PointList list;
+      pl::convert(segments, list);
+      pl::output(list, "png", filename);
+    }
   }
 
   pl::convert(segments, final_list);
@@ -133,8 +141,8 @@ Segments::iterator prev(Segments &segments, const Segments::iterator &it) {
   return it_p;
 }
 
-std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList &common_settings) {
-  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius;
+std::tuple<pl::SamplingGrid, unsigned, double, bool> init(const pl::CommonSettingList &common_settings) {
+  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius, c_s_animation;
 
   if (auto t = pl::find(common_settings, "sampling grid"))
     c_s_sampling_grid = *t;
@@ -155,16 +163,22 @@ std::tuple<pl::SamplingGrid, unsigned, double> init(const pl::CommonSettingList 
   else
     c_s_radius = pl::CommonSetting("bouncing radius", "", 3, "number", "60");
 
+  if (auto t = pl::find(common_settings, "animation"))
+    c_s_animation = *t;
+  else
+    c_s_animation = pl::CommonSetting("animation", "", 6, "number", "0");
+
   // TODO:
   // make it robust!
   pl::SamplingGrid sampling_grid(c_s_sampling_grid);
   unsigned phases = std::stoi(c_s_phases.val);
   double radius = std::stod(c_s_radius.val);
+  bool animation = std::stoi(c_s_animation.val) == 1;
 
   if (auto t = pl::find(common_settings, "segment length"); t && radius < 1)
     radius = std::stod(t->val) / 2;
 
-  return {sampling_grid, phases, radius};
+  return {sampling_grid, phases, radius, animation};
 }
 
 Segments init(const pl::PointList &point_list) {

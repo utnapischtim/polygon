@@ -1,3 +1,8 @@
+IM_CPPFLAGS = -fopenmp \
+              -DMAGICKCORE_HDRI_ENABLE=0 \
+              -DMAGICKCORE_QUANTUM_DEPTH=16 \
+              -isystem/usr/include/ImageMagick-7
+
 CPPFLAGS = -g \
            -std=c++1z \
            -fconcepts \
@@ -11,7 +16,8 @@ CPPFLAGS = -g \
            -Wall \
            -pedantic \
            -Wfatal-errors \
-           -Wextra
+           -Wextra \
+           $(IM_CPPFLAGS)
 
 LDFLAGS =
 

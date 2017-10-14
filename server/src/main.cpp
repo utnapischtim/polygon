@@ -44,7 +44,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
@@ -83,6 +83,9 @@ R"(polygon generation
     --file=FILE               set the file.
     --file-base=FILE_BASE     set the file base. file format is base-generator-nodes.file_extension
     --statistics              output of simple statistics.
+    --animation=A             create a animation of the different phases of bouncing vertices.
+                              default is 0 for false, to start the creation set this to 1.
+                              [default: 0]
 
     --v=K                     set the verbosity level. [default: 0]
 )";
@@ -140,6 +143,13 @@ void run(docopt::Arguments &args) {
   filename = args["--output-dir"].asString() + "/" + filename;
 
   pl::output(list, args["--output-format"].asString(), filename);
+
+  // used as long for easier use in CommonSetting
+  if (args["--animation"].asLong() == 1) {
+    filename = filename.replace(filename.size() - 3, 3, "gif");
+    filename = args["--output-dir"].asString() + "/" + filename;
+    pl::output({}, "animation", filename);
+  }
 }
 
 void server(docopt::Arguments &args) {
