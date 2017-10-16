@@ -47,10 +47,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   // it could be possible that in future there has to be a distinction
   // between convex and reflex orientation, but for that, the
   // insideOrientationArea has to be rewritten too!
-  bool do_orientation_filter = pl::find(filters, "reflex points").value().val > 0;
-
-  // the same as do_orientation_filter
-  bool do_angle_filter = pl::find(filters, "reflex angle range").has_value();
+  bool do_orientation_filter = pl::find(filters, "reflex points").value().val > -1;
 
   for (size_t phase = 0; phase < phases; ++phase) {
     // not use next or prev because this would cause a endles loop
@@ -83,7 +80,10 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
         if (do_orientation_filter)
           outside_orientation_area = !insideOrientationArea(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp);
 
-        if (do_angle_filter)
+        // the angle should only be checked, if there are reflex nodes
+        // to protect and if the point is not outside of the
+        // orientation area!
+        if (do_orientation_filter && !outside_orientation_area)
           out_of_angle_range = !insideAngleRange(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp, filters);
 
         if (!outside_orientation_area && !out_of_angle_range)
