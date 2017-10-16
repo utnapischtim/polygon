@@ -31,7 +31,7 @@ static Segments init(const pl::PointList &point_list);
 static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit);
 
 static bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev);
-static bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters);
+static bool insideAngleRange(const cgal::Segment_2 &e_1_new, const cgal::Segment_2 &e_2_new, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters);
 static bool isIntersection(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, Segments &segments, const Segments::iterator &sit);
 
 static double calculateAngle(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2);
@@ -71,6 +71,8 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
       do {
         // reset to false, because point search starts new
         intersection_occur = false;
+        outside_orientation_area = false;
+        out_of_angle_range = false;
 
         shifted_point = createPointInsideArea(sampling_grid, bouncing_radius, sit);
 
@@ -83,7 +85,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
         // the angle should only be checked, if there are reflex nodes
         // to protect and if the point is not outside of the
         // orientation area!
-        if (do_orientation_filter && !outside_orientation_area)
+        if (!outside_orientation_area)
           out_of_angle_range = !insideAngleRange(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp, filters);
 
         if (!outside_orientation_area && !out_of_angle_range)
@@ -220,9 +222,7 @@ bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_
     CGAL::orientation(e_2.source(), e_2.target(), next.target()) == CGAL::orientation(e_2_old.source(), e_2_old.target(), next.target());
 }
 
-bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters) {
-  bool is_inside = true;
-
+bool insideAngleRange(const cgal::Segment_2 &e_1_new, const cgal::Segment_2 &e_2_new, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters) {
   pl::Filter reflex_angle_range, convex_angle_range;
 
   if (auto t = pl::find(filters, "reflex angle range"))
@@ -230,6 +230,8 @@ bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, co
 
   if (auto t = pl::find(filters, "convex angle range"))
     convex_angle_range = *t;
+
+  bool keep_orientation = pl::find(filters, "reflex points").value().val > -1;
 
   // it could only be left or right turn, because
   // insideOrientationArea allows only that!
@@ -247,34 +249,28 @@ bool insideAngleRange(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, co
     return lower_bound < angle && angle < upper_bound;
   };
 
-  // the old_orientation is to get the correct boundaries for the new angle
-  CGAL::Orientation old_orientation;
-  double new_angle;
+  auto isInside = [&](const cgal::Point_2 &p1, const cgal::Point_2 &p2, const cgal::Point_2 &p3, const cgal::Segment_2 &first, const cgal::Segment_2 &second) {
+    CGAL::Orientation orientation = CGAL::orientation(p1, p2, p3);
+    double angle = calculateAngle(first, second);
+    if (CGAL::left_turn(p1, p2, p3))
+      angle = 360 - angle;
+    return isInBoundaries(orientation, angle);
+  };
 
-  old_orientation = CGAL::orientation(prev.source(), prev.target(), e_1_old.target());
-  new_angle = calculateAngle(prev, e_1);
 
-  // this new orientation is, to calculate the correct new angle
-  if (CGAL::left_turn(prev.source(), prev.target(), e_1.target()))
-    new_angle = 360 - new_angle;
-
-  is_inside = isInBoundaries(old_orientation, new_angle);
-
-  if (is_inside) {
-    old_orientation = CGAL::orientation(e_1_old.source(), e_1_old.target(), e_2_old.target());
-    new_angle = calculateAngle(e_1, e_2);
-    if (CGAL::left_turn(e_1.source(), e_1.target(), e_2.target()))
-      new_angle = 360 - new_angle;
-    is_inside = isInBoundaries(old_orientation, new_angle);
+  bool is_inside;
+  cgal::Segment_2 e_1, e_2;
+  if (keep_orientation) {
+    e_1 = e_1_old;
+    e_2 = e_2_old;
+  } else {
+    e_1 = e_1_new;
+    e_2 = e_2_new;
   }
 
-  if (is_inside) {
-    old_orientation = CGAL::orientation(e_2_old.source(), e_2_old.target(), next.target());
-    new_angle = calculateAngle(e_2, next);
-    if (CGAL::left_turn(e_2.source(), e_2.target(), next.target()))
-      new_angle = 360 - new_angle;
-    is_inside = isInBoundaries(old_orientation, new_angle);
-  }
+  is_inside = isInside(prev.source(), prev.target(), e_1.target(), prev, e_1_new) &&
+              isInside(e_1.source(), e_1.target(), e_2.target(), e_1_new, e_2_new) &&
+              isInside(e_2.source(), e_2.target(), next.target(), e_2_new, next);
 
   return is_inside;
 }
