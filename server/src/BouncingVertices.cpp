@@ -115,7 +115,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
       std::string filename = "out/animation/" + std::to_string(phase) + ".png";
       pl::PointList list;
       pl::convert(segments, list);
-      pl::output(list, "png", filename);
+      pl::output(list, "png", filename, sampling_grid, phase);
     }
   }
 

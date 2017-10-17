@@ -12,10 +12,11 @@
 
 #include "Output.h"
 #include "Point.h"
+#include "CommonSetting.h"
 
 namespace fs = std::experimental::filesystem;
 
-void pl::output(pl::PointList point_list, std::string format, std::string filename) {
+void pl::output(pl::PointList point_list, std::string format, std::string filename, pl::SamplingGrid sampling_grid, int phase) {
   std::ofstream file;
 
   if (filename != "STDOUT")
@@ -38,21 +39,36 @@ void pl::output(pl::PointList point_list, std::string format, std::string filena
 
     Gnuplot gp;
     gp << "set title 'plot the polygon'\n";
-    gp << "set terminal pngcairo \n";
+    gp << "set terminal pngcairo size 1400,1000\n";
+
+    if (0 < sampling_grid.width && 0 < sampling_grid.height) {
+      gp << "set xrange [0:" << std::to_string(sampling_grid.width) << "]\n";
+      gp << "set yrange [0:" << std::to_string(sampling_grid.height) << "]\n";
+    }
+
     gp << "set output '" << filename << "'\n";
-    gp << "plot '-' with lines\n";
+    gp << "plot '-'" + (0 < phase ? " title '" + std::to_string(phase) + "'" : "") + " with lines\n";
+
     gp.send1d(image);
   }
 
   if (format == "animation") {
     std::vector<Magick::Image> frames;
+    std::vector<fs::path> pngs;
 
-    for (auto png : fs::directory_iterator("out/animation")) {
+    for (auto png : fs::directory_iterator("out/animation"))
+      pngs.push_back(png.path());
+
+    std::sort(pngs.begin(), pngs.end(), [](auto a, auto b) {
+        return std::stoi(a.filename()) < std::stoi(b.filename());
+      });
+
+    for (auto png : pngs) {
       Magick::Image img;
-      img.read(png.path().string());
+      img.read(png.string());
       img.animationDelay(100);
       frames.push_back(img);
-      fs::remove(png.path().string());
+      fs::remove(png.string());
     }
 
     Magick::writeImages(frames.begin(), frames.end(), filename);
