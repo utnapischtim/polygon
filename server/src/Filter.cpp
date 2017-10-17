@@ -21,7 +21,8 @@ nlohmann::json pl::getListOfFilters() {
     {{"arg", "--convex-chain"}, {"name", "convex chain"}, {"desc", ""}, {"key", 3}, {"type", "number"}},
     {{"arg", "--lights-to-illuminate"}, {"name", "lights to illuminate"}, {"desc", ""}, {"key", 4}, {"type", "number"}},
     {{"arg", "--reflex-angle-range"}, {"name", "reflex angle range"}, {"desc", ""}, {"key", 5}, {"type", "text"}},
-    {{"arg", "--convex-angle-range"}, {"name", "convex angle range"}, {"desc", ""}, {"key", 6}, {"type", "text"}}
+    {{"arg", "--convex-angle-range"}, {"name", "convex angle range"}, {"desc", ""}, {"key", 6}, {"type", "text"}},
+    {{"arg", "--reflex-chain-max"}, {"name", "reflex chain max"}, {"desc", ""}, {"key", 7}, {"type", "number"}}
   };
 
   return obj;

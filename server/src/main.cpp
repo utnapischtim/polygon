@@ -44,7 +44,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
@@ -66,6 +66,8 @@ R"(polygon generation
                               [default: 0]
     --convex-chain=K          the same as in --reflex-points-in-chain but with convex points.
                               [default: 0]
+    --reflex-chain-max=K      the maximal length of a chain. the default value says that there is
+                              no limit. [default: 0]
     --reflex-angle-range=R    set the range of the reflex angle. the angle is interpreted as open
                               in mathematical sense (180..360). [default: 180..360]
     --convex-angle-range=R    set the range of the convex angle. the angle is interpreted as open

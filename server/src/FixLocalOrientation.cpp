@@ -22,6 +22,7 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
   auto [radius] = init(common_settings);
 
   auto reflex_points = pl::find(filters, "reflex points");
+  auto reflex_chain_max = pl::find(filters, "reflex chain max");
 
   if (!reflex_points)
     throw std::runtime_error("no reflex points set");
@@ -45,6 +46,7 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
     node_counts = std::stoi((*t).val);
 
   int reflex_counts = (*reflex_points).val;
+  int reflex_max = (*reflex_chain_max).val;
 
   // the segment angle
   double gamma = 2 * M_PI * 1/node_counts;
@@ -85,6 +87,9 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
   while (0 < reflex_counts) {
     // the random segment, where the reflex points lies in
     int random_segment;
+
+    // this construct might look ugly and bad for performance, but
+    // it's impackt is negligibly small. 
     do {
       random_segment = pl::randomValueOfRange(0, node_counts-1);
     } while (segments_used[random_segment]);
@@ -115,8 +120,15 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
     // the vector l is the vector from L to the random point P
     cgal::Vector_2 l = P - L;
 
+    // if the reflex_chain_max is set, than is should be used to
+    // hinder that all reflex points where set into one chain. But it
+    // is not possible to protect against the possibility that the
+    // last segment takes all remaining reflex points. because if not
+    // then it would not possible to use all reflex points.
+    int max = 0 < reflex_max && reflex_max < reflex_counts ? reflex_max : reflex_counts;
+
     // choose number on reflex points to put in this segment
-    int reflex_counts_for_this_run = pl::randomValueOfRange(1, reflex_counts);
+    int reflex_counts_for_this_run = pl::randomValueOfRange(1, max);
 
     // overrule the random function, because it could be possible,
     // that the random function does not put all possible reflex
