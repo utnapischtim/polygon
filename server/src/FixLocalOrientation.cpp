@@ -16,6 +16,7 @@ using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 static std::tuple<double> init(const pl::CommonSettingList &common_settings);
 static pl::CommonSettingList buildRegularPolygonSettings(const pl::CommonSettingList &common_settings, const pl::Filter &reflex_points);
 static std::vector<int> initReflexPointsPerSegment(const int node_counts, const int reflex_counts, const int reflex_chain_max);
+static void stretch(pl::PointList &final_list, const std::vector<int> &reflex_points_per_segment, const double gamma, const double scale);
 
 pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
   pl::PointList final_list;
@@ -24,6 +25,7 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
 
   auto reflex_points = pl::find(filters, "reflex points");
   auto reflex_chain_max = pl::find(filters, "reflex chain max");
+  auto convex_stretch = pl::find(filters, "convex stretch");
 
   if (!reflex_points)
     throw std::runtime_error("no reflex points set");
@@ -75,6 +77,7 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
   }
 
   auto reflex_points_per_segment = initReflexPointsPerSegment(node_counts, reflex_counts, reflex_max);
+
 
   for (int segment_number = node_counts - 1; 0 <= segment_number; --segment_number) {
     // get number on reflex points to put in this segment
@@ -129,6 +132,10 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
       }
     }
   }
+
+  if ((*convex_stretch).val == 1)
+    stretch(final_list, reflex_points_per_segment, gamma, (*convex_stretch).val);
+
 
   // this is necessary to close the polygon
   final_list.push_back(final_list[0]);
@@ -188,4 +195,69 @@ std::vector<int> initReflexPointsPerSegment(const int node_counts, const int ref
   }
 
   return reflex_points_per_segment;
+}
+
+void stretch(pl::PointList &final_list, const std::vector<int> &reflex_points_per_segment, const double gamma, const double /*scale*/) {
+  // iterate over the 0 reflex nodes per segment to stretch those
+  // points. the call of the function right_turn on every point
+  // should not be necessary with this approach
+
+  // the convex counter holds for the target of the current segment!
+  size_t convex_counter = 0;
+  size_t pos = 0;
+
+  double kappa = M_PI - (gamma / 2);
+
+  CGAL::Aff_transformation_2<cgal> rotate_clockwise_m(CGAL::ROTATION, std::sin(-kappa), std::cos(-kappa));
+
+  // it is also possible to do this in the previous loop, but it
+  // would be more difficult to distinguish between the different
+  // deformations.
+  for (size_t segment_number = 0, size = reflex_points_per_segment.size(); segment_number < size; ++segment_number) {
+    // get number on reflex points to put in this segment
+    int reflex_counts_for_this_segment = reflex_points_per_segment[segment_number];
+
+    if (reflex_counts_for_this_segment == 0)
+      convex_counter += 1;
+
+    if (0 < reflex_counts_for_this_segment || pos == final_list.size()) {
+
+      if (1 < convex_counter) {
+
+        size_t moving_pos = pos - convex_counter;
+
+        // the pos_point_before is the last point of the final_list
+        // if moving point is 0
+        size_t pos_point_before = moving_pos == 0 ? final_list.size() - 1 : moving_pos - 1;
+
+        cgal::Point_2 P_b(final_list[pos_point_before].x, final_list[pos_point_before].y);
+
+        // the convex point before a reflex series does also has not
+        // to be moved! to ensure this the (pos - 1) is used.
+        for (; moving_pos < (pos-1); moving_pos++) {
+
+          cgal::Point_2 P_c = cgal::Point_2(final_list[moving_pos].x, final_list[moving_pos].y);
+
+          cgal::Vector_2 m = P_b - P_c;
+
+          m = rotate_clockwise_m(m);
+
+          // necessary for the next loop entry, because then the
+          // Point within the final_list has yet moved.
+          P_b = P_c;
+
+          P_c = P_c + m;
+
+          final_list[moving_pos] = pl::Point<double>(P_c.x(), P_c.y());
+
+          pos_point_before = pos_point_before == (final_list.size() - 1) ? 0 : pos_point_before + 1;
+        }
+      }
+
+      convex_counter = 0;
+    }
+
+    // the + 1 is the current convex node
+    pos += reflex_counts_for_this_segment + 1;
+  }
 }

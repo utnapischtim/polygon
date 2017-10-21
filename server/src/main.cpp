@@ -44,7 +44,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --convex-stretch=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
@@ -72,6 +72,9 @@ R"(polygon generation
                               in mathematical sense (180..360). [default: 180..360]
     --convex-angle-range=R    set the range of the convex angle. the angle is interpreted as open
                               in mathematical sense (0..180). [default: 0..180]
+    --convex-stretch=K        the value is the value to scale the vector to move out of. for the
+                              moment it is only implemented to stretch by 1. and to stretch by
+                              the segment length. [default: 0]
     --lights-to-illuminate=K  don't know what i meant. [default: 0]
     --nodes=NODES             how many nodes the polygon have to have. [default: 100]
     --sampling-grid=AREA      the area within the polygon could grow. [default: 1500x800]
