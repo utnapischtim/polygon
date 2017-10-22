@@ -26,14 +26,8 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
   pl::PointList final_list;
   pl::random_selector<> selector{};
 
-  // TODO:
-  // only necessary to not rewrite the code just implemented
-  // rewrited later
-  std::vector<cgal::Point_2> point_2_list;
-  pl::convert(point_2_list, point_list);
-
-  auto [hull, segments] = init(point_2_list);
-  size_t n = point_2_list.size();
+  auto [hull, segments] = init(point_list);
+  size_t n = point_list.size();
 
   size_t N = 0;
 
@@ -45,7 +39,7 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
     for (bool predicate = true; predicate;) {
       if (++N > 5*n)
         std::exit(-1);
-      s_k = selector(point_2_list);
+      s_k = selector(point_list);
 
       VLOG(4) << "  s_k: " << s_k;
 
@@ -60,7 +54,7 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
         // triangle of v_l, v_r and s_k. if there exists one, this is
         // the new s_k point, the checked points before have not to be
         // checked, because of ... heuristic ... lemma 2.5 page 44
-        for (auto p : point_2_list) {
+        for (auto p : point_list) {
           cgal::Triangle_2 triangle(v_l, v_r, s_k);
 
           if (triangle.bounded_side(p) == CGAL::ON_BOUNDED_SIDE) {
@@ -89,7 +83,7 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
         hull.push_back(s_k);
         hull.push_front(s_k);
 
-        removePoint(point_2_list, s_k);
+        removePoint(point_list, s_k);
 
         predicate = false;
       }
@@ -119,8 +113,8 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
   }
 
   for (auto segment : segments) {
-    auto p = segment.source();
-    final_list.push_back({p.x(), p.y()});
+    // auto p = segment.source();
+    final_list.push_back(segment.source()); //{p.x(), p.y()});
   }
   final_list.push_back(final_list[0]);
 
@@ -138,30 +132,30 @@ void removePoint(std::vector<cgal::Point_2> &point_list, cgal::Point_2 point) {
                    point_list.end());
 }
 
-std::tuple<std::deque<cgal::Point_2>, std::vector<cgal::Segment_2>> init(std::vector<cgal::Point_2> &point_2_list) {
+std::tuple<std::deque<cgal::Point_2>, std::vector<cgal::Segment_2>> init(std::vector<cgal::Point_2> &point_list) {
   VLOG(3) << "init";
   pl::random_selector<> selector{};
 
-  cgal::Point_2 s_1 = selector(point_2_list);
-  removePoint(point_2_list, s_1);
+  cgal::Point_2 s_1 = selector(point_list);
+  removePoint(point_list, s_1);
 
-  cgal::Point_2 s_2 = selector(point_2_list);
-  removePoint(point_2_list, s_2);
+  cgal::Point_2 s_2 = selector(point_list);
+  removePoint(point_list, s_2);
 
   cgal::Point_2 s_3;
 
   for (bool predicate = false; predicate;) {
-    s_3 = selector(point_2_list);
+    s_3 = selector(point_list);
     cgal::Triangle_2 triangle(s_1, s_2, s_3);
 
     predicate = predicate || triangle.is_degenerate();
 
     // points are within the triangle
-    for (const auto &p : point_2_list)
+    for (const auto &p : point_list)
       predicate = predicate || triangle.bounded_side(p) == CGAL::ON_BOUNDED_SIDE || triangle.bounded_side(p) == CGAL::ON_BOUNDARY;
   }
 
-  removePoint(point_2_list, s_3);
+  removePoint(point_list, s_3);
 
   // test! ;)
   // s_1 = {200, 200};

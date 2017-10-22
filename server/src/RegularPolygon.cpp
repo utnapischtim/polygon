@@ -2,10 +2,14 @@
 #include <cmath>
 #include <tuple>
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
 #include "RegularPolygon.h"
 #include "Point.h"
 #include "CommonSetting.h"
 #include "random.h"
+
+using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 
 static std::tuple<pl::SamplingGrid, unsigned, double, double> init(const pl::CommonSettingList &common_settings);
@@ -22,7 +26,7 @@ pl::PointList pl::regularPolygon(pl::CommonSettingList &common_settings) {
 
   // the center could only be placed at a position where it is enough
   // place for the radius
-  pl::Point<double> center = {pl::randomValueOfRange(radius, sampling_grid.width-radius), pl::randomValueOfRange(radius, sampling_grid.height-radius)};
+  cgal::Point_2 center = {pl::randomValueOfRange(radius, sampling_grid.width-radius), pl::randomValueOfRange(radius, sampling_grid.height-radius)};
   common_settings.push_back({"center", pl::to_string(center)});
 
   // the centre and the radius are also dependent from the segment
@@ -49,8 +53,8 @@ pl::PointList pl::regularPolygon(pl::CommonSettingList &common_settings) {
   setValue(common_settings, "segment length", std::to_string(segment_length));
 
   for (size_t k = 1; k <= node_count; ++k) {
-    auto x = radius * std::cos(k * gamma + rotation_angle) + center.x;
-    auto y = radius * std::sin(k * gamma + rotation_angle) + center.y;
+    auto x = radius * std::cos(k * gamma + rotation_angle) + center.x();
+    auto y = radius * std::sin(k * gamma + rotation_angle) + center.y();
 
     final_list.push_back({x, y});
   }

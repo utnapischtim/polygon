@@ -63,13 +63,13 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
   cgal::Vector_2 d(radius / std::cos(gamma / 2.0), 0.0);
 
   // to calculate the point K the center is necessary
-  pl::Point center(-1, -1);
+  cgal::Point_2 center(-1, -1);
   if (auto cs_center = pl::find(regular_polygon_settings, "center"); cs_center) {
     auto vec = pl::split((*cs_center).val, ',');
-    if (vec.size() == 2) {
-      center.x = std::stod(vec[0]);
-      center.y = std::stod(vec[1]);
-    }
+
+    if (vec.size() == 2)
+      center = cgal::Point_2(std::stod(vec[0]), std::stod(vec[1]));
+
   } else {
     // the center has to be calculated and this is not implemented for
     // the moment
@@ -93,10 +93,10 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
       // the random point L around which the reflex points are rotated,
       // e is the vector from center to L
       cgal::Vector_2 e = rotate_clockwise(d);
-      cgal::Point_2 L(center.x + e.x(), center.y + e.y());
+      cgal::Point_2 L = center + e;
 
       // the point P is the target of the segment where L is between
-      cgal::Point_2 P(point_list[segment_number].x, point_list[segment_number].y);
+      cgal::Point_2 P = point_list[segment_number]; //(point_list[segment_number].x, point_list[segment_number].y);
 
       // it is enough to calculate the it start point with
       // final_list.begin() + segment_number, because the reflex
@@ -126,7 +126,7 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
         cgal::Point_2 P_r = L + l;
 
         // add point P_r to final_list between P and P+1
-        insert_it = final_list.insert(insert_it, {P_r.x(), P_r.y()});
+        insert_it = final_list.insert(insert_it, P_r);
 
         reflex_counts_for_this_run -= 1;
       }
@@ -230,13 +230,13 @@ void stretch(pl::PointList &final_list, const std::vector<int> &reflex_points_pe
         // if moving point is 0
         size_t pos_point_before = moving_pos == 0 ? final_list.size() - 1 : moving_pos - 1;
 
-        cgal::Point_2 P_b(final_list[pos_point_before].x, final_list[pos_point_before].y);
+        cgal::Point_2 P_b = final_list[pos_point_before];
 
         // the convex point before a reflex series does also has not
         // to be moved! to ensure this the (pos - 1) is used.
         for (; moving_pos < (pos-1); moving_pos++) {
 
-          cgal::Point_2 P_c = cgal::Point_2(final_list[moving_pos].x, final_list[moving_pos].y);
+          cgal::Point_2 P_c = final_list[moving_pos];
 
           cgal::Vector_2 m = P_b - P_c;
 
@@ -248,7 +248,7 @@ void stretch(pl::PointList &final_list, const std::vector<int> &reflex_points_pe
 
           P_c = P_c + m;
 
-          final_list[moving_pos] = pl::Point<double>(P_c.x(), P_c.y());
+          final_list[moving_pos] = P_c;
 
           pos_point_before = pos_point_before == (final_list.size() - 1) ? 0 : pos_point_before + 1;
         }

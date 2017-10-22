@@ -10,16 +10,14 @@ using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 pl::PointList pl::randomTwoPeasants(pl::PointList &point_list) {
   pl::PointList final_list;
 
-  std::sort(point_list.begin(), point_list.end(), [](auto a, auto b) { return a.x < b.x; });
+  std::sort(point_list.begin(), point_list.end(), [](auto a, auto b) { return a.x() < b.x(); });
 
   auto lowest_x_point = *(point_list.begin()), highest_x_point = *(point_list.end() - 1);
-
-  cgal::Point_2 p = {lowest_x_point.x, lowest_x_point.y}, q = {highest_x_point.x, highest_x_point.y};
 
   pl::PointList upper_list, lower_list;
 
   for (auto point : point_list) {
-    auto orientation = CGAL::orientation(p, q, {point.x, point.y});
+    auto orientation = CGAL::orientation(lowest_x_point, highest_x_point, point);
 
     if (orientation == CGAL::LEFT_TURN)
       lower_list.push_back(point);

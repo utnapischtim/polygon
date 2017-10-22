@@ -4,18 +4,21 @@
 #include <cmath>
 #include <cstdlib>
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
 #include "easylogging++.h"
 
 #include "CommonSetting.h"
-#include "Line.h"
 #include "Point.h"
 #include "random.h"
 #include "SpacePartitioning.h"
 
-static void recursiveDivide(pl::PointList &S, const pl::Point<double> &s_f, const pl::Point<double> &s_l, pl::PointDList &C);
-static std::optional<pl::Point<double>> calculateRandomPoint(const pl::PointList &S, const pl::Point<double> &s_f, const pl::Point<double> &s_l);
-static std::optional<pl::Line<double>> calculateRandomLine(const pl::Point<double> &s, const pl::Point<double> &s_f, const pl::Point<double> &s_l);
-static bool areOnSameSide(const pl::Line<double> &l, const pl::Point<double> &s_f, const pl::Point<double> &s_l);
+using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
+
+static void recursiveDivide(pl::PointList &S, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l, pl::PointDList &C);
+static std::optional<cgal::Point_2> calculateRandomPoint(const pl::PointList &S, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l);
+static std::optional<cgal::Line_2> calculateRandomLine(const cgal::Point_2 &s, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l);
+static bool areOnSameSide(const cgal::Line_2 &l, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l);
 
 pl::PointList pl::spacePartitioning(pl::PointList point_list) {
   VLOG(1) << "spacePartitioning";
@@ -23,20 +26,21 @@ pl::PointList pl::spacePartitioning(pl::PointList point_list) {
   pl::PointList final_list;
   pl::random_selector<> selector{};
 
-  pl::Point<double> s_f, s_l;
+  cgal::Point_2 s_f, s_l;
   do {
     s_f = selector(point_list);
     s_l = selector(point_list);
-  } while (s_f == s_l || s_f.x > s_l.x);
+  } while (s_f == s_l || s_f.x() > s_l.x());
 
   VLOG(1) << "s_f: " << s_f << " s_l: " << s_l;
 
-  pl::Line l{s_f, s_l};
+  cgal::Line_2 l{s_f, s_l};
 
   pl::PointList S_f = {s_f, s_l}, S_l = {};
 
   for (auto p : point_list)
-    if (p < l)
+    // p < l
+    if (l.has_on_positive_side(p))
       S_f.push_back(p);
     else
       S_l.push_back(p);
@@ -70,12 +74,11 @@ pl::PointList pl::spacePartitioning(pl::PointList point_list) {
   return final_list;
 }
 
-void recursiveDivide(pl::PointList &S, const pl::Point<double> &s_f, const pl::Point<double> &s_l, pl::PointDList &C) {
+void recursiveDivide(pl::PointList &S, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l, pl::PointDList &C) {
 
   VLOG(2) << "-------------------------------------";
   VLOG(2) << " size: " << S.size();
   VLOG(2) << " s_f: " << s_f << " s_l: " << s_l;
-  VLOG(2) << " S: " << S;
 
   if (S.size() == 1) {
     VLOG(1) << " size is equal to 1 in recursiveDivide";
@@ -86,7 +89,7 @@ void recursiveDivide(pl::PointList &S, const pl::Point<double> &s_f, const pl::P
     C.push_back(s_l);
   }
   else if (S.size() == 3) {
-    pl::Point<double> s;
+    cgal::Point_2 s;
     for (auto p : S)
       if (p != s_f && p != s_l)
         s = p;
@@ -110,22 +113,22 @@ void recursiveDivide(pl::PointList &S, const pl::Point<double> &s_f, const pl::P
     pl::PointList S_f = {s.value()}, S_l = {};
 
     for (auto p : S)
-      if (p < l)
+      // p < l
+      if (l->has_on_positive_side(p))
         S_f.push_back(p);
       else
         S_l.push_back(p);
 
-
-    VLOG(2) << " S_f: " << S_f << ", S_l: " << S_l;
 
     recursiveDivide(S_f, s_f, s.value(), C);
     recursiveDivide(S_l, s.value(), s_l, C);
   }
 }
 
-std::optional<pl::Point<double>> calculateRandomPoint(const pl::PointList &S, const pl::Point<double> &s_f, const pl::Point<double> &s_l) {
+
+std::optional<cgal::Point_2> calculateRandomPoint(const pl::PointList &S, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l) {
   pl::random_selector<> selector{};
-  pl::Point<double> s;
+  cgal::Point_2 s;
 
   // implemented that way, because of the informations from
   // heuristic_for_generation_of_random_polygons.pdf page 98 second
@@ -133,7 +136,8 @@ std::optional<pl::Point<double>> calculateRandomPoint(const pl::PointList &S, co
   if (S.size() == 3) {
     auto it = std::find_if(S.begin(), S.end(), [&](auto p) { return p != s_f && p != s_l; });
     s = *it;
-    if (pl::isCollinear(s_f, s, s_l))
+
+    if (CGAL::collinear(s_f, s, s_l))
       return {};
 
   } else {
@@ -145,17 +149,17 @@ std::optional<pl::Point<double>> calculateRandomPoint(const pl::PointList &S, co
       // all conditions.
       s = selector(S);
 
-    } while (s_f == s || s == s_l || pl::isCollinear(s_f, s, s_l));
+    } while (s_f == s || s == s_l || CGAL::collinear(s_f, s, s_l));
   }
 
   return s;
 }
 
-std::optional<pl::Line<double>> calculateRandomLine(const pl::Point<double> &s, const pl::Point<double> &s_f, const pl::Point<double> &s_l) {
-  pl::Line<double> l;
+std::optional<cgal::Line_2> calculateRandomLine(const cgal::Point_2 &s, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l) {
+  cgal::Line_2 l;
 
-  double delta_x = s_l.x - s_f.x;
-  double delta_y = s_l.y - s_f.y;
+  double delta_x = s_l.x() - s_f.x();
+  double delta_y = s_l.y() - s_f.y();
 
   do {
     // implement heuristic....pdf implementation details about finding line
@@ -178,18 +182,21 @@ std::optional<pl::Line<double>> calculateRandomLine(const pl::Point<double> &s, 
       std::exit(1);
     }
 
-    pl::Point s_ = {s_f.x + x, s_f.y + y};
+    cgal::Point_2 s_ = {s_f.x() + x, s_f.y() + y};
     l = {s, s_};
 
     VLOG(3) << "  l: " << l << " s_f: " << s_f << " s_l: " << s_l;
   } while (areOnSameSide(l, s_f, s_l));
 
-  if (l < s_f)
-    l.flipDirection();
+  // l < s_f
+  if (l.has_on_positive_side(s_f))
+    l = l.opposite();
 
   return l;
 }
 
-bool areOnSameSide(const pl::Line<double> &l, const pl::Point<double> &s_f, const pl::Point<double> &s_l) {
-  return (s_f < l && s_l < l) || (l < s_f && l < s_l);
+bool areOnSameSide(const cgal::Line_2 &l, const cgal::Point_2 &s_f, const cgal::Point_2 &s_l) {
+  // (s_f < l && s_l < l) || (l < s_f && l < s_l);
+  return (l.has_on_positive_side(s_f) && l.has_on_positive_side(s_l)) || (l.has_on_negative_side(s_f) && l.has_on_negative_side(s_l));
 }
+

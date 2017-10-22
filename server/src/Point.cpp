@@ -14,23 +14,17 @@ nlohmann::json pl::to_json(pl::PointList point_list) {
   nlohmann::json obj;
 
   for (auto point : point_list)
-    obj.push_back({{"x", point.x}, {"y", point.y}});
+    obj.push_back({{"x", point.x()}, {"y", point.y()}});
 
   return obj;
-}
-
-void pl::convert(std::vector<cgal::Point_2> &point_2_list, const PointList &point_list) {
-  std::transform(point_list.begin(),
-                 point_list.end(),
-                 std::back_inserter(point_2_list),
-                 [](auto p) { return cgal::Point_2(p.x, p.y); });
 }
 
 void pl::convert(const std::vector<cgal::Segment_2> &segments, PointList &point_list) {
   std::transform(segments.begin(),
                  segments.end(),
                  std::back_inserter(point_list),
-                 [](auto &s) { return pl::Point(s.source().x(), s.source().y()); });
+                 [](auto &s) { return s.source(); });
+                 //[](auto &s) { return pl::Point(s.source().x(), s.source().y()); });
 
   point_list.push_back(point_list[0]);
 }
@@ -41,4 +35,8 @@ std::ostream &pl::operator<<(std::ostream &out, const PointList &point_list) {
     out << p;
 
   return out;
+}
+
+std::string pl::to_string(const cgal::Point_2 &p) {
+  return std::to_string(p.x()) + "," + std::to_string(p.y());
 }

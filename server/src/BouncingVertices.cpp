@@ -186,12 +186,8 @@ std::tuple<pl::SamplingGrid, unsigned, double, bool> init(const pl::CommonSettin
 Segments init(const pl::PointList &point_list) {
   Segments segments;
 
-  for (size_t i = 1, size = point_list.size(); i < size; ++i) {
-    cgal::Point_2
-      source(point_list[i - 1].x, point_list[i - 1].y),
-      target(point_list[i].x, point_list[i].y);
-    segments.push_back({source, target});
-  }
+  for (size_t i = 1, size = point_list.size(); i < size; ++i)
+    segments.push_back({point_list[i-1], point_list[i]});
 
   // close the polygon
   segments.push_back({segments[segments.size() - 1].target(), segments[0].source()});

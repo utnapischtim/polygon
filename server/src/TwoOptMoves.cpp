@@ -20,15 +20,15 @@ pl::PointList pl::twoOptMoves(pl::PointList point_list) {
   pl::PointList final_list;
   pl::random_selector<> selector{};
 
-  std::vector<cgal::Point_2> point_2_list;
-  pl::convert(point_2_list, point_list);
+  // std::vector<cgal::Point_2> point_2_list;
+  // pl::convert(point_2_list, point_list);
 
   std::vector<cgal::Segment_2> segments;
-  for (size_t i = 1, size = point_2_list.size(); i < size; ++i)
-    segments.push_back({point_2_list[i - 1], point_2_list[i]});
+  for (size_t i = 1, size = point_list.size(); i < size; ++i)
+    segments.push_back({point_list[i - 1], point_list[i]});
 
   // close the polygon
-  segments.push_back({point_2_list[point_2_list.size() - 1], point_2_list[0]});
+  segments.push_back({point_list[point_list.size() - 1], point_list[0]});
 
   auto intersection_segments = calculateIntersections(segments);
 
