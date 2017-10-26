@@ -1,10 +1,18 @@
 #!/bin/bash
 
 if [ "$1" == "gnuplot" ]; then
+  if [ "$3" == "--no-point-description" ]
+  then
+    point_description=""
+  else
+    point_description='"$2" using 1:2:(sprintf("(%d,%d)", \$1, \$2)) with labels notitle,'
+  fi
+
+
   gnuplot -persist <<-EOF
     set title "plot the polygon"
     set terminal pngcairo
     set output '$2.png'
-    plot "$2" using 1:2:(sprintf("(%d,%d)", \$1, \$2)) with labels notitle, "$2" with lines
+    plot $point_description "$2" with lines
 EOF
 fi
