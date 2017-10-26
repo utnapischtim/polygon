@@ -1,0 +1,36 @@
+#!/bin/bash
+
+operating_directory=$1
+
+command -v convert >/dev/null 2>&1 || { echo >&2 "imagemagick convert is not in path"; exit 1; }
+
+file_count=`ls ${operating_directory} | grep -P "[0-9]+\.dat" | wc -l`
+
+for ((i=0;i<$file_count;i++))
+do
+  cat ${operating_directory}/$i.dat >> ${operating_directory}/compact.dat
+
+  if [ $i -ne $(($file_count - 1)) ]
+  then
+    ## necessary to separate the blocks
+    printf "\n\n" >> ${operating_directory}/compact.dat
+  fi
+done
+
+gnuplot -persist <<-EOF
+  set title "plot the polygon"
+  set terminal pngcairo
+  stats "$operating_directory/compact.dat" nooutput
+  BLOCKS=STATS_blocks
+  set xrange[STATS_min_x:STATS_max_x]
+  set yrange[STATS_min_y:STATS_max_y]
+
+  do for [i=1:BLOCKS] {
+    outfile = sprintf('%s/%03.0f.png', "$operating_directory", i)
+    filetitle = sprintf('phase %i', i)
+    set output outfile
+    plot '$operating_directory/compact.dat' index (i-1) title filetitle with lines
+  }
+EOF
+
+convert -delay 100 -loop 0 ${operating_directory}/*.png ${operating_directory}/animated.gif
