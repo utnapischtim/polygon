@@ -101,6 +101,16 @@ int main(int argc, char *argv[]) {
 
   docopt::Arguments args = docopt::docopt(USAGE, {argv + 1, argv + argc}, true, "0.1");
 
+#ifndef MAGICK
+  if (args["--animation"].asLong() == 1) {
+    std::cout << "the animation feature is not compiled in. maybe the magick++.h "
+              << "file was not found. to compile with this feature it is "
+              << "necessary to add DEFS+=MAGICK to the make call" << "\n";
+    std::exit(-1);
+  }
+#endif
+
+
   if (args["--server"].asBool())
     server(args);
 

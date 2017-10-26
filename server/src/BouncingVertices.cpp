@@ -1,3 +1,4 @@
+#include <iostream>
 #include <tuple>
 #include <limits>
 #include <cstdlib>
@@ -7,7 +8,6 @@
 #include <cmath>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <Magick++.h>
 
 #include "BouncingVertices.h"
 #include "Point.h"
@@ -112,12 +112,20 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
     }
 
     if (animation) {
+#ifdef MAGICK
       std::string filename = "out/animation/" + std::to_string(phase) + ".png";
       pl::PointList list;
       pl::convert(segments, list);
       pl::output(list, "png", filename, sampling_grid, phase);
+#else
+      std::cout << "animation feature was not compiled in" << "\n";
+      std::exit(-1);
+#endif
     }
+
+
   }
+
 
   pl::convert(segments, final_list);
   return final_list;

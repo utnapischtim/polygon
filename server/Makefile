@@ -2,6 +2,11 @@ WS_PORT =
 
 OPENCV_VERSION=3.2.0
 
+# this could be overriden with make DEFS+=MAGICK to add automation
+# output possibility
+DEFS =
+DEFINED = $(addprefix -D, ${DEFS})
+
 # the problem is, with this step is, the warnings for the magick
 # headers were displayed, but those are useless for this project
 # IM_CPPFLAGS = `Magick++-config --cxxflags`
@@ -94,7 +99,7 @@ $(EXE): $(OBJS)
 # http://scottmcpeak.com/autodepend/autodepend.html
 $(BUILD_DIR)%.o: $(SRC_DIR)%.cpp
 	@echo "build "$(PROCESS)" file: "$<
-	@$(COMPILE) $< -o $@ $(LIB_DIRS)
+	@$(COMPILE) $< -o $@ $(LIB_DIRS) $(DEFINED)
 	@$(DEPEND)	$< > $(BUILD_DIR)$*.d
 	@mv -f $(BUILD_DIR)$*.d $(BUILD_DIR)$*.d.tmp
 	@sed -e 's|.*:|$*.o:|' < $(BUILD_DIR)$*.d.tmp > $(BUILD_DIR)$*.d

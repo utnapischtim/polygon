@@ -5,7 +5,9 @@
 #include <utility>
 #include <experimental/filesystem>
 
-#include <Magick++.h>
+#ifdef MAGICK
+#  include <Magick++.h>
+#endif
 
 #include "json.hpp"
 #include "gnuplot-iostream.h"
@@ -52,6 +54,7 @@ void pl::output(pl::PointList point_list, std::string format, std::string filena
     gp.send1d(image);
   }
 
+#ifdef MAGICK
   if (format == "animation") {
     std::vector<Magick::Image> frames;
     std::vector<fs::path> pngs;
@@ -73,6 +76,7 @@ void pl::output(pl::PointList point_list, std::string format, std::string filena
 
     Magick::writeImages(frames.begin(), frames.end(), filename);
   }
+#endif
 }
 
 void pl::printOutputFormats() {
