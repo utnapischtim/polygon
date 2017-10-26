@@ -30,6 +30,7 @@ static Segments::iterator prev(Segments &segments, const Segments::iterator &it)
 
 static std::tuple<pl::SamplingGrid, unsigned, double, bool, bool> init(const pl::CommonSettingList &common_settings);
 static Segments init(const pl::PointList &point_list);
+static std::string createEveryPhaseDir(const int node_count, const int reflex_point_count);
 
 static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit);
 
@@ -45,28 +46,17 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   Segments segments = init(point_list);
   auto [sampling_grid, phases, bouncing_radius, animation, out_every_phase] = init(common_settings);
 
+  int reflex_point_count = pl::find(filters, "reflex points").value().val;
+  int node_count = point_list.size();
+
   // mainly the orientation filter is done, because of the reflex
   // points, because they are more interessting, then convex points.
   // it could be possible that in future there has to be a distinction
   // between convex and reflex orientation, but for that, the
   // insideOrientationArea has to be rewritten too!
-  bool do_orientation_filter = pl::find(filters, "reflex points").value().val > -1;
+  bool do_orientation_filter = reflex_point_count > -1;
 
-  std::string directory_for_every_phase_out = "";
-
-  if (out_every_phase) {
-    int reflex_points = pl::find(filters, "reflex points").value().val;
-
-    // create for a directory for this node reflex points combo
-    std::string directory = "out/bouncing-vertices-" + std::to_string(segments.size()) + "-" + std::to_string(reflex_points) + "-0";
-
-    if (fs::is_directory(directory))
-      std::cout << "directory: " << directory << " does just exists and this would cause to override old outputs" << "\n";
-    else
-      fs::create_directory(directory);
-
-    directory_for_every_phase_out = directory;
-  }
+  std::string directory_for_every_phase_out = out_every_phase ? createEveryPhaseDir(node_count, reflex_point_count) : "";
 
   for (size_t phase = 0; phase < phases; ++phase) {
     // not use next or prev because this would cause a endles loop
@@ -232,6 +222,18 @@ Segments init(const pl::PointList &point_list) {
   segments.push_back({segments[segments.size() - 1].target(), segments[0].source()});
 
   return segments;
+}
+
+std::string createEveryPhaseDir(const int node_count, const int reflex_point_count) {
+  // create for a directory for this node reflex points combo
+  std::string directory = "out/bouncing-vertices-" + std::to_string(node_count) + "-" + std::to_string(reflex_point_count) + "-0";
+
+  if (fs::is_directory(directory))
+    std::cout << "directory: " << directory << " does just exists and this would cause to override old outputs" << "\n";
+  else
+    fs::create_directory(directory);
+
+  return directory;
 }
 
 cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit) {
