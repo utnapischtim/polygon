@@ -44,7 +44,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --convex-stretch=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --convex-stretch=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A --out-every-phase=A] (--file=FILE | --file-base=FILE_BASE)
     polygon (-h | --help)
     polygon --version
 
@@ -90,6 +90,8 @@ R"(polygon generation
     --statistics              output of simple statistics.
     --animation=A             create a animation of the different phases of bouncing vertices.
                               default is 0 for false, to start the creation set this to 1.
+                              [default: 0]
+    --out-every-phase=A       to output every phase as a gnuplot file.
                               [default: 0]
 
     --v=K                     set the verbosity level. [default: 0]

@@ -18,7 +18,10 @@ nlohmann::json pl::getCommonSettings() {
     {{"arg", "--bouncing-radius"}, {"name", "bouncing radius"}, {"desc", ""}, {"key", 5}, {"type", "number"}, {"val", "60"}},
 
     // 0 is false and 1 is true
-    {{"arg", "--animation"}, {"name", "animation"}, {"desc", ""}, {"key", 6}, {"type", "number"}, {"val", "0"}}//,
+    {{"arg", "--animation"}, {"name", "animation"}, {"desc", ""}, {"key", 6}, {"type", "number"}, {"val", "0"}},
+    // 0 is false and 1 is true
+    {{"arg", "--out-every-phase"}, {"name", "out every phase"}, {"desc", ""}, {"key", 7}, {"type", "number"}, {"val", "0"}}//,
+
     // {{"arg", "--center"}, {"name", "center"}, {"desc", ""}, {"key", 5}, {"type", "text"}, {"val", "-1,-1"}}
   };
 

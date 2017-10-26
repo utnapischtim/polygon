@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <experimental/filesystem>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -16,6 +17,8 @@
 #include "random.h"
 #include "Output.h"
 
+namespace fs = std::experimental::filesystem;
+
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 using Segments = std::vector<cgal::Segment_2>;
@@ -25,7 +28,7 @@ const size_t MAX_CYCLES = 1000;
 static Segments::iterator next(Segments &segments, const Segments::iterator &it);
 static Segments::iterator prev(Segments &segments, const Segments::iterator &it);
 
-static std::tuple<pl::SamplingGrid, unsigned, double, bool> init(const pl::CommonSettingList &common_settings);
+static std::tuple<pl::SamplingGrid, unsigned, double, bool, bool> init(const pl::CommonSettingList &common_settings);
 static Segments init(const pl::PointList &point_list);
 
 static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit);
@@ -40,7 +43,7 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   pl::PointList final_list;
 
   Segments segments = init(point_list);
-  auto [sampling_grid, phases, bouncing_radius, animation] = init(common_settings);
+  auto [sampling_grid, phases, bouncing_radius, animation, out_every_phase] = init(common_settings);
 
   // mainly the orientation filter is done, because of the reflex
   // points, because they are more interessting, then convex points.
@@ -48,6 +51,22 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
   // between convex and reflex orientation, but for that, the
   // insideOrientationArea has to be rewritten too!
   bool do_orientation_filter = pl::find(filters, "reflex points").value().val > -1;
+
+  std::string directory_for_every_phase_out = "";
+
+  if (out_every_phase) {
+    int reflex_points = pl::find(filters, "reflex points").value().val;
+
+    // create for a directory for this node reflex points combo
+    std::string directory = "out/bouncing-vertices-" + std::to_string(segments.size()) + "-" + std::to_string(reflex_points) + "-0";
+
+    if (fs::is_directory(directory))
+      std::cout << "directory: " << directory << " does just exists and this would cause to override old outputs" << "\n";
+    else
+      fs::create_directory(directory);
+
+    directory_for_every_phase_out = directory;
+  }
 
   for (size_t phase = 0; phase < phases; ++phase) {
     // not use next or prev because this would cause a endles loop
@@ -123,7 +142,13 @@ pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::Co
 #endif
     }
 
+    if (out_every_phase) {
+      std::string filename = directory_for_every_phase_out + "/" + std::to_string(phase) + ".dat";
 
+      pl::PointList list;
+      pl::convert(segments, list);
+      pl::output(list, "gnuplot", filename);
+    }
   }
 
 
@@ -151,8 +176,8 @@ Segments::iterator prev(Segments &segments, const Segments::iterator &it) {
   return it_p;
 }
 
-std::tuple<pl::SamplingGrid, unsigned, double, bool> init(const pl::CommonSettingList &common_settings) {
-  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius, c_s_animation;
+std::tuple<pl::SamplingGrid, unsigned, double, bool, bool> init(const pl::CommonSettingList &common_settings) {
+  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius, c_s_animation, c_s_out_every_phase;
 
   if (auto t = pl::find(common_settings, "sampling grid"))
     c_s_sampling_grid = *t;
@@ -178,17 +203,23 @@ std::tuple<pl::SamplingGrid, unsigned, double, bool> init(const pl::CommonSettin
   else
     c_s_animation = pl::CommonSetting("animation", "", 6, "number", "0");
 
+  if (auto t = pl::find(common_settings, "out every phase"))
+    c_s_out_every_phase = *t;
+  else
+    c_s_out_every_phase = pl::CommonSetting("out every phase", "", 7, "number", "0");
+
   // TODO:
   // make it robust!
   pl::SamplingGrid sampling_grid(c_s_sampling_grid);
   unsigned phases = std::stoi(c_s_phases.val);
   double radius = std::stod(c_s_radius.val);
   bool animation = std::stoi(c_s_animation.val) == 1;
+  bool out_every_phase = std::stoi(c_s_out_every_phase.val) == 1;
 
   if (auto t = pl::find(common_settings, "segment length"); t && radius < 1)
     radius = std::stod(t->val) / 2;
 
-  return {sampling_grid, phases, radius, animation};
+  return {sampling_grid, phases, radius, animation, out_every_phase};
 }
 
 Segments init(const pl::PointList &point_list) {
