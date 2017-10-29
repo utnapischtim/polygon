@@ -24,7 +24,7 @@
 #include "FixLocalOrientation.h"
 #include "random.h"
 
-#ifdef DEBUG
+#ifdef DETERMINISTIC
 #include "deterministic.h"
 #endif
 
@@ -90,7 +90,7 @@ pl::Generator pl::createGenerator(int key) {
 }
 
 pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingList common_settings, pl::FilterList local_filters) {
-#ifdef DEBUG
+#ifdef DETERMINISTIC
   pl::PointList random_point_list = pl::det::deterministic(common_settings, {});
 #else
   pl::PointList random_point_list = pl::random(common_settings, {});
