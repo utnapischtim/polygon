@@ -2,10 +2,7 @@
 #define POINT_H_
 
 #include <iostream>
-#include <limits>
 #include <vector>
-#include <cmath>
-#include <list>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -16,7 +13,6 @@ using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 namespace pl {
 
 using PointList = std::vector<cgal::Point_2>;
-using PointDList = std::list<cgal::Point_2>;
 nlohmann::json to_json(PointList point_list);
 
 std::ostream &operator<<(std::ostream &out, const PointList &point_list);

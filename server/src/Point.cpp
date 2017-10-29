@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cmath>
 #include <string>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -24,7 +23,6 @@ void pl::convert(const std::vector<cgal::Segment_2> &segments, PointList &point_
                  segments.end(),
                  std::back_inserter(point_list),
                  [](auto &s) { return s.source(); });
-                 //[](auto &s) { return pl::Point(s.source().x(), s.source().y()); });
 
   point_list.push_back(point_list[0]);
 }
