@@ -51,6 +51,13 @@ pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, co
   int reflex_counts = (*reflex_points).val;
   int reflex_max = (*reflex_chain_max).val;
 
+  // if reflex_max is set to the default value, then every number is
+  // possible. reflex_counts would also be possible it, should be a
+  // number greater then reflex_counts and node_counts is a number
+  // that fullfills those needs.
+  if (reflex_max == 0)
+    reflex_max = node_counts;
+
   // the segment angle
   double gamma = 2 * M_PI * 1/node_counts;
 
