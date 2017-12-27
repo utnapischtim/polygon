@@ -4,7 +4,10 @@
 #include <cstdlib>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangle_2.h>
+
+#include <CGAL/Triangular_expansion_visibility_2.h>
+#include <CGAL/Arr_segment_traits_2.h>
+#include <CGAL/Arrangement_2.h>
 
 #include "easylogging++.h"
 
@@ -13,118 +16,72 @@
 #include "random.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
+using Iter = pl::PointList::const_iterator;
 
-static void removePoint(std::vector<cgal::Point_2> &point_list, cgal::Point_2 p);
-static std::tuple<std::deque<cgal::Point_2>, std::vector<cgal::Segment_2>> init(std::vector<cgal::Point_2> &point_2_list);
-static bool supportVertices(std::deque<cgal::Point_2> &hull, const cgal::Point_2 &s_k, cgal::Point_2 &v_l, cgal::Point_2 &v_r);
-static std::vector<cgal::Segment_2> calculateVisibleSegments(const std::vector<cgal::Segment_2> &segments, cgal::Point_2 &v_l, cgal::Point_2 &v_r);
-static void replaceSegment(std::vector<cgal::Segment_2> &segments, cgal::Segment_2 segment, cgal::Point_2 s_k);
+Iter next(const pl::PointList &list, const Iter &it);
+Iter prev(const pl::PointList &list, const Iter &it);
+
+static std::tuple<cgal::Point_2, cgal::Point_2> locateTwoIndependentPoints(const pl::PointList &point_list);
+static void removePoint(pl::PointList &point_list, cgal::Point_2 point);
+static std::tuple<cgal::Point_2, cgal::Point_2, cgal::Point_2> locateRandomPoint(const pl::PointList &point_list, pl::PointList &hull);
+static Iter calculateNearestPoint(const pl::PointList &hull, const cgal::Point_2 &p);
+static std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p);
+static void recalculateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p, Iter &s_l, Iter &s_r);
+static void addToConvexHull(pl::PointList &hull, cgal::Point_2 &p, Iter &s_l, Iter &s_r);
+static std::vector<cgal::Segment_2> locateVisibleSegments(const pl::PointList &final_list, cgal::Point_2 p, cgal::Point_2 s_l, cgal::Point_2 s_r);
+static cgal::Point_2 chooseRandomSegment(std::vector<cgal::Segment_2> segments);
+static void replaceSegment(pl::PointList &final_list, const cgal::Point_2 &source, const cgal::Point_2 &p);
 
 pl::PointList pl::steadyGrowth(pl::PointList point_list) {
   VLOG(1) << "steady growth";
 
-  pl::PointList final_list;
-  pl::random_selector<> selector{};
+  auto [s_1, s_2] = locateTwoIndependentPoints(point_list);
+  removePoint(point_list, s_1);
+  removePoint(point_list, s_2);
 
-  auto [hull, segments] = init(point_list);
-  size_t n = point_list.size();
+  pl::PointList hull = {s_1, s_2};
+  pl::PointList final_list = {s_1, s_2};
 
-  size_t N = 0;
+  VLOG(3) << "s_1: " << s_1 << " s_2: " << s_2;
 
-  for (size_t i = 0; i < n; ++i) {
-    cgal::Point_2 s_k;
+  // O(n)
+  for (size_t i = 0, size = point_list.size(); i < size; ++i) {
+    // search point no other point is within the temporarly convex
+    // hull O(n)
+    auto [p, s_l, s_r] = locateRandomPoint(point_list, hull);
 
-    cgal::Point_2 v_l, v_r;
+    removePoint(point_list, p);
 
-    for (bool predicate = true; predicate;) {
-      if (++N > 5*n)
-        std::exit(-1);
-      s_k = selector(point_list);
+    // O(n)
+    auto visible_segments = locateVisibleSegments(final_list, p, s_l, s_r);
 
-      VLOG(4) << "  s_k: " << s_k;
+    cgal::Point_2 source = chooseRandomSegment(visible_segments);
 
-      cgal::Point_2 deleted_point = hull[0];
-
-      // this does not have to be reset, because the only case where
-      // this has to be, is if there are crossing points, and if that
-      // happens, the function return, without changing hull
-      if (supportVertices(hull, s_k, v_l, v_r)) {
-
-        // loop through every point to find points they lie within the
-        // triangle of v_l, v_r and s_k. if there exists one, this is
-        // the new s_k point, the checked points before have not to be
-        // checked, because of ... heuristic ... lemma 2.5 page 44
-        for (auto p : point_list) {
-          cgal::Triangle_2 triangle(v_l, v_r, s_k);
-
-          if (triangle.bounded_side(p) == CGAL::ON_BOUNDED_SIDE) {
-            cgal::Triangle_2
-              triangle_l(v_l, s_k, deleted_point),
-              triangle_r(deleted_point, s_k, v_r);
-
-            if (triangle_l.bounded_side(p) == CGAL::ON_BOUNDED_SIDE) {
-              v_r = deleted_point;
-              hull.push_front(deleted_point);
-            }
-            else if (triangle_r.bounded_side(p) == CGAL::ON_BOUNDED_SIDE) {
-              v_l = deleted_point;
-              hull.push_back(deleted_point);
-            }
-            else {
-              // nothing, because it is in the intersection of left
-              // area and right area and therefore both support
-              // vertices remain the same
-            }
-
-            s_k = p;
-          }
-        }
-
-        hull.push_back(s_k);
-        hull.push_front(s_k);
-
-        removePoint(point_list, s_k);
-
-        predicate = false;
-      }
-
-      if (VLOG_IS_ON(4)) {
-        VLOG(4) << "  hull";
-        for (auto p : hull)
-          VLOG(4) << "    p: " << p;
-      }
-    }
-
-    // find all segments that lie between v_l and v_r
-    std::vector<cgal::Segment_2> visible_segments = calculateVisibleSegments(segments, v_l, v_r);
-
-    if (VLOG_IS_ON(3)) {
-      VLOG(3) << "vissible segments";
-      for (auto s : visible_segments)
-        VLOG(4) << "  s: " << s;
-    }
-
-    // select one at random
-    cgal::Segment_2 visible_segment = visible_segments[pl::randomValueOfRange(0, visible_segments.size() - 1)];
-
-    // replace segment with the new segments
-    // replace edge e with (v_i, s_k) and (s_k, v_i+1)
-    replaceSegment(segments, visible_segment, s_k);
+    // O(n)
+    replaceSegment(final_list, source, p);
   }
-
-  for (auto segment : segments) {
-    // auto p = segment.source();
-    final_list.push_back(segment.source()); //{p.x(), p.y()});
-  }
-  final_list.push_back(final_list[0]);
-
-
 
   return final_list;
 }
 
+std::tuple<cgal::Point_2, cgal::Point_2> locateTwoIndependentPoints(const pl::PointList &point_list) {
+  VLOG(3) << "locateTwoIndependentPoints";
 
-void removePoint(std::vector<cgal::Point_2> &point_list, cgal::Point_2 point) {
+  pl::random_selector<> selector{};
+
+  cgal::Point_2 s_1 = selector(point_list);
+  cgal::Point_2 s_2;
+
+  do {
+    s_2 = selector(point_list);
+  } while (s_1 == s_2);
+
+  VLOG(4) << "  s_1: " << s_1 << " s_2: " << s_2;
+
+  return {s_1, s_2};
+}
+
+void removePoint(pl::PointList &point_list, cgal::Point_2 point) {
   VLOG(3) << "removePoint";
   point_list.erase(std::remove_if(point_list.begin(),
                                   point_list.end(),
@@ -132,113 +89,327 @@ void removePoint(std::vector<cgal::Point_2> &point_list, cgal::Point_2 point) {
                    point_list.end());
 }
 
-std::tuple<std::deque<cgal::Point_2>, std::vector<cgal::Segment_2>> init(std::vector<cgal::Point_2> &point_list) {
-  VLOG(3) << "init";
+
+std::tuple<cgal::Point_2, cgal::Point_2, cgal::Point_2> locateRandomPoint(const pl::PointList &point_list, pl::PointList &hull) {
+  VLOG(3) << "locateRandomPoint";
+
   pl::random_selector<> selector{};
 
-  cgal::Point_2 s_1 = selector(point_list);
-  removePoint(point_list, s_1);
+  cgal::Point_2 p = selector(point_list);
 
-  cgal::Point_2 s_2 = selector(point_list);
-  removePoint(point_list, s_2);
+  VLOG(3) << "  p: " << p;
 
-  cgal::Point_2 s_3;
+  // naive approach O(n)
+  // with Preparata should be possible to search with O(log n)
+  auto [s_l, s_r] = locateSupportVertices(hull, p);
 
-  for (bool predicate = false; predicate;) {
-    s_3 = selector(point_list);
-    cgal::Triangle_2 triangle(s_1, s_2, s_3);
+  VLOG(3) << "  s_l: " << *s_l << " s_r: " << *s_r;
 
-    predicate = predicate || triangle.is_degenerate();
+  cgal::Triangle_2 triangle(*s_l, *s_r, p);
 
-    // points are within the triangle
-    for (const auto &p : point_list)
-      predicate = predicate || triangle.bounded_side(p) == CGAL::ON_BOUNDED_SIDE || triangle.bounded_side(p) == CGAL::ON_BOUNDARY;
-  }
+  for (auto point : point_list)
+    if (triangle.has_on_bounded_side(point)) {
+      p = point;
 
-  removePoint(point_list, s_3);
+      // recalculate the support vertices
+      recalculateSupportVertices(hull, p, s_l, s_r);
 
-  // test! ;)
-  // s_1 = {200, 200};
-  // s_2 = {300, 400};
-  // s_3 = {500, 100};
+      triangle = {*s_l, *s_r, p};
+    }
 
-  // point_2_list = {{500,400}, {600, 0}, {590, 80}, {580, 10}//, {570, 50}, {560, 70}, {100, 200}
-  // };
+  addToConvexHull(hull, p, s_l, s_r);
 
-  std::deque<cgal::Point_2> point_hull = {s_3, s_1, s_2, s_3};
-  std::vector<cgal::Segment_2> segments = {{s_1, s_2}, {s_2, s_3}, {s_3, s_1}};
-
-  return {point_hull, segments};
+  return {p, *s_l, *s_r};
 }
 
-bool supportVertices(std::deque<cgal::Point_2> &hull, const cgal::Point_2 &s_k, cgal::Point_2 &v_l, cgal::Point_2 &v_r) {
-  VLOG(3) << "supportVertices";
-  VLOG(4) << "  s_k: " << s_k;
+Iter calculateNearestPoint(const pl::PointList &hull, const cgal::Point_2 &p) {
+  // O(n) get the point with the min distance
+  cgal::Segment_2 seg = {*(hull.begin()), p};
+  Iter nearest_point = hull.begin();
+  int min = seg.squared_length();
 
-  // https://maxgoldste.in/melkman/ helped
-
-  // crossing lines
-  if (CGAL::left_turn(*(hull.begin() + 1), *(hull.begin()), s_k) && CGAL::right_turn(*(hull.end() - 2), *(hull.end() - 1), s_k)) {
-    VLOG(4) << "  crossing lines";
-    // TODO:
-    // if this is once started has to be always?
+  for (Iter it = hull.begin(); it < hull.end(); ++it) {
+    seg = {*it, p};
+    if (auto l = seg.squared_length(); l < min) {
+      min = l;
+      nearest_point = it;
+    }
   }
 
-  cgal::Triangle_2 triangle(*(hull.begin() + 1), *(hull.begin()), s_k);
-  while (!CGAL::left_turn(*(hull.begin() + 1), *(hull.begin()), s_k) && !triangle.is_degenerate()) {
-    hull.pop_front();
-    triangle = {*(hull.begin() + 1), *(hull.begin()), s_k};
-  }
-
-  triangle = {*(hull.end() - 2), *(hull.end() - 1), s_k};
-  while (!CGAL::right_turn(*(hull.end() - 2), *(hull.end() - 1), s_k) && !triangle.is_degenerate()) {
-    hull.pop_back();
-    triangle = {*(hull.end() - 2), *(hull.end() - 1), s_k};
-  }
-
-  v_r = *(hull.begin());
-  v_l = *(hull.end() - 1);
-
-  return true;
+  return nearest_point;
 }
 
-std::vector<cgal::Segment_2> calculateVisibleSegments(const std::vector<cgal::Segment_2> &segments, cgal::Point_2 &v_l, cgal::Point_2 &v_r) {
-  VLOG(3) << "calculateVisibleSegments";
-  VLOG(4) << "  v_l: " << v_l << "  v_r: " << v_r;
 
+std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p) {
+  Iter s_l, s_r;
+
+  Iter nearest_point = calculateNearestPoint(hull, p);
+
+  if (hull.size() == 2) {
+    s_l = hull.begin();
+    s_r = hull.begin() + 1;
+  }
+
+  else if (hull.size() < 5) {
+    Iter u = nearest_point;
+    Iter v = next(hull, u);
+
+    while (CGAL::left_turn(p, *u, *v)) {
+      u = v;
+      v = next(hull, u);
+    }
+
+    s_r = u;
+
+    u = nearest_point;
+    v = prev(hull, u);
+    while (CGAL::right_turn(p, *u, *v)) {
+      u = v;
+      v = prev(hull, u);
+    }
+
+    s_l = u;
+  }
+
+  // this would be another version to get the support vertices. but it
+  // does not work for size < 5 and the version with left_turn and
+  // right_turn works also with size > 2 therefore it is not necessary
+  // to use both!
+
+  // this is not working. it is possible, that a segment pv_1 does not
+  // intersect with the uv also in case that v is the searched point.
+  // this is because of the intersection occur outside of uv. it would
+  // be possible to use lines instead of segment, but then there is
+  // the problem, that a intersection occurs also if the point v is
+  // wrong. maybe it is possible to say, that if the intersection
+  // occurs before the segment uv then v is the search s_r, and after
+  // uv otherwise for s_l. but this is only a tought, with no evidence
+  // of truth
+  // ATTENTION this version is not tested
+  else {
+    cgal::Segment_2 pv_1, uv;
+
+    Iter u = nearest_point;
+    Iter v = next(hull, u);
+
+    VLOG(3) << "  u: " << *u << " v: " << *v;
+    do {
+      Iter v_1 = next(hull, v);
+      VLOG(3) << "    v_1: " << *v_1;
+      s_r = v;
+      uv = {*u, *v};
+      pv_1 = {p, *v_1};
+
+      // for the next run, if condition evaluates to true
+      u = v;
+      v = next(hull, u);
+      VLOG(3) << "    u: " << *u << " v: " << *v;
+    } while (!CGAL::do_intersect(pv_1, uv));
+    VLOG(3) << "  s_r: " << *s_r;
+
+    u = nearest_point;
+    v = prev(hull, u);
+    VLOG(3) << "  u: " << *u << " v: " << *v;
+    do {
+      Iter v_1 = prev(hull, v);
+      VLOG(3) << "    v_1: " << *v_1;
+      s_l = v;
+      uv = {*u, *v};
+      pv_1 = {p, *v_1};
+
+      // for the next run, if condition evaluates to true
+      u = v;
+      v = prev(hull, u);
+      VLOG(3) << "    u: " << *u << " v: " << *v;
+    } while (!CGAL::do_intersect(pv_1, uv));
+    VLOG(3) << "  s_l: " << *s_l;
+  }
+
+  return {s_l, s_r};
+}
+
+void recalculateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p, Iter &s_l, Iter &s_r) {
+  Iter v = next(hull, s_l);
+  while (CGAL::right_turn(p, *s_l, *v)) {
+    s_l = v;
+    v = next(hull, s_l);
+  }
+
+  v = prev(hull, s_r);
+  while (CGAL::left_turn(p, *s_r, *v)) {
+    s_r = v;
+    v = prev(hull, s_r);
+  }
+}
+
+void addToConvexHull(pl::PointList &hull, cgal::Point_2 &p, Iter &s_l, Iter &s_r) {
+  VLOG(3) << "    addToConvexHull";
+
+  cgal::Point_2
+    s_l_p = *s_l,
+    s_r_p = *s_r;
+
+  VLOG(4) << "  s_l_p: " << s_l_p << " s_r_p: " << s_r_p;
+
+  for (auto q : hull)
+    VLOG(4) << "      q: " << q;
+
+  // remove points [s_l + 1, s_r)
+  hull.erase(s_l + 1, s_r);
+
+  VLOG(4) << "      after erase";
+  VLOG(4) << "      s_l: " << *s_l << " s_r: " << *s_r << " p: " << p;
+  for (auto q : hull)
+    VLOG(4) << "      q: " << q;
+
+  // insert before s_r
+  hull.insert(s_r, p);
+
+  VLOG(4) << "      after insert";
+  VLOG(4) << "      s_l: " << *s_l << " s_r: " << *s_r << " p: " << p;
+  for (auto q : hull)
+    VLOG(4) << "      q: " << q;
+
+  // TODO:
+  // make that this is not necessary. but for the moment it is easier,
+  // because erase and insert above corrupts the iterator a little
+  // bit. with little testing the erase should not be a problem, but
+  // insert is a problem.
+  s_l = std::find_if(hull.begin(), hull.end(), [&](auto q) { return q == s_l_p; });
+  s_r = std::find_if(hull.begin(), hull.end(), [&](auto q) { return q == s_r_p; });
+
+  VLOG(4) << "      after woraround with std::find_if";
+  VLOG(4) << "      s_l: " << *s_l << " s_r: " << *s_r << " p: " << p;
+}
+
+std::vector<cgal::Segment_2> locateVisibleSegments(const pl::PointList &final_list, cgal::Point_2 p, cgal::Point_2 s_l, cgal::Point_2 s_r) {
+  VLOG(3) << "locateVisibleSegments";
+  std::vector<cgal::Segment_2> segments;
+
+  VLOG(3) << "  s_l: " << s_l << " s_r: " << s_r << " p: " << p;
+  for (auto q : final_list)
+    VLOG(3) << "    q: " << q;
+
+  // TODO:
+  // visible_points maybe there are also necessary points to close
+  // this polygon? maybe it is enough to close the polygon with the
+  // point p and lines to s_l and s_r? done with initializing of
+  // visible_points with {p}
+
+  // TODO:
+  // s_l could be the n-1 point and the s_r could be the 0+3 point
+  // therefore this is not save for boundary overruns
+  pl::PointList visible_points = {p};
+  bool within_possible_visible_points = false;
+  for (auto point : final_list) {
+    if (point == s_l)
+      within_possible_visible_points = true;
+
+    if (within_possible_visible_points)
+      visible_points.push_back(point);
+
+    if (point == s_r)
+      within_possible_visible_points = false;
+  }
+
+  VLOG(3) << "  visible_points.size: " << visible_points.size();
+
+  for (size_t i = 1, size = visible_points.size(); i < size; ++i)
+    segments.push_back(cgal::Segment_2(visible_points[i-1], visible_points[i]));
+  segments.push_back(cgal::Segment_2(visible_points[visible_points.size() - 1], visible_points[0]));
+  VLOG(3) << "  segments.size(): " << segments.size();
+
+  using Arrangement_2 = CGAL::Arrangement_2<CGAL::Arr_segment_traits_2<cgal>>;
+  Arrangement_2 env;
+  CGAL::insert_non_intersecting_curves(env, segments.begin(), segments.end());
+  Arrangement_2::Halfedge_const_handle he = env.halfedges_begin();
+
+  VLOG(3) << "  env";
+
+  // TODO: think of it again!
+  // https://doc.cgal.org/latest/Visibility_2/Visibility_2_2general_polygon_example_8cpp-example.html
+  while (he->target()->point() != p)
+    he++;
+
+  VLOG(3) << "  he";
+
+  using TEV = CGAL::Triangular_expansion_visibility_2<Arrangement_2>;
+  Arrangement_2 regular_output;
+  TEV tev(env);
+
+  VLOG(3) << "  tev";
+
+  Arrangement_2::Face_handle fh = tev.compute_visibility(p, he, regular_output);
+
+  VLOG(3) << "  tev.computed";
+
+  pl::PointList regular_points;
+
+  Arrangement_2::Ccb_halfedge_circulator curr = fh->outer_ccb();
+  do {
+    regular_points.push_back(curr->source()->point());
+  } while (++curr != fh->outer_ccb());
+
+  VLOG(3) << "  regular_points.size(): " << regular_points.size();
+
+  // iterator
+  Iter vis = next(visible_points, visible_points.begin());
+  Iter reg = next(regular_points, std::find_if(regular_points.begin(), regular_points.end(), [&](auto point){ return p == point; }));
+  bool add_mode = (*vis == *reg);
   std::vector<cgal::Segment_2> visible_segments;
+  do {
+    if (add_mode) {
+      vis = next(visible_points, vis);
+      reg = next(regular_points, reg);
 
-  bool between = false;
+      add_mode = (*vis == *reg);
 
-  for (auto s : segments) {
-    VLOG(4) << "  s: " << s << "  between: " << between;
+      if (add_mode)
+        visible_segments.push_back({*vis, *(vis - 1)}); // direction correct?
+    }
+    else {
+      reg = next(regular_points, reg);
+      do {
+        vis = next(visible_points, vis);
+        add_mode = (*vis == *reg);
+      } while (!add_mode);
+    }
+  } while (*vis == p && *reg == p);
 
-    if (s.source() == v_l || between || s.target() == v_r)
-      visible_segments.push_back(s);
-
-    // TODO:
-    // maybee it is possible to write those two statements within one?
-    if (s.source() == v_l)
-      between = true;
-
-    if (s.target() == v_r)
-      between = false;
-  }
+  VLOG(3) << "  visible_segments.size(): " << visible_segments.size();
 
   return visible_segments;
 }
 
-void replaceSegment(std::vector<cgal::Segment_2> &segments, cgal::Segment_2 segment, cgal::Point_2 s_k) {
+cgal::Point_2 chooseRandomSegment(std::vector<cgal::Segment_2> segments) {
+  VLOG(3) << "chooseRandomSegment";
+  pl::random_selector<> selector{};
+  cgal::Segment_2 seg = selector(segments);
+  return seg.source();
+}
+
+void replaceSegment(pl::PointList &final_list, const cgal::Point_2 &source, const cgal::Point_2 &p) {
   VLOG(3) << "replaceSegment";
-  VLOG(4) << "  segment: " << segment;
+  auto iter_source = std::find_if(final_list.begin(), final_list.end(), [&](auto const& point){ return source == point; });
+  final_list.insert(iter_source, p);
+}
 
-  auto it = std::find_if(segments.begin(), segments.end(), [&](auto s) { return segment == s; });
-  it = segments.erase(it);
-  segments.insert(it, {segment.source(), s_k});
-  segments.insert(++it, {s_k, segment.target()});
+Iter next(const pl::PointList &list, const Iter &it) {
+  auto it_n = it + 1;
 
-  if (VLOG_IS_ON(3)) {
-    for (auto s : segments)
-      VLOG(4) << "  s: " << s;
-  }
+  if (it_n == list.end())
+    it_n = list.begin();
+
+  return it_n;
+}
+
+Iter prev(const pl::PointList &list, const Iter &it) {
+  Iter it_p;
+
+  if (it == list.begin())
+    it_p = list.end() - 1;
+  else
+    it_p = it - 1;
+
+  return it_p;
 }
