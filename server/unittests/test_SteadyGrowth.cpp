@@ -23,6 +23,32 @@ TEST_CASE("test SteadyGrowth") {
     CHECK( (*nearest_point == k) );
   }
 
+  SECTION("calculateStartPoint") {
+    cgal::Point_2 p = {60,50};
+    cgal::Point_2 k = {10,20};
+    pl::PointList hull = {{10,20}, {39,22}, {68,19}, {48,9}, {21,10}, {1,11}};
+
+    Iter start_point = calculateStartPoint(hull, p);
+    CHECK( (*start_point == k) );
+  }
+
+  SECTION("calculateStartPoint 2") {
+    cgal::Point_2 p = {75,33};
+    cgal::Point_2 k = {10,20};
+    pl::PointList hull = {{10,20}, {39,22}, {68,19}, {48,9}, {21,10}, {1,11}};
+
+    Iter start_point = calculateStartPoint(hull, p);
+    CHECK( (*start_point == k) );
+  }
+
+  SECTION("calculateStartPoint 3") {
+    cgal::Point_2 p = {55,12};
+    cgal::Point_2 k = {21,10};
+    pl::PointList hull = {{21,10}, {20,18}, {39,22}, {33,15}};
+
+    Iter start_point = calculateStartPoint(hull, p);
+    CHECK( (*start_point == k) );
+  }
 
   SECTION("locateSupportVertices case 2") {
     cgal::Point_2 p = {10,20};

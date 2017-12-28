@@ -25,6 +25,7 @@ static std::tuple<cgal::Point_2, cgal::Point_2> locateTwoIndependentPoints(const
 static void removePoint(pl::PointList &point_list, cgal::Point_2 point);
 static std::tuple<cgal::Point_2, cgal::Point_2, cgal::Point_2> locateRandomPoint(const pl::PointList &point_list, pl::PointList &hull);
 static Iter calculateNearestPoint(const pl::PointList &hull, const cgal::Point_2 &p);
+static Iter calculateStartPoint(const pl::PointList &hull, const cgal::Point_2 &p);
 static std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p);
 static void recalculateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p, Iter &s_l, Iter &s_r);
 static void addToConvexHull(pl::PointList &hull, cgal::Point_2 &p, Iter &s_l, Iter &s_r);
@@ -139,19 +140,43 @@ Iter calculateNearestPoint(const pl::PointList &hull, const cgal::Point_2 &p) {
   return nearest_point;
 }
 
+Iter calculateStartPoint(const pl::PointList &hull, const cgal::Point_2 &p) {
+  // to have better possibility to test this function. use the first
+  // point of the hull.
+  cgal::Point_2 x = hull[0];
+  cgal::Segment_2 px = {p, x};
+  Iter start_point = hull.begin();
+
+  for (size_t i = 0, size = hull.size(); i < size; ++i) {
+    // to get also the segment from the last to the first hull point
+    size_t
+      source = i == 0 ? size - 1 : i-1,
+      target = i;
+
+    cgal::Segment_2 uv = {hull[source], hull[target]};
+
+    // this should only occure once.
+    if (CGAL::do_intersect(uv, px) && uv.source() != px.target() && uv.target() != px.target())
+      start_point = hull.begin() + i;
+
+  }
+
+  return start_point;
+}
+
 
 std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p) {
   Iter s_l, s_r;
 
-  Iter nearest_point = calculateNearestPoint(hull, p);
+  Iter start_point = calculateStartPoint(hull, p);
 
   if (hull.size() == 2) {
     s_l = hull.begin();
     s_r = hull.begin() + 1;
   }
 
-  else if (hull.size() < 5) {
-    Iter u = nearest_point;
+  else {
+    Iter u = start_point;
     Iter v = next(hull, u);
 
     while (CGAL::left_turn(p, *u, *v)) {
@@ -161,7 +186,7 @@ std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cg
 
     s_r = u;
 
-    u = nearest_point;
+    u = start_point;
     v = prev(hull, u);
     while (CGAL::right_turn(p, *u, *v)) {
       u = v;
@@ -169,60 +194,6 @@ std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cg
     }
 
     s_l = u;
-  }
-
-  // this would be another version to get the support vertices. but it
-  // does not work for size < 5 and the version with left_turn and
-  // right_turn works also with size > 2 therefore it is not necessary
-  // to use both!
-
-  // this is not working. it is possible, that a segment pv_1 does not
-  // intersect with the uv also in case that v is the searched point.
-  // this is because of the intersection occur outside of uv. it would
-  // be possible to use lines instead of segment, but then there is
-  // the problem, that a intersection occurs also if the point v is
-  // wrong. maybe it is possible to say, that if the intersection
-  // occurs before the segment uv then v is the search s_r, and after
-  // uv otherwise for s_l. but this is only a tought, with no evidence
-  // of truth
-  // ATTENTION this version is not tested
-  else {
-    cgal::Segment_2 pv_1, uv;
-
-    Iter u = nearest_point;
-    Iter v = next(hull, u);
-
-    VLOG(3) << "  u: " << *u << " v: " << *v;
-    do {
-      Iter v_1 = next(hull, v);
-      VLOG(3) << "    v_1: " << *v_1;
-      s_r = v;
-      uv = {*u, *v};
-      pv_1 = {p, *v_1};
-
-      // for the next run, if condition evaluates to true
-      u = v;
-      v = next(hull, u);
-      VLOG(3) << "    u: " << *u << " v: " << *v;
-    } while (!CGAL::do_intersect(pv_1, uv));
-    VLOG(3) << "  s_r: " << *s_r;
-
-    u = nearest_point;
-    v = prev(hull, u);
-    VLOG(3) << "  u: " << *u << " v: " << *v;
-    do {
-      Iter v_1 = prev(hull, v);
-      VLOG(3) << "    v_1: " << *v_1;
-      s_l = v;
-      uv = {*u, *v};
-      pv_1 = {p, *v_1};
-
-      // for the next run, if condition evaluates to true
-      u = v;
-      v = prev(hull, u);
-      VLOG(3) << "    u: " << *u << " v: " << *v;
-    } while (!CGAL::do_intersect(pv_1, uv));
-    VLOG(3) << "  s_l: " << *s_l;
   }
 
   return {s_l, s_r};
