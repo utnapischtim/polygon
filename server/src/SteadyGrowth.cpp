@@ -156,8 +156,13 @@ std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cg
   Iter start_point = calculateStartPoint(hull, p);
 
   if (hull.size() == 2) {
-    s_l = hull.begin();
-    s_r = hull.begin() + 1;
+    if (CGAL::left_turn(hull[0], hull[1], p)) {
+      s_l = hull.begin();
+      s_r = hull.begin() + 1;
+    } else {
+      s_l = hull.begin() + 1;
+      s_r = hull.begin();
+    }
   }
 
   else {

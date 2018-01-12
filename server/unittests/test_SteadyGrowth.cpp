@@ -138,6 +138,17 @@ TEST_CASE("test SteadyGrowth") {
     CHECK( (*s_r == s_r_real) );
   }
 
+  SECTION("locateSupportVertices 9") {
+    cgal::Point_2 p = {55,17};
+    cgal::Point_2 s_l_real = {68,19};
+    cgal::Point_2 s_r_real = {20,41};
+    pl::PointList hull = {{20,41},{68,19}};
+
+    auto [s_l, s_r] = locateSupportVertices(hull, p);
+    CHECK( (*s_l == s_l_real) );
+    CHECK( (*s_r == s_r_real) );
+  }
+
   SECTION("recalculateSupportVertices") {
     pl::PointList hull = {{10,20}, {68,19}, {48,9}, {21,10}, {1,11}};
     cgal::Point_2 p = {39,22};
