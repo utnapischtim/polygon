@@ -368,19 +368,39 @@ std::vector<cgal::Segment_2> calculateRealVisibleSegments(const pl::PointList &v
       reg += 1;
     }
     else {
-      // it is possible that there are more possible visible points
-      // then regular points. regular + 1 should always go to a
-      // visible point! plus two, because plus 1 goes only to the next
-      // regular point, which is the different from a visible point.
-      // and plus another one, goes to the desirable visible point!
-      reg += 2;
+      // there exists 3 cases.
+      // 1) is that the next reg (+1) could be a visible point. or
+      //    that the segment is on the line from p to the point +1
+      // 2) is that the after next reg (+2) could be the visible point
+      // 3) is that the after after next reg (+3) could be equal to a
+      //    visible point
+      // there should no other possibilities!
+
+      bool
+        is_first_case = false,
+        is_second_case = false,
+        is_third_case = false;
+
       do {
         vis += 1;
-      } while (*vis != *reg);
+
+        is_first_case = *vis == *(reg + 1);
+        is_second_case = *vis == *(reg + 2);
+        is_third_case = *vis == *(reg + 3);
+      } while (!(is_first_case || is_second_case || is_third_case));
+
+      if (is_first_case)
+        reg += 1;
+
+      if (is_second_case)
+        reg += 2;
+
+      if (is_third_case)
+        reg += 3;
     }
     // the last point from both should always be the s_r, and
     // therefore both are at the end of the vector!
-  } while ((vis+1) != visible_points.end() && (reg+1) != regular_points.end());
+  } while ((vis+1) < visible_points.end() && (reg+1) < regular_points.end());
 
   return visible_segments;
 }
@@ -401,13 +421,13 @@ cgal::Segment_2 locateVisibleSegment(const pl::PointList &final_list, cgal::Poin
   cgal::Segment_2 located_visible_segment;
 
   pl::PointList visible_points = calculatePossibleVisiblePoints(final_list, s_l, s_r);
-  std::vector<cgal::Segment_2> segments = calculatePossibleVisibleSegments(visible_points);
 
   // with one or two segments it is not necessary to do the calculation.
   // and some problematic cases don't have to be looked
-  if (segments.size() < 3)
-    located_visible_segment = segments[0];
+  if (visible_points.size() < 4)
+    located_visible_segment = cgal::Segment_2(visible_points[0], visible_points[1]);
   else {
+    std::vector<cgal::Segment_2> segments = calculatePossibleVisibleSegments(visible_points);
     std::vector<cgal::Segment_2> regular_segments = createRegularSegments(segments, p);
     pl::PointList regular_points = calculateRegularPoints(regular_segments, p);
     std::vector<cgal::Segment_2> visible_segments = calculateRealVisibleSegments(visible_points, regular_points);

@@ -305,7 +305,14 @@ TEST_CASE("test SteadyGrowth") {
 
   SECTION("calculateRealVisibleSegments") {
     cgal::Point_2 p = {20,41};
-    std::vector<cgal::Segment_2> regular_segs = {{{1,11},{10,20}},{{10,20},{39,22}},{{39,22},{33,15}},{{33,15},{68,19}},{{68,19},{20,41}},{{20,41},{1,11}}};
+    std::vector<cgal::Segment_2> regular_segs = {
+      {{1,11},{10,20}},
+      {{10,20},{39,22}},
+      {{39,22},{33,15}},
+      {{33,15},{68,19}},
+      {{68,19},{20,41}},
+      {{20,41},{1,11}}
+    };
     pl::PointList regular_points = calculateRegularPoints(regular_segs, p);
     pl::PointList visible_points = {{1,11}, {10,20}, {39,22}, {33,15}, {68,19}};
 
@@ -318,13 +325,45 @@ TEST_CASE("test SteadyGrowth") {
 
   SECTION("calculateRealVisibleSegments 2") {
     cgal::Point_2 p = {20,41};
-    std::vector<cgal::Segment_2> regular_segs = {{{1,11},{10,20}},{{10,20},{39,22}},{{39,22},{33,15}},{{33,15},{40,13}},{{40,13},{68,19}},{{68,19},{20,41}},{{20,41},{1,11}}};
+    std::vector<cgal::Segment_2> regular_segs = {
+      {{1,11},{10,20}},
+      {{10,20},{39,22}},
+      {{39,22},{33,15}},
+      {{33,15},{40,13}},
+      {{40,13},{68,19}},
+      {{68,19},{20,41}},
+      {{20,41},{1,11}}
+    };
     pl::PointList regular_points = calculateRegularPoints(regular_segs, p);
     pl::PointList visible_points = {{1,11}, {10,20}, {39,22}, {33,15}, {40, 13}, {68,19}};
 
     std::vector<cgal::Segment_2> segs = calculateRealVisibleSegments(visible_points, regular_points);
 
     std::vector<cgal::Segment_2> segs_real = {{{1,11},{10,20}},{{10,20},{39,22}}};
+
+    CHECK( (segs == segs_real) );
+  }
+
+  SECTION("calculateRealVisibleSegments 3") {
+    cgal::Point_2 p = {20, 36};
+    std::vector<cgal::Segment_2> regular_segs = {
+      {{10,14},{19,24}},
+      {{19,24},{16,19}},
+      {{16,19},{21,10}},
+      {{21,10},{29,17}},
+      {{29,17},{24,21}},
+      {{24,21},{35,30}},
+      {{35,30},{38,19}},
+      {{38,19},{44,22}},
+      {{44,22},{54,34}},
+      {{54,34},{20,36}},
+      {{20,36},{10,14}}
+    };
+    pl::PointList regular_points = calculateRegularPoints(regular_segs, p);
+    pl::PointList visible_points = {{10,14},{19,24},{16,19},{21,10},{29,17},{24,21},{35,30},{38,19},{44,22},{54,34}};
+
+    std::vector<cgal::Segment_2> segs = calculateRealVisibleSegments(visible_points, regular_points);
+    std::vector<cgal::Segment_2> segs_real = {{{10,14},{19,24}},{{24,21},{35,30}}};
 
     CHECK( (segs == segs_real) );
   }
