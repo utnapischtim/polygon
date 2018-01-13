@@ -51,8 +51,6 @@ static void replaceSegment(pl::PointList &final_list, const cgal::Segment_2 &seg
 
 
 pl::PointList pl::steadyGrowth(pl::PointList point_list) {
-  VLOG(3) << "steadyGrowth";
-
   auto [s_1, s_2] = locateTwoIndependentPoints(point_list);
   removePoint(point_list, s_1);
   removePoint(point_list, s_2);
@@ -64,8 +62,6 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
   for (size_t i = 0, size = point_list.size(); i < size; ++i) {
     // search point no other point is within the temporarly convex
     // hull O(n)
-    for (auto h : hull)
-      VLOG(4) << "   h: " << h;
     auto [p, s_l, s_r] = locateRandomPoint(point_list, hull);
 
     // the iterator is necessary for the function addToConvexHull, but
@@ -84,12 +80,6 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
 
     // O(n)
     replaceSegment(final_list, visible_segment, p);
-
-    for (auto f : final_list)
-      VLOG(4) << "   f: " << f;
-
-    VLOG(3) << "  size: " << final_list.size() << " p: " << p;
-    VLOG(3) << "---------------------------------";
   }
 
   final_list.push_back(final_list[0]);
@@ -98,7 +88,6 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
 }
 
 std::tuple<cgal::Point_2, cgal::Point_2> locateTwoIndependentPoints(const pl::PointList &point_list) {
-  VLOG(3) << "  locateTwoIndependendPoints";
   pl::random_selector<> selector{};
 
   cgal::Point_2 s_1 = selector(point_list);
@@ -116,7 +105,6 @@ std::tuple<cgal::Point_2, cgal::Point_2> locateTwoIndependentPoints(const pl::Po
 }
 
 void removePoint(pl::PointList &point_list, cgal::Point_2 point) {
-  VLOG(3) << "  removePoint";
   point_list.erase(std::remove_if(point_list.begin(),
                                   point_list.end(),
                                   [&](auto p) { return p == point; }),
@@ -124,7 +112,6 @@ void removePoint(pl::PointList &point_list, cgal::Point_2 point) {
 }
 
 Iter calculateStartPoint(const pl::PointList &hull, const cgal::Point_2 &p) {
-  VLOG(3) << "    calculateStartPoint";
   // to have better possibility to test this function. use the first
   // point of the hull.
   cgal::Point_2 x = hull[0];
@@ -150,7 +137,6 @@ Iter calculateStartPoint(const pl::PointList &hull, const cgal::Point_2 &p) {
 
 
 std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p) {
-  VLOG(3) << "    locateSupportVertices";
   Iter s_l, s_r;
 
   Iter start_point = calculateStartPoint(hull, p);
@@ -190,7 +176,6 @@ std::tuple<Iter, Iter> locateSupportVertices(const pl::PointList &hull, const cg
 }
 
 void recalculateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &p, Iter &s_l, Iter &s_r) {
-  VLOG(3) << "    recalculateSupportVertices";
   Iter v = next(hull, s_l);
   while (CGAL::right_turn(p, *s_l, *v)) {
     s_l = v;
@@ -206,7 +191,6 @@ void recalculateSupportVertices(const pl::PointList &hull, const cgal::Point_2 &
 
 
 std::tuple<cgal::Point_2, Iter, Iter> locateRandomPoint(const pl::PointList &point_list, const pl::PointList &hull) {
-  VLOG(3) << "  locateRandomPoint";
   pl::random_selector<> selector{};
 
   cgal::Point_2 p = selector(point_list);
@@ -231,8 +215,6 @@ std::tuple<cgal::Point_2, Iter, Iter> locateRandomPoint(const pl::PointList &poi
 }
 
 void addToConvexHull(pl::PointList &hull, cgal::Point_2 &p, Iter &s_l, Iter &s_r) {
-  VLOG(3) << "  addToConvexHull";
-
   if (s_l < s_r) {
     size_t dist = std::distance(s_l, s_r);
 
@@ -262,7 +244,6 @@ void addToConvexHull(pl::PointList &hull, cgal::Point_2 &p, Iter &s_l, Iter &s_r
 // return the points visible from p in order from s_l to s_r
 // O(2n) => O(n)
 pl::PointList calculatePossibleVisiblePoints(const pl::PointList &final_list, const cgal::Point_2 &s_l, const cgal::Point_2 &s_r) {
-  VLOG(3) << "    calculatePossibleVisiblePoints";
   pl::PointList visible_points;
   bool within_possible_visible_points = false;
   bool exit = false;
@@ -285,7 +266,6 @@ pl::PointList calculatePossibleVisiblePoints(const pl::PointList &final_list, co
 
 // return the segments from visible points
 std::vector<cgal::Segment_2> calculatePossibleVisibleSegments(const pl::PointList &visible_points) {
-  VLOG(3) << "    calculatePossibleVisibleSegments";
   std::vector<cgal::Segment_2> segments;
 
   for (size_t i = 1, size = visible_points.size(); i < size; ++i)
@@ -297,7 +277,6 @@ std::vector<cgal::Segment_2> calculatePossibleVisibleSegments(const pl::PointLis
 // return the segments containing the segments from and to p from s_l
 // and s_r to complete the polygon!
 std::vector<cgal::Segment_2> createRegularSegments(const std::vector<cgal::Segment_2> &segments, const cgal::Point_2 &p) {
-  VLOG(3) << "    createRegularSegments";
   std::vector<cgal::Segment_2> regular_segments = segments;
 
   cgal::Point_2 s_l = segments[0].source();
@@ -310,12 +289,6 @@ std::vector<cgal::Segment_2> createRegularSegments(const std::vector<cgal::Segme
 }
 
 pl::PointList calculateRegularPoints(const std::vector<cgal::Segment_2> &segments, cgal::Point_2 query_point) {
-  VLOG(3) << "    calculateRegularPoints";
-
-  VLOG(4) << "      p: " << query_point;
-  for (auto seg : segments)
-    VLOG(4) << "      seg: " << seg;
-
   using Arrangement_2 = CGAL::Arrangement_2<CGAL::Arr_non_caching_segment_traits_2<cgal>>;
   Arrangement_2 env;
   CGAL::insert_non_intersecting_curves(env, segments.begin(), segments.end());
@@ -342,9 +315,6 @@ pl::PointList calculateRegularPoints(const std::vector<cgal::Segment_2> &segment
   while (++curr != fh->outer_ccb())
     regular_points.push_back(curr->target()->point());
 
-  for (auto k : regular_points)
-    VLOG(4) << "  k: " << k;
-
   return regular_points;
 }
 
@@ -353,7 +323,6 @@ pl::PointList calculateRegularPoints(const std::vector<cgal::Segment_2> &segment
 // return the real segments visible from point p. WITHOUT any partial
 // or complete hidden segment.
 std::vector<cgal::Segment_2> calculateRealVisibleSegments(const pl::PointList &visible_points, const pl::PointList &regular_points) {
-  VLOG(3) << "    calculateRealVisibleSegments";
   // iterator
   Iter vis = visible_points.begin();
   Iter reg = regular_points.begin();
@@ -406,7 +375,6 @@ std::vector<cgal::Segment_2> calculateRealVisibleSegments(const pl::PointList &v
 }
 
 cgal::Segment_2 chooseRandomSegment(std::vector<cgal::Segment_2> segments) {
-  VLOG(3) << "    chooseRandomSegment";
   pl::random_selector<> selector{};
   cgal::Segment_2 seg = selector(segments);
   return seg;
@@ -414,10 +382,6 @@ cgal::Segment_2 chooseRandomSegment(std::vector<cgal::Segment_2> segments) {
 
 
 cgal::Segment_2 locateVisibleSegment(const pl::PointList &final_list, cgal::Point_2 p, cgal::Point_2 s_l, cgal::Point_2 s_r) {
-  VLOG(3) << "  locateVisibleSegment";
-  VLOG(4) << "    s_l: " << s_l << " s_r: " << s_r;
-  for (auto q : final_list)
-    VLOG(4) << "    q: " << q;
   cgal::Segment_2 located_visible_segment;
 
   pl::PointList visible_points = calculatePossibleVisiblePoints(final_list, s_l, s_r);
@@ -438,14 +402,12 @@ cgal::Segment_2 locateVisibleSegment(const pl::PointList &final_list, cgal::Poin
 
 
 void replaceSegment(pl::PointList &final_list, const cgal::Segment_2 &seg, const cgal::Point_2 &p) {
-  VLOG(3) << "  replaceSegment";
   cgal::Point_2 source = seg.target();
   auto iter_source = std::find_if(final_list.begin(), final_list.end(), [&](auto const& point){ return source == point; });
   final_list.insert(iter_source, p);
 }
 
 Iter next(const pl::PointList &list, const Iter &it) {
-  VLOG(3) << "      next";
   auto it_n = it + 1;
 
   if (it_n == list.end())
@@ -455,7 +417,6 @@ Iter next(const pl::PointList &list, const Iter &it) {
 }
 
 Iter prev(const pl::PointList &list, const Iter &it) {
-  VLOG(3) << "      prev";
   Iter it_p;
 
   if (it == list.begin())
