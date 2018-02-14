@@ -42,7 +42,7 @@ static std::tuple<cgal::Point_2, Iter, Iter> locateRandomPoint(const pl::PointLi
 // add the point to the convex hull
 static void addToConvexHull(pl::PointList &hull, cgal::Point_2 &p, Iter &s_l, Iter &s_r);
 
-// return a random segment completly visible from the point p. to do
+// return a random segment completely visible from the point p. to do
 // that some steps are necessary.
 static cgal::Segment_2 locateVisibleSegment(const pl::PointList &final_list, cgal::Point_2 p, cgal::Point_2 s_l, cgal::Point_2 s_r);
 
@@ -64,22 +64,14 @@ pl::PointList pl::steadyGrowth(pl::PointList point_list) {
     // hull O(n)
     auto [p, s_l, s_r] = locateRandomPoint(point_list, hull);
 
-    // the iterator is necessary for the function addToConvexHull, but
-    // locateVisibleSegment needs the point. it would be possible to
-    // use iterator arithmetic in addToConvexHull to not cache it
-    // here, but that would be creepy
-    cgal::Point_2
-      s_l_p = *s_l,
-      s_r_p = *s_r;
-
-    addToConvexHull(hull, p, s_l, s_r);
-    removePoint(point_list, p);
-
     // O(n)
-    cgal::Segment_2 visible_segment = locateVisibleSegment(final_list, p, s_l_p, s_r_p);
+    cgal::Segment_2 visible_segment = locateVisibleSegment(final_list, p, *s_l, *s_r);
 
     // O(n)
     replaceSegment(final_list, visible_segment, p);
+
+    addToConvexHull(hull, p, s_l, s_r);
+    removePoint(point_list, p);
   }
 
   final_list.push_back(final_list[0]);
