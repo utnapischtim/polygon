@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 #include <tuple>
+#include <map>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangle_2.h>
@@ -11,163 +12,183 @@
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
-static std::vector<std::tuple<cgal::Segment_2, cgal::Segment_2>> calculateIntersections(const std::vector<cgal::Segment_2> &segments);
-static std::tuple<cgal::Segment_2, cgal::Segment_2> calculateNewSegments(const std::vector<cgal::Segment_2> &segments, const cgal::Segment_2 &f_1, const cgal::Segment_2 &f_2);
-pl::PointList calculateFinalList(std::vector<cgal::Segment_2> &segments);
-static void goingInDepth(std::vector<cgal::Segment_2> &segments, cgal::Point_2 current, pl::PointList &final_list);
+using Intersections = std::map<std::string, std::tuple<cgal::Segment_2, cgal::Segment_2>>;
 
-pl::PointList pl::twoOptMoves(pl::PointList point_list) {
+static Intersections calculateIntersections(const std::vector<cgal::Segment_2> &segments);
+static void resolveIntersections(std::vector<cgal::Segment_2> &segments, Intersections &intersections);
+static pl::PointList calculateFinalList(std::vector<cgal::Segment_2> &segments);
+
+pl::PointList pl::twoOptMoves(const pl::PointList &point_list) {
   pl::PointList final_list;
-  pl::random_selector<> selector{};
-
-  // std::vector<cgal::Point_2> point_2_list;
-  // pl::convert(point_2_list, point_list);
 
   std::vector<cgal::Segment_2> segments;
-  for (size_t i = 1, size = point_list.size(); i < size; ++i)
-    segments.push_back({point_list[i - 1], point_list[i]});
+  pl::convert(point_list, segments);
 
-  // close the polygon
-  segments.push_back({point_list[point_list.size() - 1], point_list[0]});
+  // O(n^2*log(n))
+  auto intersections = calculateIntersections(segments);
 
-  auto intersection_segments = calculateIntersections(segments);
+  // O(n^2*log(n))
+  resolveIntersections(segments, intersections);
 
-  for (; 0 < intersection_segments.size();) {
-    auto [f_1, f_2] = selector(intersection_segments);
-
-    // remove the intersections that have f1 or f2 same as the choosen
-    // current intersection
-    intersection_segments.erase(std::remove_if(intersection_segments.begin(),
-                                               intersection_segments.end(),
-                                               [&](auto inter){ return f_1 == std::get<0>(inter) ||
-                                                                       f_2 == std::get<0>(inter) ||
-                                                                       f_1 == std::get<1>(inter) ||
-                                                                       f_2 == std::get<1>(inter); }),
-                                intersection_segments.end());
-
-    // replace f_1 with e_1 and f_2 with e_2
-
-    auto [e_1, e_2] = calculateNewSegments(segments, f_1, f_2);
-
-    auto it_f_1 = std::find_if(segments.begin(), segments.end(), [&](auto seg){ return seg == f_1; });
-    segments.erase(it_f_1);
-
-    auto it_f_2 = std::find_if(segments.begin(), segments.end(), [&](auto seg){ return seg == f_2; });
-    segments.erase(it_f_2);
-
-    for (auto s : segments) {
-      if (s != e_1 &&
-          s.source() != e_1.target() && s.target() != e_1.source() && s.source() != e_1.source() && s.target() != e_1.target() &&
-          CGAL::do_intersect(s, e_1) &&
-          std::count_if(intersection_segments.begin(), intersection_segments.end(), [&](auto inter){ return e_1 == std::get<0>(inter) && s == std::get<1>(inter); }) == 0)
-        intersection_segments.push_back({s, e_1});
-
-      if (s != e_2 &&
-          s.source() != e_2.target() && s.target() != e_2.source() && s.source() != e_2.source() && s.target() != e_2.target() &&
-          CGAL::do_intersect(s, e_2) &&
-          std::count_if(intersection_segments.begin(), intersection_segments.end(), [&](auto inter){ return e_2 == std::get<0>(inter) && s == std::get<1>(inter); }) == 0)
-        intersection_segments.push_back({s, e_2});
-    }
-
-    // do it after to the segments intersection check to not confuse it
-    segments.insert(it_f_1, e_1);
-    segments.insert(it_f_2, e_2);
-
-    // with this it would be O(n^3) i don't know if the above approach
-    // is correct, it would be to simple to reduce it to O(n^2)
-    // intersection_segments = calculateIntersections(segments);
-
-  }
-
+  // O(n*log(n))
   final_list = calculateFinalList(segments);
 
   return final_list;
 }
 
-std::vector<std::tuple<cgal::Segment_2, cgal::Segment_2>> calculateIntersections(const std::vector<cgal::Segment_2> &segments) {
-  std::vector<std::tuple<cgal::Segment_2, cgal::Segment_2>> intersection_segments;
-
-  // s_1 != s_2
-
-  // s_1.source() != s_2.target() && s_1.target() != s_2.source() this
-  // is necessary because do_intersect would treat this as a
-  // intersection
-
-  // maybe this part should be done in a better time complexity,
-  // because with this, we are on O(n^3)
-  // std::count(intersection_segments.begin(), intersection_segments.end(), [&](auto tup){ return std::get<0>(tup) == s_2 || std::get<1>(tup) == s_1}) == 0
-  // check if there exists intersections with segments in reverse order
-
-  for (auto s_1 : segments)
-    for (auto s_2 : segments)
-      if (s_1 != s_2 &&
-          s_1.source() != s_2.target() && s_1.target() != s_2.source() && s_1.source() != s_2.source() && s_1.target() != s_2.target() &&
-          CGAL::do_intersect(s_1, s_2) &&
-          std::count_if(intersection_segments.begin(), intersection_segments.end(), [&](auto inter){ return s_2 == std::get<0>(inter) && s_1 == std::get<1>(inter); }) == 0)
-        intersection_segments.push_back({s_1, s_2});
-
-  return intersection_segments;
+std::string to_key(const cgal::Segment_2 &s_1, const cgal::Segment_2 &s_2) {
+  return pl::to_string(s_1.source()) + '-' + pl::to_string(s_1.target()) + '-' + pl::to_string(s_2.source()) + '-' + pl::to_string(s_2.target());
 }
 
-std::tuple<cgal::Segment_2, cgal::Segment_2> calculateNewSegments(const std::vector<cgal::Segment_2> &segments, const cgal::Segment_2 &f_1, const cgal::Segment_2 &f_2) {
-  // TODO:
-  // there has to be a check, if the combination of the segment does
-  // just exists
+bool isIntersection(auto s_1, auto s_2) {
+  return s_1 != s_2 &&
+         s_1.source() != s_2.target() && s_1.target() != s_2.source() && s_1.source() != s_2.source() && s_1.target() != s_2.target() &&
+         CGAL::do_intersect(s_1, s_2);
+}
+
+bool isUnique(auto intersections, auto s_1, auto s_2) {
+  return intersections.find(to_key(s_2, s_1)) == intersections.end();
+}
+
+Intersections calculateIntersections(const std::vector<cgal::Segment_2> &segments) {
+  Intersections intersections;
+  // O(n^2*log(n))
+  for (auto s_1 : segments) // O(n)
+    for (auto s_2 : segments) // O(n)
+      if (isIntersection(s_1, s_2) && isUnique(intersections, s_1, s_2)) // O(1) + O(log(n))
+        intersections[to_key(s_1, s_2)] = {s_1, s_2}; // O(log(n))
+
+  return intersections;
+}
+
+std::tuple<cgal::Segment_2, cgal::Segment_2> calculateNewSegments(std::vector<cgal::Segment_2> &segments, const cgal::Segment_2 &f_1, const cgal::Segment_2 &f_2) {
   cgal::Segment_2 e_1(f_1.source(), f_2.source()), e_2(f_1.target(), f_2.target());
 
-  // it could be possible, it was possible when i was doing the
-  // algorithm by hand
-  if (std::any_of(segments.begin(), segments.end(), [&](auto s) { return e_1 == s || e_2 == s; })) {
+  segments.push_back(e_1);
+  segments.push_back(e_2);
+
+  // O(n*log(n))
+  pl::PointList list = calculateFinalList(segments);
+
+  if (list.size() != segments.size()) {
+    segments.pop_back();
+    segments.pop_back();
+
     e_1 = {f_1.source(), f_2.target()};
     e_2 = {f_1.target(), f_2.source()};
+
+    segments.push_back(e_1);
+    segments.push_back(e_2);
+
+    list = calculateFinalList(segments);
+
+    if (list.size() != segments.size())
+      throw std::runtime_error("ui big problem");
   }
 
-  if (std::any_of(segments.begin(), segments.end(), [&](auto s) { return e_1 == s || e_2 == s; }))
-    throw std::runtime_error("segments could not be changed, because they exists in both variants just");
+  // it might be possible to add the new segments within this function
+  // BUT by the new intersection calculation should considered about
+  // this change!
+  segments.pop_back();
+  segments.pop_back();
 
   return {e_1, e_2};
 }
 
+void resolveIntersections(std::vector<cgal::Segment_2> &segments, Intersections &intersections) {
+  pl::random_selector<> selector{};
 
-pl::PointList calculateFinalList(std::vector<cgal::Segment_2> &segments) {
-  pl::PointList final_list;
+    // O(n^2*log(n))
+  for (; 0 < intersections.size();) { // O(n)
+    auto [f_1, f_2] = selector(intersections).second;
 
-  auto segment = segments[0];
+    // remove the intersections that have f1 or f2 same as the choosen
+    // current intersection
+    auto condition_to_erase = [&](auto intersection) {
+      return f_1 == std::get<0>(intersection) || f_2 == std::get<0>(intersection) ||
+             f_1 == std::get<1>(intersection) || f_2 == std::get<1>(intersection);
+    };
 
-  segments.erase(segments.begin());
+    // O(nlog(n))
+    for (auto it = intersections.begin(); it != intersections.end();)
+      if (condition_to_erase(it->second))
+        it = intersections.erase(it); // O(log(n))
+      else
+        it++;
 
-  auto p = segment.source(), next = segment.target();
+    // O(n)
+    auto it_f_1 = std::find_if(segments.begin(), segments.end(), [&](auto seg){ return seg == f_1; });
+    segments.erase(it_f_1);
 
-  final_list.push_back({p.x(), p.y()});
+    // O(n)
+    auto it_f_2 = std::find_if(segments.begin(), segments.end(), [&](auto seg){ return seg == f_2; });
+    segments.erase(it_f_2);
 
-  goingInDepth(segments, next, final_list);
+    // O(n*log(n))
+    // replace f_1 with e_1 and f_2 with e_2
+    auto [e_1, e_2] = calculateNewSegments(segments, f_1, f_2);
 
-  final_list.push_back(final_list[0]);
+    // O(n*log(n))
+    for (auto s : segments) { // O(n)
+      if (isIntersection(s, e_1) && isUnique(intersections, s, e_1)) // O(1) + O(log(n))
+        intersections[to_key(s, e_1)] = {s, e_1}; // O(log(n))
 
-  return final_list;
+      if (isIntersection(s, e_2) && isUnique(intersections, s, e_2)) // O(1) + O(log(n))
+        intersections[to_key(s, e_2)] = {s, e_2}; // O(log(n))
+    }
+
+    // do it after to the segments intersection check to not confuse it
+    segments.insert(it_f_1, e_1);
+    segments.insert(it_f_2, e_2);
+  }
 }
 
-// maybe it is possible to rewrite it with fold expressions
-void goingInDepth(std::vector<cgal::Segment_2> &segments, cgal::Point_2 current, pl::PointList &final_list) {
-  for (auto it = segments.begin(); it != segments.end(); ++it) {
-    auto p = (*it).source(), q = (*it).target();
+pl::PointList calculateFinalList(std::vector<cgal::Segment_2> &segments) {
 
-    if (p == current) {
-      final_list.push_back({p.x(), p.y()});
-      segments.erase(it);
-      return goingInDepth(segments, q, final_list);
-    }
+  std::map<std::string, cgal::Point_2> look_1, look_2;
 
-    if (q == current) {
-      final_list.push_back({q.x(), q.y()});
-      segments.erase(it);
-      return goingInDepth(segments, p, final_list);
-    }
+  // O(n*log(n))
+  for (const auto &s : segments) { // O(n)
+    std::string
+      key_source = pl::to_string(s.source()),
+      key_target = pl::to_string(s.target());
+
+    if (look_1.find(key_source) == look_1.end())  // O(log(n))
+      look_1[key_source] = s.target();
+    else if (look_2.find(key_source) == look_2.end()) // O(log(n))
+      look_2[key_source] = s.target();
+    else
+      throw std::runtime_error("blob");
+
+    if (look_1.find(key_target) == look_1.end()) // O(log(n))
+      look_1[key_target] = s.source();
+    else if (look_2.find(key_target) == look_2.end()) // O(log(n))
+      look_2[key_target] = s.source();
+    else
+      throw std::runtime_error("blob");
   }
 
-  if (segments.size() == 0)
-    return;
+  cgal::Point_2
+    source = segments[0].source(),
+    target = segments[0].target();
 
-  if (segments.size() > 0)
-    throw std::runtime_error("it should not be possible to arrive to this exception, there was no successor of the searched point");
+  pl::PointList final_list = {source};
+
+  // O(n*log(n))
+  for (size_t i = 0, size = segments.size(); i < size; ++i) { // O(n)
+    final_list.push_back(target);
+
+    std::string key = pl::to_string(target);
+
+    if (look_1[key] != source) { // O(log(n))
+      source = target;
+      target = look_1[key];
+    } else if (look_2[key] != source) { // O(log(n))
+      source = target;
+      target = look_2[key];
+    } else
+      throw std::runtime_error("not working");
+  }
+
+  return final_list;
 }

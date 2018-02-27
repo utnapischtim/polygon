@@ -70,14 +70,14 @@ OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(SRCS)))))
 DEPS = $(OBJS:.o=.d)
 
 TEST_EXE  = $(BIN_DIR)tests
-TEST_SRCS = $(filter-out $(shell find unittests -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard unittests/*.cpp))
+TEST_SRCS = $(filter-out $(shell find unittests -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard unittests/*.cpp)) src/Point.cpp
 TEST_OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(TEST_SRCS)))))
 TEST_DEPS = $(TEST_OBJS:.o=.d)
 
 
 
 RM  = rm -f
-CXX = g++-7.1.0
+CXX = g++-7.2.0
 
 COMPILE := $(CXX) $(CPPFLAGS) $(INCLUDE_DIRS) -c
 DEPEND  := $(CXX) -MM $(CPPFLAGS) $(INCLUDE_DIRS)

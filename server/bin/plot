@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 if [ "$1" == "gnuplot" ]; then
   gnuplot -persist <<-EOF
     set title "plot the polygon"

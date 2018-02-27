@@ -5,7 +5,7 @@
 
 namespace pl {
 
-PointList twoOptMoves(PointList point_list);
+PointList twoOptMoves(const PointList &point_list);
 
 }
 

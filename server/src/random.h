@@ -29,7 +29,7 @@ struct random_selector {
   }
 
   template<typename Container>
-  auto operator()(const Container &c) -> decltype(*begin(c)) & {
+  auto operator()(const Container &c) {
     return *select(begin(c), end(c));
   }
 

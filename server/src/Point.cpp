@@ -27,6 +27,14 @@ void pl::convert(const std::vector<cgal::Segment_2> &segments, PointList &point_
   point_list.push_back(point_list[0]);
 }
 
+void pl::convert(const PointList &point_list, std::vector<cgal::Segment_2> &segments) {
+  for (size_t i = 1, size = point_list.size(); i < size; ++i)
+    segments.push_back({point_list[i - 1], point_list[i]});
+
+  // close the polygon
+  segments.push_back({point_list[point_list.size() - 1], point_list[0]});
+}
+
 
 std::ostream &pl::operator<<(std::ostream &out, const PointList &point_list) {
   for (auto p : point_list)
