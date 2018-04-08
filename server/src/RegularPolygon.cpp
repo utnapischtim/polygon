@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cmath>
 #include <tuple>
+#include <iostream>
+#include <iomanip>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -11,43 +13,27 @@
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
-
-struct RegularPolygonSettings {
-  cgal::Point_2 center;
-
-  unsigned node_count;
-  double radius;
-  double segment_length;
-  double winding_number;
-  double gamma;
-  double rotation_angle;
-
-  RegularPolygonSettings() : center{}, node_count{}, radius{}, segment_length{}, winding_number{}, gamma{}, rotation_angle{} {}
-};
-
-static RegularPolygonSettings buildRegularPolygonSettings(const pl::CommonSettingList &common_settings);
-static pl::PointList calculateRegularPolygonPoints(const RegularPolygonSettings &rps);
+static pl::PointList calculateRegularPolygonPoints(const pl::RegularPolygonSettings &rps);
 
 pl::PointList pl::regularPolygon(pl::CommonSettingList &common_settings) {
-  RegularPolygonSettings rps = buildRegularPolygonSettings(common_settings);
-  pl::PointList final_list = calculateRegularPolygonPoints(rps);
+  RegularPolygonSettings rps(common_settings);
+  pl::PointList final_list = pl::regularPolygon(rps);
+  return final_list;
+}
 
-  // set values for potentially other algorithmns who use this
-  // algorithm for initialization
-  setValue(common_settings, "segment length", std::to_string(rps.segment_length));
-  setValue(common_settings, "center", pl::to_string(rps.center));
+pl::PointList pl::regularPolygon(const pl::RegularPolygonSettings &rps) {
+  pl::PointList final_list = calculateRegularPolygonPoints(rps);
 
   // reverse it, to be in same order as the other algorithm, which
   // build there polygon in clockwise direction
   std::reverse(final_list.begin(), final_list.end());
-
   final_list.push_back(final_list[0]);
 
   return final_list;
 }
 
 // https://de.wikipedia.org/wiki/Regelm%C3%A4%C3%9Figes_Polygon
-pl::PointList calculateRegularPolygonPoints(const RegularPolygonSettings &rps) {
+pl::PointList calculateRegularPolygonPoints(const pl::RegularPolygonSettings &rps) {
   pl::PointList final_list;
 
   for (size_t seg = 1; seg <= rps.node_count; ++seg) {
@@ -147,21 +133,38 @@ cgal::Point_2 calculateCenter(const double radius, const pl::SamplingGrid &sampl
   return {x, y};
 }
 
-RegularPolygonSettings buildRegularPolygonSettings(const pl::CommonSettingList &common_settings) {
-  RegularPolygonSettings rps;
-
+pl::RegularPolygonSettings::RegularPolygonSettings(const pl::CommonSettingList &common_settings)
+  : RegularPolygonSettings{}
+{
   pl::SamplingGrid sampling_grid = getSamplingGrid(common_settings);
 
-  rps.winding_number = getWindingNumber(common_settings);
-  rps.node_count = getNodeCount(common_settings);
-  rps.gamma = 2 * M_PI * rps.winding_number / rps.node_count;
-  rps.radius = getRadius(common_settings);
-  rps.center = calculateCenter(rps.radius, sampling_grid);
+  winding_number = getWindingNumber(common_settings);
+  node_count = getNodeCount(common_settings);
+  gamma = 2 * M_PI * winding_number / node_count;
+  radius = getRadius(common_settings);
+  center = calculateCenter(radius, sampling_grid);
 
   // this has the effect, that the middle line of the first segment
   // lies on the positive x-axis
-  rps.rotation_angle = - rps.gamma / 2;
-  rps.segment_length = calculateSegmentLength(common_settings, rps.radius, rps.gamma);
+  rotation_angle = - gamma / 2;
+  segment_length = calculateSegmentLength(common_settings, radius, gamma);
+}
 
-  return rps;
+void pl::RegularPolygonSettings::updateNodeCount(const size_t nc) {
+  node_count = nc;
+  // following two values depend on node_count and have to be updated
+  // accordingly
+  gamma = 2 * M_PI * winding_number / node_count;
+  rotation_angle = - gamma / 2;
+}
+
+std::ostream &pl::operator<<(std::ostream &out, const pl::RegularPolygonSettings &rps) {
+  out << "  rps.node_count: "     << std::setw(7) << rps.node_count << '\n'
+      << "  rps.radius: "         << std::setw(11) << rps.radius << '\n'
+      << "  rps.segment_length: " << std::setw(2) << rps.segment_length << '\n'
+      << "  rps.winding_number: " << std::setw(2) << rps.winding_number << '\n'
+      << "  rps.gamma: "          << std::setw(12) << rps.gamma << '\n'
+      << "  rps.rotation_angle: " << std::setw(2) << rps.rotation_angle << '\n'
+      << "  rps.center: "         << std::setw(11) << rps.center << '\n';
+  return out;
 }
