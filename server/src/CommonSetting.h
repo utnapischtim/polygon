@@ -58,12 +58,20 @@ struct SamplingGrid {
 
   SamplingGrid() : width(0), height(0) {}
 
+  SamplingGrid(int w, int h) : width(w), height(h) {}
+
   SamplingGrid(CommonSetting common_setting) : SamplingGrid() {
     std::string sampling_grid = common_setting.val;
 
     auto t = pl::split(sampling_grid, 'x');
     width = std::stoi(t[0]);
     height = std::stoi(t[1]);
+  }
+
+  SamplingGrid &operator=(const SamplingGrid &cs) {
+    width = cs.width;
+    height = cs.height;
+    return *this;
   }
 
   bool isOutOfArea(const cgal::Point_2 p) const {

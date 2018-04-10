@@ -6,8 +6,6 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "easylogging++.h"
-
 #include "FixLocalOrientation.h"
 #include "RegularPolygon.h"
 #include "Point.h"
@@ -174,7 +172,7 @@ void stretch(pl::PointList &final_list, const pl::RegularPolygonSettings &rps, c
 }
 
 int getReflexPointCount(const pl::FilterList &filters) {
-  int reflex_point_count;
+  int reflex_point_count = 0;
 
   if (auto t = pl::find(filters, "reflex points"))
     reflex_point_count = (*t).val;
@@ -183,9 +181,9 @@ int getReflexPointCount(const pl::FilterList &filters) {
 }
 
 int getReflexChainMaxCount(const pl::FilterList &filters) {
-  int reflex_chain_max_count;
+  int reflex_chain_max_count = getReflexPointCount(filters);
 
-  if (auto t = pl::find(filters, "reflex chain max"))
+  if (auto t = pl::find(filters, "reflex chain max"); 0 <= (*t).val)
     reflex_chain_max_count = (*t).val;
 
   return reflex_chain_max_count;

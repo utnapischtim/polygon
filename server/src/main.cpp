@@ -67,7 +67,7 @@ R"(polygon generation
     --convex-chain=K          the same as in --reflex-points-in-chain but with convex points.
                               [default: 0]
     --reflex-chain-max=K      the maximal length of a chain. the default value says that there is
-                              no limit. [default: 0]
+                              no limit. [default: -1]
     --reflex-angle-range=R    set the range of the reflex angle. the angle is interpreted as open
                               in mathematical sense (180..360). [default: 180..360]
     --convex-angle-range=R    set the range of the convex angle. the angle is interpreted as open

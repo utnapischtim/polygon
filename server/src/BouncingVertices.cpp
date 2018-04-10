@@ -22,131 +22,38 @@ namespace fs = std::experimental::filesystem;
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 using Segments = std::vector<cgal::Segment_2>;
+using SegmentsIterator = Segments::iterator;
 
 const size_t MAX_CYCLES = 1000;
 
-static Segments::iterator next(Segments &segments, const Segments::iterator &it);
-static Segments::iterator prev(Segments &segments, const Segments::iterator &it);
-
-static std::tuple<pl::SamplingGrid, unsigned, double, bool, bool> init(const pl::CommonSettingList &common_settings);
-static Segments init(const pl::PointList &point_list);
-static std::string createEveryPhaseDir(const int node_count, const int reflex_point_count);
-
-static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit);
-
-static bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev);
-static bool insideAngleRange(const cgal::Segment_2 &e_1_new, const cgal::Segment_2 &e_2_new, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters);
-static bool isIntersection(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, Segments &segments, const Segments::iterator &sit);
-
-static double calculateAngle(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2);
+static Segments buildSegments(const pl::PointList &point_list);
+static void runBouncing(const pl::BouncingVerticesSettings &bvs, Segments &segments, SegmentsIterator &sit);
+static void createAnimationOutput(const pl::BouncingVerticesSettings &bvs, const Segments &segments, const int phase);
+static void createOutputForPhase(const pl::BouncingVerticesSettings &bvs, const Segments &segments, const int phase);
 
 pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
-  pl::PointList final_list;
+  pl::BouncingVerticesSettings bvs(common_settings, filters, point_list.size());
+  Segments segments = buildSegments(point_list);
 
-  Segments segments = init(point_list);
-  auto [sampling_grid, phases, bouncing_radius, animation, out_every_phase] = init(common_settings);
-
-  int reflex_point_count = pl::find(filters, "reflex points").value().val;
-  int node_count = point_list.size();
-
-  // mainly the orientation filter is done, because of the reflex
-  // points, because they are more interessting, then convex points.
-  // it could be possible that in future there has to be a distinction
-  // between convex and reflex orientation, but for that, the
-  // insideOrientationArea has to be rewritten too!
-  bool do_orientation_filter = reflex_point_count > -1;
-
-  std::string directory_for_every_phase_out = out_every_phase ? createEveryPhaseDir(node_count, reflex_point_count) : "";
-
-  for (size_t phase = 0; phase < phases; ++phase) {
+  for (int phase = 0; phase < bvs.phases; ++phase) {
     // not use next or prev because this would cause a endles loop
-    for (auto sit = segments.begin(); sit != segments.end(); ++sit) {
-      bool
-        intersection_occur = false,
-        outside_orientation_area = false,
-        out_of_angle_range = false;
+    for (auto sit = segments.begin(); sit != segments.end(); ++sit)
+      runBouncing(bvs, segments, sit);
 
-      cgal::Point_2 shifted_point;
+    if (bvs.animation)
+      createAnimationOutput(bvs, segments, phase);
 
-      Segments::iterator
-        sitp = prev(segments, sit),
-        sitn = next(segments, sit),
-        sitnn = next(segments, sitn);
-
-      cgal::Segment_2 e_1, e_2, e_1_old = *sit, e_2_old = *sitn;
-
-      size_t count_cycles = 0;
-
-      do {
-        // reset to false, because point search starts new
-        intersection_occur = false;
-        outside_orientation_area = false;
-        out_of_angle_range = false;
-
-        shifted_point = createPointInsideArea(sampling_grid, bouncing_radius, sit);
-
-        e_1 = {sit->source(), shifted_point};
-        e_2 = {shifted_point, sitn->target()};
-
-        if (do_orientation_filter)
-          outside_orientation_area = !insideOrientationArea(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp);
-
-        // the angle should only be checked, if there are reflex nodes
-        // to protect and if the point is not outside of the
-        // orientation area!
-        if (!outside_orientation_area)
-          out_of_angle_range = !insideAngleRange(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp, filters);
-
-        if (!outside_orientation_area && !out_of_angle_range)
-          intersection_occur = isIntersection(e_1, e_2, segments, sit);
-
-        // this construct has the benefit, that the search does not
-        // run in an endless loop if it not find a valid point, and
-        // skip this point and redo it on the next phase
-        if (MAX_CYCLES < count_cycles) {
-          outside_orientation_area = false;
-          out_of_angle_range = false;
-          intersection_occur = false;
-        }
-        else
-          count_cycles += 1;
-
-      } while (outside_orientation_area || out_of_angle_range || intersection_occur);
-
-      if (count_cycles <= MAX_CYCLES) {
-        // set the new segments;
-        *sit = e_1;
-        *sitn = e_2;
-      }
-    }
-
-    if (animation) {
-#ifdef MAGICK
-      std::string filename = "out/animation/" + std::to_string(phase) + ".png";
-      pl::PointList list;
-      pl::convert(segments, list);
-      pl::output(list, "png", filename, sampling_grid, phase);
-#else
-      std::cout << "animation feature was not compiled in" << "\n";
-      std::exit(-1);
-#endif
-    }
-
-    if (out_every_phase) {
-      std::string filename = directory_for_every_phase_out + "/" + std::to_string(phase) + ".dat";
-
-      pl::PointList list;
-      pl::convert(segments, list);
-      pl::output(list, "gnuplot", filename);
-    }
+    if (bvs.out_every_phase)
+      createOutputForPhase(bvs, segments, phase);
   }
 
-
+  pl::PointList final_list;
   pl::convert(segments, final_list);
+
   return final_list;
 }
 
-Segments::iterator next(Segments &segments, const Segments::iterator &it) {
+static Segments::iterator next(Segments &segments, const Segments::iterator &it) {
   auto it_n = it + 1;
 
   if (it_n == segments.end())
@@ -155,7 +62,7 @@ Segments::iterator next(Segments &segments, const Segments::iterator &it) {
   return it_n;
 }
 
-Segments::iterator prev(Segments &segments, const Segments::iterator &it) {
+static Segments::iterator prev(Segments &segments, const Segments::iterator &it) {
   Segments::iterator it_p;
 
   if (it == segments.begin())
@@ -166,53 +73,27 @@ Segments::iterator prev(Segments &segments, const Segments::iterator &it) {
   return it_p;
 }
 
-std::tuple<pl::SamplingGrid, unsigned, double, bool, bool> init(const pl::CommonSettingList &common_settings) {
-  pl::CommonSetting c_s_sampling_grid, c_s_phases, c_s_radius, c_s_animation, c_s_out_every_phase;
-
-  if (auto t = pl::find(common_settings, "sampling grid"))
-    c_s_sampling_grid = *t;
-  else {
-    std::string msg = std::string("essential common setting 'sampling grid' not set to generate random pointList");
-    throw std::runtime_error(msg);
-  }
-
-  if (auto t = pl::find(common_settings, "phases"))
-    c_s_phases = *t;
-  else {
-    std::string msg = std::string("essential common setting 'nodes' not set to generate random pointList");
-    throw std::runtime_error(msg);
-  }
-
-  if (auto t = pl::find(common_settings, "bouncing radius"))
-    c_s_radius = *t;
-  else
-    c_s_radius = pl::CommonSetting("bouncing radius", "", 3, "number", "60");
-
-  if (auto t = pl::find(common_settings, "animation"))
-    c_s_animation = *t;
-  else
-    c_s_animation = pl::CommonSetting("animation", "", 6, "number", "0");
-
-  if (auto t = pl::find(common_settings, "out every phase"))
-    c_s_out_every_phase = *t;
-  else
-    c_s_out_every_phase = pl::CommonSetting("out every phase", "", 7, "number", "0");
-
-  // TODO:
-  // make it robust!
-  pl::SamplingGrid sampling_grid(c_s_sampling_grid);
-  unsigned phases = std::stoi(c_s_phases.val);
-  double radius = std::stod(c_s_radius.val);
-  bool animation = std::stoi(c_s_animation.val) == 1;
-  bool out_every_phase = std::stoi(c_s_out_every_phase.val) == 1;
-
-  if (auto t = pl::find(common_settings, "segment length"); t && radius < 1)
-    radius = std::stod(t->val) / 2;
-
-  return {sampling_grid, phases, radius, animation, out_every_phase};
+void createAnimationOutput([[maybe_unused]] const pl::BouncingVerticesSettings &bvs, [[maybe_unused]] const Segments &segments, [[maybe_unused]] const int phase) {
+#ifdef MAGICK
+  std::string filename = "out/animation/" + std::to_string(phase) + ".png";
+  pl::PointList list;
+  pl::convert(segments, list);
+  pl::output(list, "png", filename, bvs.sampling_grid, phase);
+#else
+  std::cout << "animation feature was not compiled in" << "\n";
+  std::exit(-1);
+#endif
 }
 
-Segments init(const pl::PointList &point_list) {
+void createOutputForPhase(const pl::BouncingVerticesSettings &bvs, const Segments &segments, const int phase) {
+  std::string filename = bvs.directory_for_every_phase_out + "/" + std::to_string(phase) + ".dat";
+
+  pl::PointList list;
+  pl::convert(segments, list);
+  pl::output(list, "gnuplot", filename);
+}
+
+Segments buildSegments(const pl::PointList &point_list) {
   Segments segments;
 
   for (size_t i = 1, size = point_list.size(); i < size; ++i)
@@ -224,7 +105,7 @@ Segments init(const pl::PointList &point_list) {
   return segments;
 }
 
-std::string createEveryPhaseDir(const int node_count, const int reflex_point_count) {
+static std::string createEveryPhaseDir(const int node_count, const int reflex_point_count) {
   // create for a directory for this node reflex points combo
   std::string directory = "out/bouncing-vertices-" + std::to_string(node_count) + "-" + std::to_string(reflex_point_count) + "-0";
 
@@ -236,7 +117,7 @@ std::string createEveryPhaseDir(const int node_count, const int reflex_point_cou
   return directory;
 }
 
-cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit) {
+static cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const double radius, const Segments::iterator &sit) {
   cgal::Point_2 shifted_point;
 
   do {
@@ -252,35 +133,36 @@ cgal::Point_2 createPointInsideArea(const pl::SamplingGrid &sampling_grid, const
   return shifted_point;
 }
 
-bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev) {
+static bool insideOrientationArea(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev) {
   return
     CGAL::orientation(prev.source(), e_1.source(), e_1.target()) == CGAL::orientation(prev.source(), e_1_old.source(), e_1_old.target()) &&
     CGAL::orientation(e_1.source(), e_1.target(), e_2.target()) == CGAL::orientation(e_1_old.source(), e_1_old.target(), e_2_old.target()) &&
     CGAL::orientation(e_2.source(), e_2.target(), next.target()) == CGAL::orientation(e_2_old.source(), e_2_old.target(), next.target());
 }
 
-bool insideAngleRange(const cgal::Segment_2 &e_1_new, const cgal::Segment_2 &e_2_new, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::FilterList &filters) {
-  pl::Filter reflex_angle_range, convex_angle_range;
+static double calculateAngle(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2) {
+  cgal::Vector_2
+    u = e_1.source() - e_1.target(),
+    v = e_2.target() - e_2.source();
 
-  if (auto t = pl::find(filters, "reflex angle range"))
-    reflex_angle_range = *t;
+  // angle = arccos((u * v) / (||u|| * ||v||))
+  double radian_angle = std::acos((u*v) / (std::sqrt(u.squared_length()) * std::sqrt(v.squared_length())));
 
-  if (auto t = pl::find(filters, "convex angle range"))
-    convex_angle_range = *t;
+  return (radian_angle * 180) / M_PI;
+}
 
-  bool keep_orientation = pl::find(filters, "reflex points").value().val > -1;
-
+static bool insideAngleRange(const cgal::Segment_2 &e_1_new, const cgal::Segment_2 &e_2_new, const cgal::Segment_2 &e_1_old, const cgal::Segment_2 &e_2_old, const cgal::Segment_2 &next, const cgal::Segment_2 &prev, const pl::BouncingVerticesSettings &bvs) {
   // it could only be left or right turn, because
   // insideOrientationArea allows only that!
   auto isInBoundaries = [&](CGAL::Orientation orientation, double angle) {
     double lower_bound, upper_bound;
 
     if (orientation == CGAL::LEFT_TURN) {
-      lower_bound = reflex_angle_range.lower_bound;
-      upper_bound = reflex_angle_range.upper_bound;
+      lower_bound = bvs.reflex_angle_range.lower_bound;
+      upper_bound = bvs.reflex_angle_range.upper_bound;
     } else {
-      lower_bound = convex_angle_range.lower_bound;
-      upper_bound = convex_angle_range.upper_bound;
+      lower_bound = bvs.convex_angle_range.lower_bound;
+      upper_bound = bvs.convex_angle_range.upper_bound;
     }
 
     return lower_bound < angle && angle < upper_bound;
@@ -297,7 +179,7 @@ bool insideAngleRange(const cgal::Segment_2 &e_1_new, const cgal::Segment_2 &e_2
 
   bool is_inside;
   cgal::Segment_2 e_1, e_2;
-  if (keep_orientation) {
+  if (bvs.keep_orientation) {
     e_1 = e_1_old;
     e_2 = e_2_old;
   } else {
@@ -310,17 +192,6 @@ bool insideAngleRange(const cgal::Segment_2 &e_1_new, const cgal::Segment_2 &e_2
               isInside(e_2.source(), e_2.target(), next.target(), e_2_new, next);
 
   return is_inside;
-}
-
-double calculateAngle(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2) {
-  cgal::Vector_2
-    u = e_1.source() - e_1.target(),
-    v = e_2.target() - e_2.source();
-
-  // angle = arccos((u * v) / (||u|| * ||v||))
-  double radian_angle = std::acos((u*v) / (std::sqrt(u.squared_length()) * std::sqrt(v.squared_length())));
-
-  return (radian_angle * 180) / M_PI;
 }
 
 // *ssit != old_e_1 && *ssit != old_e_2, the new segments
@@ -339,7 +210,7 @@ double calculateAngle(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2) {
 //   intersection_occur variable has to be set with the two
 //   collinearity checks
 // ssit->source != e_2.target the same as with e_1
-bool isIntersection(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, Segments &segments, const Segments::iterator &sit) {
+static bool isIntersection(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, Segments &segments, const Segments::iterator &sit) {
   bool intersection_occur = false;
 
   cgal::Segment_2 old_e_1 = *sit, old_e_2 = *next(segments, sit);
@@ -360,3 +231,156 @@ bool isIntersection(const cgal::Segment_2 &e_1, const cgal::Segment_2 &e_2, Segm
   return intersection_occur;
 }
 
+
+void runBouncing(const pl::BouncingVerticesSettings &bvs, Segments &segments, SegmentsIterator &sit) {
+  bool
+    intersection_occur = false,
+    outside_orientation_area = false,
+    out_of_angle_range = false;
+
+  cgal::Point_2 shifted_point;
+
+  Segments::iterator
+    sitp = prev(segments, sit),
+    sitn = next(segments, sit),
+    sitnn = next(segments, sitn);
+
+  cgal::Segment_2 e_1, e_2, e_1_old = *sit, e_2_old = *sitn;
+
+  size_t count_cycles = 0;
+
+  do {
+    // reset to false, because point search starts new
+    intersection_occur = false;
+    outside_orientation_area = false;
+    out_of_angle_range = false;
+
+    shifted_point = createPointInsideArea(bvs.sampling_grid, bvs.bouncing_radius, sit);
+
+    e_1 = {sit->source(), shifted_point};
+    e_2 = {shifted_point, sitn->target()};
+
+    if (bvs.do_orientation_filter)
+      outside_orientation_area = !insideOrientationArea(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp);
+
+    // the angle should only be checked, if there are reflex nodes
+    // to protect and if the point is not outside of the
+    // orientation area!
+    if (!outside_orientation_area)
+      out_of_angle_range = !insideAngleRange(e_1, e_2, e_1_old, e_2_old, *sitnn, *sitp, bvs);
+
+    if (!outside_orientation_area && !out_of_angle_range)
+      intersection_occur = isIntersection(e_1, e_2, segments, sit);
+
+    // this construct has the benefit, that the search does not
+    // run in an endless loop if it not find a valid point, and
+    // skip this point and redo it on the next phase
+    if (MAX_CYCLES < count_cycles) {
+      outside_orientation_area = false;
+      out_of_angle_range = false;
+      intersection_occur = false;
+    }
+    else
+      count_cycles += 1;
+
+  } while (outside_orientation_area || out_of_angle_range || intersection_occur);
+
+  if (count_cycles <= MAX_CYCLES) {
+    // set the new segments;
+    *sit = e_1;
+    *sitn = e_2;
+  }
+}
+
+static pl::SamplingGrid getSamplingGrid(const pl::CommonSettingList &common_settings) {
+  pl::SamplingGrid sampling_grid{100,80};
+
+  if (auto t = pl::find(common_settings, "sampling grid"))
+    sampling_grid = {*t};
+
+  return sampling_grid;
+}
+
+static int getPhases(const pl::CommonSettingList &common_settings) {
+  int phases = 10;
+
+  if (auto t = pl::find(common_settings, "phases"))
+    phases = std::stoi((*t).val);
+
+  return phases;
+}
+
+static double getBouncingRadius(const pl::CommonSettingList &common_settings) {
+  double radius = 60;
+
+  if (auto t = pl::find(common_settings, "bouncing radius"))
+    radius = std::stod((*t).val);
+
+  if (auto t = pl::find(common_settings, "segment length"); t && radius < 1)
+    radius = std::stod((*t).val) / 2;
+
+  return radius;
+}
+
+static bool getAnimation(const pl::CommonSettingList &common_settings) {
+  bool animation = false;
+
+  if (auto t = pl::find(common_settings, "animation"))
+    animation  = std::stoi((*t).val) == 1;
+
+  return animation;
+}
+
+static bool getOutEveryPhase(const pl::CommonSettingList &common_settings) {
+  bool out_every_phase = false;
+
+  if (auto t = pl::find(common_settings, "out every phase"))
+    out_every_phase = std::stoi((*t).val) == 1;
+
+  return out_every_phase;
+}
+
+static int getReflexPointCount(const pl::FilterList &filters) {
+  int reflex_point_count = 0;
+
+  if (auto t = pl::find(filters, "reflex points"))
+    reflex_point_count = (*t).val;
+
+  return reflex_point_count;
+}
+
+static pl::Filter getReflexAngleRange(const pl::FilterList &filters) {
+  pl::Filter reflex_angle_range;
+
+  if (auto t = pl::find(filters, "reflex angle range"))
+    reflex_angle_range = *t;
+
+  return reflex_angle_range;
+}
+
+static pl::Filter getConvexAngleRange(const pl::FilterList &filters) {
+  pl::Filter convex_angle_range;
+
+  if (auto t = pl::find(filters, "convex angle range"))
+    convex_angle_range = *t;
+
+  return convex_angle_range;
+}
+
+pl::BouncingVerticesSettings::BouncingVerticesSettings(const pl::CommonSettingList &common_settings, const pl::FilterList &filters, size_t point_list_size) : BouncingVerticesSettings{} {
+  sampling_grid = getSamplingGrid(common_settings);
+  phases = getPhases(common_settings);
+  bouncing_radius = getBouncingRadius(common_settings);
+
+  reflex_point_count = getReflexPointCount(filters);
+  reflex_angle_range = getReflexAngleRange(filters);
+  convex_angle_range = getConvexAngleRange(filters);
+
+  animation = getAnimation(common_settings);
+  out_every_phase = getOutEveryPhase(common_settings);
+  keep_orientation = reflex_point_count > -1;
+  do_orientation_filter = reflex_point_count > -1;
+
+  directory_for_every_phase_out = out_every_phase ? createEveryPhaseDir(point_list_size, reflex_point_count) : "";
+
+}
