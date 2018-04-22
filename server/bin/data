@@ -1,21 +1,37 @@
 #!/bin/bash
 
-# from all algorithms 20 polygons with 10,50,100,500, 1000 points
 
-phase=2
+#  0    random two peasants
+#  1          steady growth
+#  2          two opt moves
+#  4          convex bottom
+#  5     space partitioning
+#  7                 random
+#  8      bouncing vertices
+#  9        regular polygon
+# 10  fix local orientation
 
-generators="0 2 4 5 7 8 9"
+generators_simple="0 1 2 4 5 9"
+generators_complex="8 10"
 
+list_of_nodes=$(seq 100 200)
+indices=$(seq 1 20)
 
-list_of_nodes="10 50 100 500 1000"
-
-for key in $generators
-do
-  for nodes in $list_of_nodes
+if [ "$1" = "sequential" ]
+then
+  for key in $generators
   do
-    for index in {1..20}
+    for nodes in $list_of_nodes
     do
-      ./bin/polygon --generator=$key --output-format=gnuplot --file-base=polygon-$index --nodes=$nodes --phases=$phase --output-dir=out
+      for index in $indices
+      do
+        ./bin/polygon --generator=$key --output-format=gnuplot --file-base=polygon-$index --nodes=$nodes --output-dir=out
+      done
     done
   done
-done
+elif [ "$1" = "parallel" ]
+then
+  parallel -j8 ./bin/polygon --generator={1} --output-format=gnuplot --file-base=polygon-{3} --nodes={2} ::: $generators_simple ::: $list_of_nodes ::: $indices
+else
+  echo "not implemented parameter"
+fi
