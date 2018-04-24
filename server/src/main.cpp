@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <experimental/filesystem>
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polygon_2_algorithms.h>
+
 #include "docopt.h"
 #include "easylogging++.h"
 
@@ -23,6 +26,8 @@ namespace docopt {
 
 namespace fs = std::experimental::filesystem;
 
+using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
+
 INITIALIZE_EASYLOGGINGPP
 
 pl::WebSocketServer websocket_server;
@@ -35,6 +40,7 @@ static void server(docopt::Arguments &args);
 static void run(docopt::Arguments &args);
 static std::string buildCustomFilename(docopt::Arguments &args);
 static void collectSimpleStats(std::function<void(docopt::Arguments &)> func, docopt::Arguments &args);
+static void checkDirectoryAboutSimplePolygons(docopt::Arguments &args);
 
 
 // ATTENTION
@@ -45,6 +51,7 @@ R"(polygon generation
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
     polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --convex-stretch=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A --out-every-phase=A] (--file=FILE | --file-base=FILE_BASE)
+    polygon --is-simple --input-dir=DIR [--v=K]
     polygon (-h | --help)
     polygon --version
 
@@ -93,6 +100,8 @@ R"(polygon generation
                               [default: 0]
     --out-every-phase=A       to output every phase as a gnuplot file.
                               [default: 0]
+    --is-simple               check if the files contains simple polygons
+    --input-dir=DIR           the input directory to check if files contains simple polygons
 
     --v=K                     set the verbosity level. [default: 0]
 )";
@@ -127,6 +136,9 @@ int main(int argc, char *argv[]) {
 
   else if (args["--list-output-format"].asBool())
     pl::printOutputFormats();
+
+  else if (args["--is-simple"].asBool())
+    checkDirectoryAboutSimplePolygons(args);
 
   else {
     if (auto dir = fs::status(args["--output-dir"].asString()); !fs::is_directory(dir)) {
@@ -226,4 +238,34 @@ void collectSimpleStats(std::function<void(docopt::Arguments &)> func, docopt::A
   func(args);
   TIME_END
   TIME_PARSE
+}
+
+void checkDirectoryAboutSimplePolygons(docopt::Arguments &args) {
+  auto dir_status = fs::status(args["--input-dir"].asString());
+
+  if (!fs::is_directory(dir_status)) {
+    std::cout << "the directory given by --output-dir is not a existing directory\n";
+    return;
+  }
+
+  for (auto file : fs::directory_iterator(args["--input-dir"].asString()))
+    if (fs::is_regular_file(file) && file.path().extension() == ".dat") {
+      std::ifstream infile(file.path().string());
+      std::vector<cgal::Point_2> points;
+
+      double x, y;
+      while (infile >> x >> y)
+        points.emplace_back(x, y);
+
+      // remove the last element, otherwise the is_simple_2 algorithm
+      // would classify the simple polygon also as not simple
+      if (points.front() == points.back())
+        points.pop_back();
+
+      if (0 < points.size() && !CGAL::is_simple_2(points.begin(), points.end(), cgal()))
+        std::cout << "file: " << file << " is not simple" << "\n";
+    }
+
+
+  std::cout << "if this is the only output, all are simple!" << "\n";
 }
