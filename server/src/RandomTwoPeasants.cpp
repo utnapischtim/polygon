@@ -25,12 +25,8 @@ pl::PointList pl::randomTwoPeasants(pl::PointList &point_list) {
       upper_list.push_back(point);
   }
 
-  final_list.push_back(lowest_x_point);
-
   for (auto point : upper_list)
     final_list.push_back(point);
-
-  final_list.push_back(highest_x_point);
 
   for (auto it = lower_list.end() - 1; it >= lower_list.begin(); it--)
     final_list.push_back(*it);
