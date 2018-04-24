@@ -31,7 +31,12 @@ then
   done
 elif [ "$1" = "parallel" ]
 then
-  parallel -j8 ./bin/polygon --generator={1} --output-format=gnuplot --file-base=polygon-{3} --nodes={2} --output-dir=out ::: $generators_simple ::: $list_of_nodes ::: $indices
+  if [ "$2" = "all" ]
+  then
+    parallel -j8 ./bin/polygon --generator={1} --output-format=gnuplot --file-base=polygon-{3} --nodes={2} --output-dir=out ::: $generators_simple ::: $list_of_nodes ::: $indices
+  else
+    parallel -j8 ./bin/polygon --generator=$2 --output-format=gnuplot --file-base=polygon-{2} --nodes={1} --output-dir=$3 ::: $list_of_nodes ::: $indices
+  fi
 else
   echo "not implemented parameter"
 fi
