@@ -5,3 +5,12 @@ server/lib/*
 server/logs/*
 server/*.dat
 
+*.aux
+*.log
+*.nav
+*.out
+*.pdf
+*.snm
+*.toc
+*.dvi
+*.lof
