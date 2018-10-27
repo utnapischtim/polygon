@@ -1,0 +1,421 @@
+\subsection{Bouncing Vertices}
+\subsubsection{Description of the algorithm}
+The main idea behind Bouncing Vertices is to take a simple polygon and
+bounce the points randomly by retaining the simple status. Further, it
+is possible to restrict the movement of the bouncing step by certain
+requirements. Requirements could be, for example to retain the convex
+and/or reflex status of the bouncing point.
+
+\subsubsection{Steps of the algorithm}
+
+The bouncing loop could be achieved in two different ways. Both have been
+implemented.
+
+\paragraph{Check after the point is temporarly moved}
+\begin{enumerate}
+  \item initialize settings
+  \item convert point list to segment list
+  \item bounce every point n times
+  \begin{enumerate}
+    \item choose a point inside the sampling grid
+    \item if wanted, check if the orientation is still the same
+    \item if wanted, check if the angle is still within the given range
+    \item check if the moved point causes an intersection
+    \item follow the above steps until a point fullfills all of them
+  \end{enumerate}
+\end{enumerate}
+
+\paragraph{Calculate the allowed segment before moving the point}
+\begin{enumerate}
+  \item initialize settings
+  \item convert point list to segment list
+  \item bounce every point n times
+  \begin{enumerate}
+    \item choose a random angle to move the point
+    \item calculate the random line to move the point
+    \item calculate allowed segment which is has no intersections with other
+      segments or the border
+    \item if wanted, calculate allowed segment to keep the angle range for the
+      current point and the point before and the point after the current point
+    \item if wanted, calculate allowed segment to keep the orientation of the
+      current point, the point before and the point after the current point
+    \item merge those allowed segments to the smallest allowed segment
+    \item choose a random value [0,distance)
+    \item move the point to the new position
+  \end{enumerate}
+\end{enumerate}
+
+\subsubsection{Description of implementation}
+This algorithm is straight forward to implement, and also gives the
+opportunity to extend the requirements to bounce a point, like the
+angle range or the orientation stability.
+
+As mentioned above, the bouncing loop can be done in two different
+ways. Both possibilities of implementation are described below.
+
+\paragraph{Check after the point is temporarly moved}
+
+\begin{enumerate}
+  \item the initialization of the values succeeds by the
+    ``BouncingVerticesSettings'' struct
+  \item the conversion from point list to segment list is implemented
+    with a ``for loop''
+  \item bounce every point n times
+  \begin{enumerate}
+    \item choose a velocity vector randomly within the range given
+      by the bouncing radius parameter within the sampling grid
+      boundaries. This is implemented with a do while loop.
+    \item to check the orientation stability it is necessary to
+      compare the old and the new segments around the bouncing point.
+      Three equalities have to be equal: the orientation in the
+      bouncing point, the orientation in the point before and the
+      orientation in the point after the bouncing point. This is
+      necessary because the current point affects the orientation of
+      the previous point and next point.
+    \item there are two cases to consider when the angle range needs
+      to be checked. The first is, if the orientation takes place,
+      then the old points have to be used to calculate the necessary
+      angle influenced by the old orientation. The second case is, if
+      the orientation does not take place, and therefore only the
+      angle range is used. To implement this the current segments
+      were used to calculate the orientation to choose the necessary
+      angle range.
+    \item the intersection check is also straight forward implemented.
+      a loop to iterate over all segments, and to check if both new
+      segments would create a intersection. Some cases have to be
+      noted. The checked segment should be different from the old
+      segments. If the current segment to check has common starting
+      points with the new segments, then it is only checked about
+      collinearity which would be interpreted as a intersection.
+  \end{enumerate}
+\end{enumerate}
+
+\paragraph{Calculate the allowed segment before moving the point}
+\begin{enumerate}
+  \item the initialization of the values succeeds by the
+    BouncingVerticesSettings struct
+  \item the convertion from point list to segment list is straight
+    forward a for loop
+  \item bounce every segment n times
+  \begin{enumerate}
+    \item the value gets choosen by a random function from [0, 360).
+      the whole range could be used except of two values. The angles
+      from the next and the previous segment.
+    \item create a temporary line and rotate that around the current point
+    \item calculate the intersection with the sampling\_grid. then iterate over
+      all segments and check if there are intersections and if the distance to
+      the bouncing point is lower. Update the allowed segment if necessary
+    \item to keep the angle range it is necessary to do two steps. First the
+      allowed segment for the combination of the point before and the point
+      after the current point has to be calculated. This is done by rotating the
+      line throw the segment before by the angle range and intersect it with the
+      random line. This produces 4 allowed segments. These have to be combined
+      to two according to the orientation of the points before and after. The
+      second step is to calculate the allowed segment according to the angle
+      range of the current point. To do this the Thales's Theorem is used. The
+      first step is to calculate the bisecting line of the point before A and the
+      point after B the current point C. The next step is to create a vector
+      from A to B. This vector is rotated according to the angle range. The
+      intersection between this vector and the bisecting line is the center of
+      the circle in which every line from point A to the circle to point B has
+      the angle with which the vector was rotated.
+    \item to calculate the allowed segment for the orientation stability it is
+      necessary to intersect the prev segment (target is A) and the next segment
+      (source is A) with the random line and construct a allowed segment.
+    \item merge the allowed segments to find the smallest allowed
+    \item calculate the new point by choosing a value $d$ between 0 and distance of
+      allowed segment $D$. calculate the point by $d/D * A + (1-d/D) * B$
+  \end{enumerate}
+\end{enumerate}
+
+
+\subsubsection{Complexity}
+\paragraph{Check after the point is temporarly moved}
+\begin{enumerate}
+  \item initialize settings $\bigO(1)$
+  \item convert point list to segment list $\bigO(n)$
+  \item bounce every segment n times $\bigO(n)$
+  \begin{enumerate}
+    \item choose a point inside the sampling grid $\bigO(P(x = point\ inside\ grid))$
+    \item if wanted check if the orientation is still the same $\bigO(1)$
+    \item if wanted check if the angle is still in given range $\bigO(1)$
+    \item check if the moved point cause a intersection $\bigO(n)$
+    \item do the above steps until a point fullfills all of them $\bigO(k)$
+  \end{enumerate}
+\end{enumerate}
+The complexity depends with this implementation a little on the
+probabilty how fast a correct point is found. Otherwise every point
+has to be bounced for a fixed count of phases. On every iteration
+every segment has to be checked of intersection, therefore
+$\bigO(n^2*k)$ should be the complexity. n is the number of points, k
+is the number how often a new point has to be choosen to fullfill the
+requirements. This value depends on the parameter set to restrict the
+valid area.
+
+\paragraph{Calculate the allowed segment before moving the point}
+\begin{enumerate}
+  \item initialize settings $\bigO(1)$
+  \item convert point list to segment list $\bigO(n)$
+  \item bounce every segment n times $\bigO(n)$
+  \begin{enumerate}
+    \item all calculation have $\bigO(1)$
+    \item the intersection part has $\bigO(n)$
+  \end{enumerate}
+\end{enumerate}
+
+This leads to $\bigO(n^2)$
+
+\subsubsection{Parameters}
+\begin{description}
+  \item [--nodes] how many nodes the polygon have to have. [default: 100]
+  \item [--sampling-grid] the area within the polygon could grow. [default: 1500x800]
+  \item [--phases] how many phases a random algorithm should run. [default: 10]
+  \item [--bouncing-radius] the distance to move a random point from old to new point. [default: 60]
+  \item [--animation] create a animation of the different phases of bouncing vertices. default is 0 for false, to start the creation set this to 1. [default: 0]
+  \item [--out-every-phase] to output every phase as a gnuplot file. [default: 0]
+  \item [--reflex-points] set the number of reflex points that should be at least. [default: 0]
+  \item [--reflex-angle-range] set the range of the reflex angle. the angle is interpreted as open in mathematical sense (180..360). [default: 180..360]
+  \item [--convex-angle-range] set the range of the convex angle. the angle is interpreted as open in mathematical sense (0..180). [default: 0..180]
+\end{description}
+
+\subsubsection{Examples}
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(62,26),(51,11),(34,6),(16,11),(5,26),(5,45),(16,60),(34,66),(51,60),(62,45)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (7) -- (8) -- (9) -- (10) -- (1);
+    \end{tikzpicture}
+    \caption{Regular Polygon. Startpoint for the algorithm}
+    \label{fig:bv:base}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(62,26),(51,11),(34,6),(16,11),(5,26),(15,45),(16,60),(34,66),(51,60),(62,45)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (7) -- (8) -- (9) -- (10) -- (1);
+    \end{tikzpicture}
+    \caption{Point 6 has moved}
+    \label{fig:bv:bounce2}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(62,26),(30,11),(34,6),(16,11),(5,26),(15,45),(16,60),(34,66),(51,60),(62,45)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (7) -- (8) -- (9) -- (10) -- (1);
+    \end{tikzpicture}
+    \caption{Point 3 has moved}
+    \label{fig:bv:bounce3}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(62,26),(30,11),(34,6),(16,11),(5,26),(15,45),(16,60),(34,66),(65,56),(62,45)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (7) -- (8) -- (9) -- (10) -- (1);
+    \end{tikzpicture}
+    \caption{Point 9 has moved}
+    \label{fig:bv:bounce4}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(62,26),(30,11),(34,6),(16,11),(5,26),(15,45),(70,47),(34,66),(65,56),(62,45)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6);
+      \draw (10) -- (1);
+      \draw (8) -- (9);
+      \draw[red] (6) -- (7) -- (8);
+      \draw[green] (9) -- (10);
+    \end{tikzpicture}
+    \caption{The red lines cut the green line, which is not good, and not valid!}
+    \label{fig:bv:bounce5}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(62,26),(30,11),(34,6),(16,11),(5,26),(15,45),(16,20),(34,66),(65,56),(62,45)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (7) -- (8) -- (9) -- (10) -- (1);
+    \end{tikzpicture}
+    \caption{Valid movement!}
+    \label{fig:bv:bounce6}
+  \end{minipage}
+\end{figure}
+
+
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=0.2,xscale=0.2]
+    \setcounter{i}{1}
+
+    \draw[->] (0,0) -- (80,0) node[below] {$x$};
+    \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+    \foreach \p in {(10,10),(30,10),(30,30),(10,30)} {
+      \node[point] (\arabic{i}) at \p {};
+      \stepcounter{i}
+    }
+
+    \draw (1) -- (2) -- (3) -- (4) -- (1);
+
+    \node (5) at (0,20) {};
+    \node (6) at (20,0) {};
+    \draw (5) -- (6);
+  \end{tikzpicture}
+  \caption{first test}
+\end{figure}
+
+\newcommand{\axis}{
+  \draw[->] (0,0) -- (13,0) node[below] {$x$};
+  \draw[->] (0,0) -- (0,10) node[left] {$y$};
+}
+
+\newcommand{\polygon}[1]{
+  \draw[name path=polygon]
+    \foreach \x [count=\xi] in {#1} {
+      \x node[point] (node\xi) {}
+    }
+
+    \foreach \x [count=\xi, remember=\xi-1 as \xiprev] in {#1} {
+      \ifnum\xi>1%
+        (node\xiprev) -- (node\xi)
+      \fi
+    }
+  ;
+}
+
+\newcommand{\randomLine}[4]{
+  \ifthenelse{\equal{#3}{}}{
+    \draw[name path=randomLine,rotate=0] #1 -- #2;
+  }{
+    \draw[name path=randomLine,rotate around={#3:#4}] #1 -- #2;
+  }
+}
+
+\newcommand{\intersection}[2]{
+  \fill[red, name intersections={of=#1 and #2, total=\t}]
+    \foreach \s in {1,...,\t}{(intersection-\s) circle (5pt) node{\s}};
+}
+
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=0.75,xscale=0.75]
+    \axis
+    \polygon{(2,2),(3,4),(9,6),(12,1),(8,2),(5,1),(2,2)}
+    \randomLine{(5,0)}{(5,7)}{}{}
+    \intersection{randomLine}{polygon}
+  \end{tikzpicture}
+  \caption{intersection free with vertical line}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=0.75,xscale=0.75]
+    \axis
+    \polygon{(2,2),(3,4),(9,6),(12,1),(8,2),(5,1),(2,2)}
+    \randomLine{(0,2)}{(13,2)}{}{}
+    \intersection{randomLine}{polygon}
+  \end{tikzpicture}
+  \caption{intersection free with horizontal line}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=0.75,xscale=0.75]
+    \axis
+    \polygon{(2,2),(3,4),(9,6),(12,1),(8,2),(5,1),(2,2)}
+    \randomLine{(0,2)}{(13,2)}{30}{(8,2)}
+    \intersection{randomLine}{polygon}
+  \end{tikzpicture}
+  \caption{intersection free with slightly rotated line}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=0.75,xscale=0.75]
+    \axis
+    \polygon{(2,2),(3,4),(9,6),(12,1),(8,2),(5,1),(2,2)}
+    \randomLine{(5,0)}{(5,7)}{}{}
+
+    \draw[red, shorten >=-3cm, shorten <= -3cm] (2,2) -- (3,4);
+    \draw[red, shorten >=-3cm, shorten <= -3cm] (2,2) -- (8,2);
+    \draw[red, shorten >=-3cm, shorten <= -3cm] (12,1) -- (8,2);
+
+    %% \intersection{randomLine}{reflexLine}
+    %% \intersection{randomLine}{convexLine}
+  \end{tikzpicture}
+  \caption{orientation stability with vertical line}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=0.35,xscale=0.35]
+    \draw[->] (0,0) -- (40,0) node[below] {$x$};
+    \draw[->] (0,0) -- (0,40) node[left] {$y$};
+    \polygon{(23.7135,28.4134), (21.5339, 25.4134), (18.0072,24.2675), (14.4805,25.4134), (12.3009, 28.4134), (12.3009, 32.1216), (14.4805, 35.1216), (18.0072, 36.2675), (21.5339, 35.1216), (23.7135,32.1216),(23.7135,28.4134)}
+    \randomLine{(18.5339, 25.4134)}{(38.5339, 25.4134)}{128.25}{(21.5339, 25.4134)}
+    \intersection{randomLine}{polygon}
+  \end{tikzpicture}
+  \caption{intersection free with slightly rotated line}
+\end{figure}
+
+
+\FloatBarrier

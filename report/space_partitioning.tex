@@ -1,0 +1,200 @@
+\subsection{Space Partitioning}
+\subsubsection{Description of the Algorithm}
+The main idea is a combination of the divide and conquer principle and
+the convex hull. The algorithm divides the point cloud by a line and
+recursively process those sets. Finally the points of the sets were
+pushed to the polygon. The fact that every set has a convex hull that
+has only one point in common with adjacent sets guarantees a simple
+polygon.
+\\[12pt]
+Following a description of the algorithm in detail:
+
+\begin{enumerate}
+  \item select two points
+  \item divide the point cloud by a line through those points \fref{sp:line}
+  \item recursively process those two sets of points \fref{sp:line2} to \fref{sp:line5}
+  \begin{enumerate}
+    \item exit point set of points == 2 || == 3 push points on the final list
+    \item calculate a random point
+    \item calculate a random line with this point
+    \item divide the point cloud by that line
+  \end{enumerate}
+\end{enumerate}
+
+\subsubsection{Implementation description}
+\begin{enumerate}
+  \item a random function selects two points ($s_l$ and $s_f$). Point $s_l$ is the
+    first point in rotation direction and $s_f$ the second point.
+  \item to divide the point cloud in two independent sets we create a
+    line through the two points. The \textit{Line\_2} class from the cgal
+    framework has a \textit{has\_on\_positive} and \textit{has\_on\_negative} function.
+    With these it is possible to distinguish between a point of one or
+    the other side of the line.
+  \item with the created sets we call recursivelly the function
+    \textit{recursiveDivide} and give the function the created set $S$, point $s_f$,
+    point $s_l$ and the polygon $C$. One call has as first element $s_f$ the other has $s_l$
+    as first element of the two points. This is necessary to close the
+    polygon.
+  \begin{enumerate}
+    \item there are two exit points of the \textit{recursiveDivide} function.
+      The first is with set \textit{S.size == 2} and pushs the point $s_l$ to the
+      polygon $C$. The second is with set \textit{S.size == 3}. Here we have to
+      search the third point $s$, which is not $s_l$ or $s_f$ and then we
+      could push $s$ and $s_l$ to the polygon $C$.
+    \item if the exit points does not occure we calculate a random
+      point. The random point should be selected randomly. The
+      condition is that it is not a point equal to and not collinear
+      with $s_f$ and $s_l$. The next step is to calculate a random line
+      through the point s and a point of the line through $s_f$ and
+      $s_l$. Essentially is that $s_f$ lies on the positive side of the
+      calculated random line.
+    \item the division of the set is equal as in the parent function
+  \end{enumerate}
+\end{enumerate}
+
+\subsubsection{Complexity}
+$\bigO(n^2)$ if it is done in a good way then it should be $\bigO(nlogn)$
+
+\subsubsection{Parameters}
+\begin{description}
+  \item [--nodes] how many nodes the polygon has to have. [default: 100]
+  \item [--sampling-grid] the area within the polygon could grow. [default: 1500x800]
+\end{description}
+
+\subsubsection{Examples}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(5,40),(10,20),(20,41),(21,10),(33,15),(39,22),(48,9),(55,17),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+    \end{tikzpicture}
+    \caption{Base random point cloud}
+    \label{fig:sp:base}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(5,40),(10,20),(20,41),(21,10)} {
+        \node[point, fill=red] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \foreach \p in {(33,15),(39,22)} {
+        \node[point, fill=violet] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \foreach \p in {(48,9),(55,17),(68,19)} {
+        \node[point, fill=blue] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \path (5) -- (6) coordinate[pos=-3.5](dd) coordinate[pos=10](ff);
+      \draw[green, dashed] (dd) -- (5);
+      \draw[green] (5) node[right=1pt, black] {$s_f$} -- (6) node[left=1pt, black] {$s_l$};
+      \draw[green, dashed] (6) -- (ff);
+    \end{tikzpicture}
+    \caption{First two points with the line and the two sets. Points on the line are in both sets.}
+    \label{fig:sp:line}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(5,40),(10,20),(20,41),(21,10),(33,15),(39,22),(48,9),(55,17),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[green] (5) node[right=1pt, black] {$s_f$} -- node[placeholder](a){} (6) node[right=1pt, black] {$s_l$};
+      \draw[red] (a) -- (1) node[right=1pt, black] {$s$};
+    \end{tikzpicture}
+    \caption{First split of left set}
+    \label{fig:sp:line2}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(5,40),(10,20),(20,41),(21,10),(33,15),(39,22),(48,9),(55,17),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (5) -- node[placeholder](a){} (6);
+      \draw (a) -- node[placeholder](b){} (1);
+      \draw (2) -- (b);
+    \end{tikzpicture}
+    \caption{Second split of left set}
+    \label{fig:sp:line3}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(5,40),(10,20),(20,41),(21,10),(33,15),(39,22),(48,9),(55,17),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (5) -- node[placeholder](a){} (6);
+      \draw (a) -- node[placeholder](b){} (1);
+      \draw (2) -- (b);
+      \draw (8) -- (a);
+    \end{tikzpicture}
+    \caption{First split of right set}
+    \label{fig:sp:line4}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(5,40),(10,20),(20,41),(21,10),(33,15),(39,22),(48,9),(55,17),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (5) -- (4) -- (2) -- (1) -- (3) -- (6) -- (9) -- (8) -- (7) -- (5);
+    \end{tikzpicture}
+    \caption{Final polygon}
+    \label{fig:sp:line5}
+  \end{minipage}
+\end{figure}
+
+\FloatBarrier
