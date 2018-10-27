@@ -5,6 +5,7 @@
 
 #include "Point.h"
 #include "CommonSetting.h"
+#include "SamplingGrid.h"
 
 namespace pl {
 

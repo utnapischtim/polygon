@@ -4,7 +4,7 @@ IM_CPPFLAGS = -fopenmp \
               -isystem/usr/include/ImageMagick-7
 
 CPPFLAGS = -g \
-           -std=c++1z \
+           -std=c++2a \
            -fconcepts \
            -Wshadow \
            -Winit-self \
@@ -34,7 +34,7 @@ LIB_DIRS =
 FLYMAKE_TEMP_FILES = build/
 
 RM  = rm -f
-CXX = g++-7.1.0
+CXX = g++-8.1.0
 
 check-syntax:
 	$(RM) $(FLYMAKE_TEMP_FILES)

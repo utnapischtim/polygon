@@ -15,6 +15,7 @@
 #include "Output.h"
 #include "Point.h"
 #include "CommonSetting.h"
+#include "SamplingGrid.h"
 
 namespace fs = std::experimental::filesystem;
 

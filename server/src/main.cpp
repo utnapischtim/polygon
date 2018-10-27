@@ -262,8 +262,11 @@ void checkDirectoryAboutSimplePolygons(docopt::Arguments &args) {
       if (points.front() == points.back())
         points.pop_back();
 
-      if (0 < points.size() && !CGAL::is_simple_2(points.begin(), points.end(), cgal()))
-        std::cout << "file: " << file << " is not simple" << "\n";
+      // could not be compiled with g++-8.1.0
+      // if (0 < points.size() && !CGAL::is_simple_2(points.begin(), points.end(), cgal()))
+      //   std::cout << "file: " << file << " is not simple" << "\n";
+      std::cout << "the check about simplicity could not be compiled with g++-8.1.0 for the moment\n";
+      std::exit(-1);
     }
 
 

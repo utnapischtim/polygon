@@ -9,6 +9,7 @@
 #include "RegularPolygon.h"
 #include "Point.h"
 #include "CommonSetting.h"
+#include "SamplingGrid.h"
 #include "random.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;

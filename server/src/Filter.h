@@ -46,6 +46,14 @@ struct Filter {
       if (0 < obj.count("val"))
         val = obj["val"];
     }
+
+  double lower_bound_radian() const {
+    return lower_bound * (M_PI / 180);
+  }
+
+  double upper_bound_radian() const {
+    return upper_bound * (M_PI / 180);
+  }
 };
 
 using FilterList = std::vector<Filter>;

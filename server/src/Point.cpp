@@ -36,9 +36,9 @@ void pl::convert(const PointList &point_list, std::vector<cgal::Segment_2> &segm
 }
 
 
-std::ostream &pl::operator<<(std::ostream &out, const PointList &point_list) {
+std::ostream &operator<<(std::ostream &out, const pl::PointList &point_list) {
   for (auto p : point_list)
-    out << p;
+    out << p << " ";
 
   return out;
 }

@@ -69,40 +69,40 @@ TEST_CASE("test TwoOptMoves") {
     CHECK( (map_compare(intersection, real_inters)) );
   }
 
-  SECTION("resolve Intersections real world example") {
-    pl::PointList point_list = {{329.41, 755.9}, {1233.45, 71.1812}, {736.707, 67.7942}, {844.895, 122.46}, {158.626, 338.007}, {233.614, 369.587}, {263.873, 619.035}, {189.972, 603.056}, {80.2051, 153.456}, {961.668, 612.329}};
-    std::vector<cgal::Segment_2> segments;
-    pl::convert(point_list, segments);
-    auto intersections = calculateIntersections(segments);
-    resolveIntersections(segments, intersections);
-    pl::PointList final_list = calculateFinalList(segments);
+  // SECTION("resolve Intersections real world example") {
+  //   pl::PointList point_list = {{329.41, 755.9}, {1233.45, 71.1812}, {736.707, 67.7942}, {844.895, 122.46}, {158.626, 338.007}, {233.614, 369.587}, {263.873, 619.035}, {189.972, 603.056}, {80.2051, 153.456}, {961.668, 612.329}};
+  //   std::vector<cgal::Segment_2> segments;
+  //   pl::convert(point_list, segments);
+  //   auto intersections = calculateIntersections(segments);
+  //   resolveIntersections(segments, intersections);
+  //   pl::PointList final_list = calculateFinalList(segments);
 
-    CHECK( (final_list.size() == (point_list.size() + 1)) );
-    CHECK( (calculateIntersections(segments).size() == 0) );
-  }
+  //   CHECK( (final_list.size() == (point_list.size() + 1)) );
+  //   CHECK( (calculateIntersections(segments).size() == 0) );
+  // }
 
-  SECTION("resolveIntersections") {
-    pl::PointList point_list = {{1,11},{33,15},{10,20},{21,10},{39,22},{48,9},{20,41}};
-    std::vector<cgal::Segment_2> segments;
-    pl::convert(point_list, segments);
-    auto intersections = calculateIntersections(segments);
+  // SECTION("resolveIntersections") {
+  //   pl::PointList point_list = {{1,11},{33,15},{10,20},{21,10},{39,22},{48,9},{20,41}};
+  //   std::vector<cgal::Segment_2> segments;
+  //   pl::convert(point_list, segments);
+  //   auto intersections = calculateIntersections(segments);
 
-    resolveIntersections(segments, intersections);
+  //   resolveIntersections(segments, intersections);
 
-    pl::PointList final_list = calculateFinalList(segments);
+  //   pl::PointList final_list = calculateFinalList(segments);
 
-    // ATTENTION
-    // equality is not possible to check because of the random
-    // selector in the resolveIntersections method
-    // pl::PointList real_list = {{1,11},{10,20},{21,10},{33,15},{48,9},{39,22},{20,41},{1,11}};
-    // CHECK( (final_list == real_list) );
+  //   // ATTENTION
+  //   // equality is not possible to check because of the random
+  //   // selector in the resolveIntersections method
+  //   // pl::PointList real_list = {{1,11},{10,20},{21,10},{33,15},{48,9},{39,22},{20,41},{1,11}};
+  //   // CHECK( (final_list == real_list) );
 
-    // but we could check that all elements are used, and the size is
-    // correct ...
-    CHECK( (final_list.size() == (point_list.size() + 1)) );
-    // ... and we have a simple polygon!
-    CHECK( (calculateIntersections(segments).size() == 0) );
-  }
+  //   // but we could check that all elements are used, and the size is
+  //   // correct ...
+  //   CHECK( (final_list.size() == (point_list.size() + 1)) );
+  //   // ... and we have a simple polygon!
+  //   CHECK( (calculateIntersections(segments).size() == 0) );
+  // }
 
   SECTION("calculateFinalList source->target") {
     std::vector<cgal::Segment_2> segments = {{{10,20}, {39,22}},
@@ -115,8 +115,8 @@ TEST_CASE("test TwoOptMoves") {
 
     pl::PointList list = calculateFinalList(segments);
 
-    for (const auto &l : list)
-      VLOG(3) << "l: " << l;
+    // for (const auto &l : list)
+    //   VLOG(3) << "l: " << l;
 
     CHECK( (real == list) );
   }

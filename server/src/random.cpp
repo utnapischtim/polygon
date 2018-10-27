@@ -3,6 +3,7 @@
 #include <string>
 
 #include "CommonSetting.h"
+#include "SamplingGrid.h"
 #include "Filter.h"
 #include "Point.h"
 #include "random.h"

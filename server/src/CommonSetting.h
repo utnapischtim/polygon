@@ -5,16 +5,13 @@
 #include <string>
 #include <vector>
 #include <map>
-
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <tuple>
 
 #include "json.hpp"
 #include "docopt.h"
 
 #include "Point.h"
 #include "utilities.h"
-
-using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 namespace pl {
 
@@ -49,34 +46,6 @@ struct CommonSetting {
   CommonSetting(nlohmann::json obj)
     : CommonSetting(obj["arg"], obj["name"], obj["desc"], obj["key"], obj["type"], obj["val"])
     {}
-};
-
-
-struct SamplingGrid {
-  int width;
-  int height;
-
-  SamplingGrid() : width(0), height(0) {}
-
-  SamplingGrid(int w, int h) : width(w), height(h) {}
-
-  SamplingGrid(CommonSetting common_setting) : SamplingGrid() {
-    std::string sampling_grid = common_setting.val;
-
-    auto t = pl::split(sampling_grid, 'x');
-    width = std::stoi(t[0]);
-    height = std::stoi(t[1]);
-  }
-
-  SamplingGrid &operator=(const SamplingGrid &cs) {
-    width = cs.width;
-    height = cs.height;
-    return *this;
-  }
-
-  bool isOutOfArea(const cgal::Point_2 p) const {
-    return p.x() < 0 || width < p.x() || p.y() < 0 || height < p.y();
-  }
 };
 
 

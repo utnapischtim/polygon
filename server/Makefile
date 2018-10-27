@@ -19,7 +19,7 @@ IM_LDFLAGS = `Magick++-config --ldflags`
 
 # -pg removed, causing problems when compiling with g++-7.1.0
 CPPFLAGS = $(CFLAGS) -g \
-           -std=c++1z \
+           -std=c++2a \
            -fconcepts \
            -Wshadow \
            -Winit-self \
@@ -77,7 +77,7 @@ TEST_DEPS = $(TEST_OBJS:.o=.d)
 
 
 RM  = rm -f
-CXX = g++-7.2.0
+CXX = g++-8.1.0
 
 COMPILE := $(CXX) $(CPPFLAGS) $(INCLUDE_DIRS) -c
 DEPEND  := $(CXX) -MM $(CPPFLAGS) $(INCLUDE_DIRS)
@@ -156,7 +156,7 @@ clean-test:
 	$(RM) $(TEST_DEPS) $(TEST_OBJS) $(TEST_EXE) $(FLYMAKE_TEMP_FILES)
 
 $(TEST_EXE): $(TEST_OBJS)
-	@$(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS) build/Filter.o build/utilities.o
+	@$(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS) build/Filter.o build/utilities.o build/random.o build/CommonSetting.o build/Output.o build/SamplingGrid.o
 
 debugOut:
 	@echo 'srcs: ' $(SRCS)

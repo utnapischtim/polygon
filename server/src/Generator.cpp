@@ -132,7 +132,11 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
   case 6:
     break;
   case 7:
+#ifdef DETERMINISTIC
+    point_list = random_point_list;
+#else
     point_list = pl::random(common_settings, local_filters);
+#endif
     point_list.push_back(point_list[0]);
     break;
   case 8:

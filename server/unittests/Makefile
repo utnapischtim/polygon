@@ -26,7 +26,7 @@ LIB_DIRS =
 FLYMAKE_TEMP_FILES = ../build/
 
 RM  = rm -f
-CXX = g++-7.1.0
+CXX = g++-7.2.0
 
 check-syntax:
 	$(RM) $(FLYMAKE_TEMP_FILES)
