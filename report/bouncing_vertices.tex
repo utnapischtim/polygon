@@ -417,5 +417,17 @@ This leads to $\bigO(n^2)$
   \caption{intersection free with slightly rotated line}
 \end{figure}
 
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=0.25,xscale=0.25]
+    \draw[->] (0,0) -- (70,0) node[below] {$x$};
+    \draw[->] (0,0) -- (0,70) node[left] {$y$};
+    \polygon{(20,30),(20,50),(30,60),(50,60),(60,50),(60,30),(28,24),(30,20),(20,30)}
+    \randomLine{(-10,20)}{(70,20)}{-30}{(30,20)}
+    %%\intersection{randomLine}{polygon}
+    \draw[shorten >=-6cm] (20,30) -- (28,24);
+  \end{tikzpicture}
+  \caption{intersection free with slightly rotated line}
+\end{figure}
+
 
 \FloatBarrier

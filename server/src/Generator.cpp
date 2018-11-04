@@ -141,7 +141,7 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
     break;
   case 8:
 
-#ifdef DEBUG
+#ifdef DETERMINISTIC
     point_list = pl::det::deterministic(common_settings, {});
 #else
     // TODO would be nice to have a choice here!

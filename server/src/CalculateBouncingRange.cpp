@@ -1,4 +1,5 @@
 #include <vector>
+#include <array>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Exact_circular_kernel_2.h>
@@ -208,7 +209,7 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedMovingSegment(const 
 }
 
 cgal::Segment_2 pl::CalculateBouncingRange::calculateOrientationStability() {
-  // VLOG(3) << "calculateOrientationStability prev_segment: " << prev_segment << " next_segment: " << next_segment;
+  VLOG(3) << "calculateOrientationStability prev_segment: " << prev_segment << " next_segment: " << next_segment;
   cgal::Line_2 prev_line(prev_segment), next_line(next_segment);
   // VLOG(3) << "calculateOrientationStability prev_line: " << prev_line << " next_line: " << next_line;
   const auto orientation_bouncing_point = CGAL::orientation(before_point, after_point, bouncing_point);
@@ -251,17 +252,37 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateOrientationStability() {
 }
 
 cgal::Segment_2 pl::CalculateBouncingRange::calculateIntersectionFreeRange() {
-  VLOG(3) << "calculateIntersectionFreeRange";
   cgal::Point_2 upper_point, lower_point;
-  auto [point_1, point_2] = bvs.sampling_grid.intersection(random_line);
-  VLOG(3) << "calculateIntersectionFreeRange point_1: " << point_1 << " point_2: " << point_2;
-  bool
-    left_of_bouncing_point = random_line.is_horizontal() && point_1.x() <= bouncing_point.x(),
-    below_of_bouncing_point = !random_line.is_horizontal() && point_1.y() <= bouncing_point.y(),
-    right_of_bouncing_point = false,
-    upper_of_bouncing_point = false;
 
-  if (left_of_bouncing_point || below_of_bouncing_point) {
+  auto left_or_below = [&](auto &point) {
+    bool is_left = random_line.is_horizontal() && point.x() <= bouncing_point.x();
+    bool is_below = !random_line.is_horizontal() && point.y() <= bouncing_point.y();
+    return is_left || is_below;
+  };
+
+  auto update_interval = [&](auto &point) {
+    if (left_or_below(point) && CGAL::squared_distance(bouncing_point, point) < CGAL::squared_distance(bouncing_point, lower_point))
+      lower_point = point;
+    else if (!left_or_below(point) && CGAL::squared_distance(bouncing_point, point) < CGAL::squared_distance(bouncing_point, upper_point))
+      upper_point = point;
+  };
+
+  auto intersection_after_point_on_ray = [&](auto &a, auto &b, auto &c) {
+    if (a.x() < b.x()) {
+      if (a.y() < b.y())
+        return b.x() < c.x() && b.y() < c.y();
+      else
+        return b.x() < c.x() && c.y() < b.y();
+    } else {
+      if (a.y() < b.y())
+        return c.x() < b.x() && b.y() < c.y();
+      else
+        return c.x() < b.x() && c.y() < b.y();
+    }
+  };
+
+  auto [point_1, point_2] = bvs.sampling_grid.intersection(random_line);
+  if (left_or_below(point_1)) {
     lower_point = point_1;
     upper_point = point_2;
   } else {
@@ -269,29 +290,27 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateIntersectionFreeRange() {
     upper_point = point_1;
   }
 
-  VLOG(3) << "calculateIntersectionFreeRange lower_point: " << lower_point << " upper_point: " << upper_point;
-
-  for (const auto segment : segments)
-    if (const auto inter = CGAL::intersection(cgal::Line_2(segment), random_line); inter) {
-      
-      const auto point = boost::get<cgal::Point_2>(*inter);
-
-      left_of_bouncing_point = random_line.is_horizontal() && point.x() <= bouncing_point.x();
-      below_of_bouncing_point = !random_line.is_horizontal() && point.y() <= bouncing_point.y();
-      right_of_bouncing_point = random_line.is_horizontal() && bouncing_point.x() < point.x();
-      upper_of_bouncing_point = !random_line.is_horizontal() && bouncing_point.y() < point.y();
-
-
-      VLOG(3) << "  segment: (" << segment << ") point: (" << point << ") left_of_bouncing_point: " << (left_of_bouncing_point) << " below_of_bouncing_point: " << (below_of_bouncing_point);
-
-      if (compare(point, bouncing_point)) {
-        // do nothing
-      }
-      else if ((left_of_bouncing_point || below_of_bouncing_point) && CGAL::squared_distance(bouncing_point, point) < CGAL::squared_distance(bouncing_point, lower_point))
-        lower_point = point;
-      else if ((right_of_bouncing_point || upper_of_bouncing_point) && CGAL::squared_distance(bouncing_point, point) < CGAL::squared_distance(bouncing_point, upper_point))
-        upper_point = point;
+  for (const auto segment : segments) {
+    if (const auto inter = CGAL::intersection(segment, random_line); inter) {
+      const auto inter_point = boost::get<cgal::Point_2>(*inter);
+      if (!compare(inter_point, bouncing_point))
+        update_interval(inter_point);
     }
+
+    for (const auto point_around : std::array{before_point, after_point}) {
+      if (const auto inter = CGAL::intersection(cgal::Ray_2(point_around, segment.target()), random_line); inter) {
+        try {
+          const auto inter_point = boost::get<cgal::Point_2>(*inter);
+
+          if (!compare(bouncing_point, inter_point) && intersection_after_point_on_ray(point_around, segment.target(), inter_point))
+            update_interval(inter_point);
+        } catch (boost::bad_get &e) {
+          // nothing happend, because this is only the case if the ray is on the
+          // random _line, and in this case no update should occur!
+        }
+      }
+    }
+  }
 
   return {lower_point, upper_point};
 }
@@ -300,8 +319,6 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateSmallestBouncingInterval(co
   cgal::Segment_2 allowed_segment = allowed_segments[0];
 
   for (auto segment : allowed_segments) {
-    VLOG(3) << "  calculateSmallesBouncingInterval segment: " << segment;
-
     if (CGAL::squared_distance(segment.source(), bouncing_point) < CGAL::squared_distance(allowed_segment.source(), bouncing_point))
       allowed_segment = {segment.source(), allowed_segment.target()};
 
@@ -344,10 +361,10 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateBouncingInterval(SegmentsIt
   // }
 
   // calculate smallest/widest by orientation stability
-  if (bvs.keep_orientation) {
-    const auto allowed_orientation_stability_segment = calculateOrientationStability();
-    allowed_segments.push_back(allowed_orientation_stability_segment);
-  }
+  // if (bvs.keep_orientation) {
+  //   const auto allowed_orientation_stability_segment = calculateOrientationStability();
+  //   allowed_segments.push_back(allowed_orientation_stability_segment);
+  // }
 
   return calculateSmallestBouncingInterval(allowed_segments);
 }
