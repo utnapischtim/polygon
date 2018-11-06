@@ -26,24 +26,6 @@ static bool compare(const cgal::Point_2 &a, const cgal::Point_2 &b, const double
   return x_equal && y_equal;
 }
 
-static cgal::Segment_2 intersection(std::vector<cgal::Point_2> poly, cgal::Line_2 line) {
-  cgal::Point_2 source, target;
-  bool is_source = false;
-  std::size_t size = poly.size();
-  poly.push_back(poly[0]);
-
-  for (std::size_t position = 0; position < size; position += 1)
-    if (auto inter = CGAL::intersection(cgal::Segment_2(poly[position], poly[position+1]), line); inter) {
-      if (is_source && !compare(boost::get<cgal::Point_2>(*inter), source))
-        target = boost::get<cgal::Point_2>(*inter);
-      else {
-        source = boost::get<cgal::Point_2>(*inter);
-        is_source = true;
-      }
-    }
-  return {source, target};
-}
-
 double pl::CalculateBouncingRange::getRandomAngleToBounce([[maybe_unused]] Segments::iterator &sit) {
   // ATTENTION
   // there is a bug. it is possible to get a angle and in series the line where
@@ -209,46 +191,33 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedMovingSegment(const 
 }
 
 cgal::Segment_2 pl::CalculateBouncingRange::calculateOrientationStability() {
-  VLOG(3) << "calculateOrientationStability prev_segment: " << prev_segment << " next_segment: " << next_segment;
-  cgal::Line_2 prev_line(prev_segment), next_line(next_segment);
-  // VLOG(3) << "calculateOrientationStability prev_line: " << prev_line << " next_line: " << next_line;
-  const auto orientation_bouncing_point = CGAL::orientation(before_point, after_point, bouncing_point);
+  cgal::Point_2 left_point, right_point;
+  auto [point_1, point_2] = bvs.sampling_grid.intersection(random_line);
 
-  // VLOG(3) << "calculateOrientationStability orientation_bouncing_point: " << orientation_bouncing_point;
-
-  if (auto inter = CGAL::intersection(prev_line, next_line);
-      inter && orientation_bouncing_point == CGAL::orientation(before_point, after_point, boost::get<cgal::Point_2>(*inter))) {
-    // VLOG(3) << "calculateOrientationStability inter: " << boost::get<cgal::Point_2>(*inter);
-    return intersection({before_point, after_point, boost::get<cgal::Point_2>(*inter)}, random_line);
+  if (CGAL::left_turn(before_point, bouncing_point, point_1)) {
+    left_point = point_1;
+    right_point = point_2;
   } else {
-    // VLOG(3) << "calculateOrientationStability else";
-    const auto inter_prev = bvs.sampling_grid.intersection(cgal::Line_2(prev_segment));
-    const auto orientation_inter_prev = CGAL::orientation(before_point, after_point, std::get<0>(inter_prev));
-
-    const auto inter_next = bvs.sampling_grid.intersection(cgal::Line_2(next_segment));
-    const auto orientation_inter_next = CGAL::orientation(before_point, after_point, std::get<0>(inter_next));
-
-    std::vector<cgal::Point_2> polygon = {before_point, after_point};
-
-    cgal::Point_2
-      point_from_next = orientation_bouncing_point == orientation_inter_next ? std::get<0>(inter_next) : std::get<1>(inter_next),
-      point_from_prev = orientation_bouncing_point == orientation_inter_prev ? std::get<0>(inter_prev) : std::get<1>(inter_prev);
-
-    polygon.push_back(point_from_next);
-
-    // it is possible that the previous and next segments doesn't intersect the
-    // same border, therefore the corner between them is necessary. it is
-    // possible to have more then one, but it should always be a right turn
-    cgal::Line_2 line(point_from_prev, point_from_next);
-    if (!line.is_vertical() && !line.is_horizontal())
-      for (auto point : bvs.sampling_grid.points())
-        if (CGAL::right_turn(point_from_prev, point_from_next, point))
-          polygon.push_back(point);
-
-    polygon.push_back(point_from_prev);
-
-    return intersection(polygon, random_line);
+    left_point = point_2;
+    right_point = point_1;
   }
+
+  std::array lines = {cgal::Line_2(prev_segment), cgal::Line_2(next_segment), cgal::Line_2(before_point, after_point)};
+  for (auto line : lines) {
+    if (const auto inter = CGAL::intersection(line, random_line); inter) {
+      // TODO: try catch
+      if (CGAL::orientation(before_point, bouncing_point, left_point) == CGAL::orientation(before_point, bouncing_point, boost::get<cgal::Point_2>(*inter))) {
+        if (CGAL::squared_distance(bouncing_point, boost::get<cgal::Point_2>(*inter)) < CGAL::squared_distance(bouncing_point, left_point))
+          left_point = boost::get<cgal::Point_2>(*inter);
+      } else if (CGAL::orientation(before_point, bouncing_point, right_point) == CGAL::orientation(before_point, bouncing_point, boost::get<cgal::Point_2>(*inter))) {
+        if (CGAL::squared_distance(bouncing_point, boost::get<cgal::Point_2>(*inter)) < CGAL::squared_distance(bouncing_point, right_point))
+          right_point = boost::get<cgal::Point_2>(*inter);
+      } else
+        VLOG(3) << "calculateOrientationStability missed some case";
+    }
+  }
+
+  return {left_point, right_point};
 }
 
 cgal::Segment_2 pl::CalculateBouncingRange::calculateIntersectionFreeRange() {
@@ -360,11 +329,11 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateBouncingInterval(SegmentsIt
   //   allowed_segments.push_back(allowed_convex_bouncing_point_segment);
   // }
 
-  // calculate smallest/widest by orientation stability
-  // if (bvs.keep_orientation) {
-  //   const auto allowed_orientation_stability_segment = calculateOrientationStability();
-  //   allowed_segments.push_back(allowed_orientation_stability_segment);
-  // }
+  //calculate smallest/widest by orientation stability
+  if (bvs.keep_orientation) {
+    const auto allowed_orientation_stability_segment = calculateOrientationStability();
+    allowed_segments.push_back(allowed_orientation_stability_segment);
+  }
 
   return calculateSmallestBouncingInterval(allowed_segments);
 }

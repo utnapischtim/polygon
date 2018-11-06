@@ -403,45 +403,87 @@ TEST_CASE("calculateIntersectionFreeRange ray 2") {
   }
 }
 
-// TEST_CASE("calculateOrientationStability") {
-//   cgal::Point_2 A(2,2),B(3,4),C(9,6),D(12,1),E(8,2),F(5,1);
+TEST_CASE("calculateOrientationStability") {
+  cgal::Point_2 A(2,2),B(3,4),C(9,6),D(12,1),E(8,2),F(5,1);
+
+  pl::BouncingVerticesSettings bvs{};
+  bvs.sampling_grid = {20,10};
+  bvs.convex_angle_range = pl::Filter("convex", 170, 180);
+  bvs.reflex_angle_range = pl::Filter("reflex", 180, 190);
+
+  std::vector<cgal::Segment_2> segments = {{A,B},{B,C},{C,D},{D,E},{E,F},{F,A}};
+  pl::CalculateBouncingRange cbr{bvs, segments};
+
+  SECTION("vertical random line through point F") {
+    cbr.bouncing_point = F;
+    cbr.after_point = A;
+    cbr.before_point = E;
+    cbr.random_line = cbr.calculateRandomLine(M_PI / 2);
+    cbr.prev_segment = cgal::Segment_2(D, E);
+    cbr.next_segment = cgal::Segment_2(A, B);
+
+    cgal::Segment_2 segment_real = {{5,0}, {5,2}};
+    cgal::Segment_2 allowed_segment = cbr.calculateOrientationStability();
+
+    CHECK( compare(segment_real, allowed_segment) );
+  }
+
+  SECTION("vertical random line through point E") {
+    cbr.bouncing_point = E;
+    cbr.after_point = F;
+    cbr.before_point = D;
+    cbr.random_line = cbr.calculateRandomLine(M_PI / 2);
+    cbr.prev_segment = cgal::Segment_2(C, D);
+    cbr.next_segment = cgal::Segment_2(F, A);
+
+    cgal::Segment_2 segment_real = {{8,1},{8,23/3.0}};
+    cgal::Segment_2 allowed_segment = cbr.calculateOrientationStability();
+
+    CHECK( compare(segment_real, allowed_segment) );
+  }
+
+  SECTION("vertical random line through point E") {
+    cbr.bouncing_point = A;
+    cbr.after_point = B;
+    cbr.before_point = F;
+    cbr.random_line = cgal::Line_2(A, C);
+    cbr.prev_segment = cgal::Segment_2(E, F);
+    cbr.next_segment = cgal::Segment_2(B, C);
+
+    cgal::Segment_2 segment_real = {{0, 0.857143}, {3.68966, 2.96552}};
+    cgal::Segment_2 allowed_segment = cbr.calculateOrientationStability();
+
+    CHECK( compare(segment_real, allowed_segment, 1.0e-5) );
+  }
+}
+
+// TEST_CASE("calculateOrientationStability 2") {
+//   cgal::Point_2 A(1415.52, 623.157), B(1291.81, 582.991), C(1405.68, 104.452), D(1275.07, 610.035), E(1232.36, 577.015), F(1306.94, 700.561), G(1299, 687.407), H(1285.15, 716.948), I(1356.17, 665.814);
 
 //   pl::BouncingVerticesSettings bvs{};
-//   bvs.sampling_grid = {20,10};
+//   bvs.sampling_grid = {1500,800};
 //   bvs.convex_angle_range = pl::Filter("convex", 170, 180);
 //   bvs.reflex_angle_range = pl::Filter("reflex", 180, 190);
 
-//   std::vector<cgal::Segment_2> segments = {{A,B},{B,C},{C,D},{D,E},{E,F},{F,A}};
+//   std::vector<cgal::Segment_2> segments = {{A,B},{B,C},{C,D},{D,E},{E,F},{F,G},{G,H},{H,I},{I,A}};
 //   pl::CalculateBouncingRange cbr{bvs, segments};
 
-//   SECTION("vertical random line through point F") {
-//     cbr.bouncing_point = F;
-//     cbr.random_line = cbr.calculateRandomLine(M_PI / 2);
-//     cbr.prev_segment = cgal::Segment_2(D, E);
-//     cbr.next_segment = cgal::Segment_2(A, B);
-//     cbr.before_point = E;
-//     cbr.after_point = A;
+//   SECTION("random line") {
+//     cbr.bouncing_point = A;
+//     cbr.after_point = B;
+//     cbr.before_point = I;
+//     cbr.random_line = cgal::Line_2(cgal::Point_2(1389.46, 723.627), A);
+//     cbr.prev_segment = cgal::Segment_2(E, F);
+//     cbr.next_segment = cgal::Segment_2(B, C);
 
-//     cgal::Segment_2 segment_real = {{5,2},{5,0}};
+//     //cgal::Segment_2 segment_real = {{1500, 297.458}, {1392.37, 712.401}};
 //     cgal::Segment_2 allowed_segment = cbr.calculateOrientationStability();
 
-//     CHECK( segment_real == allowed_segment );
-//   }
-
-//   SECTION("vertical random line through point E") {
-//     cbr.bouncing_point = E;
-//     cbr.random_line = cbr.calculateRandomLine(M_PI / 2);
-//     cbr.prev_segment = cgal::Segment_2(C, D);
-//     cbr.next_segment = cgal::Segment_2(F, A);
-//     cbr.before_point = D;
-//     cbr.after_point = F;
-
-//     cgal::Segment_2 segment_real = {{8,1},{8,23/3.0}};
-//     cgal::Segment_2 allowed_segment = cbr.calculateOrientationStability();
-
-//     CHECK( segment_real == allowed_segment );
+//     VLOG(3) << "allowed_segment: " << allowed_segment;
+//     //CHECK( compare(segment_real, allowed_segment, 1.0e-0) );
 //   }
 // }
+
 
 TEST_CASE("calculateSmallestBouncingInterval") {
   cgal::Point_2 A(2,2),B(3,4),C(9,6),D(12,1),E(8,2),F(5,1);

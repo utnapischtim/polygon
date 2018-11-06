@@ -429,5 +429,19 @@ This leads to $\bigO(n^2)$
   \caption{intersection free with slightly rotated line}
 \end{figure}
 
+\begin{figure}[ht]
+  \begin{tikzpicture}[yscale=1.25,xscale=1.25]
+    \draw[->] (0,0) -- (5,0) node[below] {$x$};
+    \draw[->] (0,0) -- (0,8) node[left] {$y$};
+    %%\polygon{(141.552, 62.3157), (129.181, 58.2991), (140.568, 10.4452), (127.507, 61.0035), (123.236, 57.7015), (130.694, 70.0561), (129.9, 68.7407), (128.515, 71.6948), (135.617, 66.5814), (141.552, 62.3157)}
+    \polygon{(4.1552, 6.23157), (2.9181, 5.82991), (4.0568, 1.04452), (2.7507, 6.10035), (2.3236, 5.77015), (3.0694, 7.00561), (2.99, 6.87407), (2.8515, 7.16948), (3.5617, 6.65814), (4.1552, 6.23157)}
+    \draw[shorten >= -6cm, shorten <= -2cm, name path=randomLine] (3.8946, 7.23627) -- (4.1552, 6.23157);
+    \draw[shorten >= -6cm, shorten <= -2cm] (2.9181, 5.82991) -- (3.5617, 6.65814);
+    \draw[shorten >= -6cm, shorten <= -2cm] (2.8515, 7.16948) -- (3.5617, 6.65814);
+    \draw[shorten >= -6cm, shorten <= -2cm] (2.9181, 5.82991) -- (4.0568, 1.04452);
+    %% \intersection{randomLine}{polygon}
+  \end{tikzpicture}
+  \caption{calculate}
+\end{figure}
 
 \FloatBarrier
