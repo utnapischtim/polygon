@@ -128,30 +128,6 @@ TEST_CASE("test compare function") {
   }
 }
 
-TEST_CASE("test intersection function") {
-  cgal::Point_2 A(2,2), B(3,4), C(9,6), D(12,1), E(8,2), F(5,1), G(5,7);
-
-  SECTION("test intersection with vertical line") {
-    std::vector<cgal::Point_2> poly = {A, B, C, D};
-    cgal::Line_2 line = {F, G};
-
-    cgal::Segment_2 real = {{5, 14/3.0},{5,1.7}};
-    cgal::Segment_2 inter = intersection(poly, line);
-
-    CHECK( compare(real, inter) );
-  }
-
-  SECTION("test compare two points beeing false int") {
-    std::vector<cgal::Point_2> poly = {A, B, C, D};
-    cgal::Line_2 line = {A, E};
-
-    cgal::Segment_2 real = {{2,2},{11.4,2}};
-    cgal::Segment_2 inter = intersection(poly, line);
-
-    CHECK( compare(real, inter) );
-  }
-}
-
 TEST_CASE("test CalculateBouncingRange rotate") {
   pl::BouncingVerticesSettings bvs{};
   std::vector<cgal::Segment_2> segments;
@@ -497,6 +473,16 @@ TEST_CASE("calculateSmallestBouncingInterval") {
   SECTION("test 1") {
     cbr.bouncing_point = E;
     std::vector<cgal::Segment_2> to_test_segments = {{{8,1},{8,23/3.0}}, {{8,0},{8,17/3.0}}};
+
+    cgal::Segment_2 allowed_real = {{8,1},{8,17/3.0}};
+    cgal::Segment_2 allowed_segment = cbr.calculateSmallestBouncingInterval(to_test_segments);
+
+    CHECK( allowed_real == allowed_segment );
+  }
+
+  SECTION("test 2") {
+    cbr.bouncing_point = E;
+    std::vector<cgal::Segment_2> to_test_segments = {{{8,1},{8,23/3.0}}, {{8,17/3.0},{8,0}}};
 
     cgal::Segment_2 allowed_real = {{8,1},{8,17/3.0}};
     cgal::Segment_2 allowed_segment = cbr.calculateSmallestBouncingInterval(to_test_segments);

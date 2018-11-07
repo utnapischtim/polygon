@@ -1,5 +1,7 @@
 #include <vector>
 #include <array>
+#include <iterator>
+#include <cmath>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Exact_circular_kernel_2.h>
@@ -287,12 +289,24 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateIntersectionFreeRange() {
 cgal::Segment_2 pl::CalculateBouncingRange::calculateSmallestBouncingInterval(const Segments &allowed_segments) {
   cgal::Segment_2 allowed_segment = allowed_segments[0];
 
-  for (auto segment : allowed_segments) {
-    if (CGAL::squared_distance(segment.source(), bouncing_point) < CGAL::squared_distance(allowed_segment.source(), bouncing_point))
-      allowed_segment = {segment.source(), allowed_segment.target()};
+  for (auto it = std::next(allowed_segments.begin(), 1); it != allowed_segments.end(); it++) {
+    const auto
+      orientation_allowed_source = CGAL::orientation(before_point, bouncing_point, allowed_segment.source()),
+      orientation_allowed_target = CGAL::orientation(before_point, bouncing_point, allowed_segment.target()),
+      orientation_segment_source = CGAL::orientation(before_point, bouncing_point, it->source()),
+      orientation_segment_target = CGAL::orientation(before_point, bouncing_point, it->target());
 
-    if (CGAL::squared_distance(segment.target(), bouncing_point) < CGAL::squared_distance(allowed_segment.target(), bouncing_point))
-      allowed_segment = {allowed_segment.source(), segment.target()};
+    if (orientation_segment_source == orientation_allowed_source && CGAL::squared_distance(it->source(), bouncing_point) < CGAL::squared_distance(allowed_segment.source(), bouncing_point))
+      allowed_segment = {it->source(), allowed_segment.target()};
+
+    if (orientation_segment_source == orientation_allowed_target && CGAL::squared_distance(it->source(), bouncing_point) < CGAL::squared_distance(allowed_segment.target(), bouncing_point))
+      allowed_segment = {allowed_segment.source(), it->source()};
+
+    if (orientation_segment_target == orientation_allowed_source && CGAL::squared_distance(it->target(), bouncing_point) < CGAL::squared_distance(allowed_segment.source(), bouncing_point))
+      allowed_segment = {it->target(), allowed_segment.target()};
+
+    if (orientation_segment_target == orientation_allowed_target && CGAL::squared_distance(it->target(), bouncing_point) < CGAL::squared_distance(allowed_segment.target(), bouncing_point))
+      allowed_segment = {allowed_segment.source(), it->target()};
   }
 
   return allowed_segment;
