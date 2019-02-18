@@ -16,11 +16,12 @@ nlohmann::json pl::getCommonSettings() {
     {{"arg", "--radius"}, {"name", "radius"}, {"desc", ""}, {"key", 3}, {"type", "number"}, {"val", "60"}},
     {{"arg", "--segment-length"}, {"name", "segment length"}, {"desc", ""}, {"key", 4}, {"type", "number"}, {"val", "20"}},
     {{"arg", "--bouncing-radius"}, {"name", "bouncing radius"}, {"desc", ""}, {"key", 5}, {"type", "number"}, {"val", "60"}},
+    {{"arg", "--bouncing-method"}, {"name", "bouncing method"}, {"desc", ""}, {"key", 6}, {"type", "text"}, {"val", "calculate-possible-bouncing-radius-before"}},
 
     // 0 is false and 1 is true
-    {{"arg", "--animation"}, {"name", "animation"}, {"desc", ""}, {"key", 6}, {"type", "number"}, {"val", "0"}},
+    {{"arg", "--animation"}, {"name", "animation"}, {"desc", ""}, {"key", 7}, {"type", "number"}, {"val", "0"}},
     // 0 is false and 1 is true
-    {{"arg", "--out-every-phase"}, {"name", "out every phase"}, {"desc", ""}, {"key", 7}, {"type", "number"}, {"val", "0"}}//,
+    {{"arg", "--out-every-phase"}, {"name", "out every phase"}, {"desc", ""}, {"key", 8}, {"type", "number"}, {"val", "0"}}//,
 
     // {{"arg", "--center"}, {"name", "center"}, {"desc", ""}, {"key", 5}, {"type", "text"}, {"val", "-1,-1"}}
   };

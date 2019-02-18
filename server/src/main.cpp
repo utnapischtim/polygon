@@ -50,7 +50,7 @@ R"(polygon generation
   USAGE:
     polygon --server [--port=PORT --v=K]
     polygon (--list-generator | --list-filter | --list-common-setting | --list-output-format)
-    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --convex-stretch=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A --out-every-phase=A] (--file=FILE | --file-base=FILE_BASE)
+    polygon --generator=KEY [--reflex-points=K --convex-points=K --reflex-chain=K --convex-chain=K --reflex-angle-range=R --convex-angle-range=R --reflex-chain-max=K --convex-stretch=K --lights-to-illuminate=K --nodes=NODES --sampling-grid=AREA --phases=P --radius=R --bouncing-radius=R --bouncing-method=M --segment-length=L --output-format=FORMAT --output-dir=DIR --v=K --statistics --animation=A --out-every-phase=A] (--file=FILE | --file-base=FILE_BASE)
     polygon --is-simple --input-dir=DIR [--v=K]
     polygon (-h | --help)
     polygon --version
@@ -90,6 +90,9 @@ R"(polygon generation
     --radius=R                the radius for regular polygon. [default: 60]
     --bouncing-radius=R       the distance to move a random point from old to new point.
                               [default: 60]
+    --bouncing-method=M       the bouncing method. (check-requirements-after-point-creation or
+                              calculate-possible-bouncing-radius-before)
+                              [default: calculate-possible-bouncing-radius-before]
     --output-format=FORMAT    set the output format. [default: gnuplot]
     --output-dir=DIR          set the output dir. [default: .]
     --file=FILE               set the file.

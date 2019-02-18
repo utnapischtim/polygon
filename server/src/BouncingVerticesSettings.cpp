@@ -97,14 +97,22 @@ static std::string createEveryPhaseDir(const int node_count, const int reflex_po
   return directory;
 }
 
+static std::string getBouncingMethod(const pl::CommonSettingList &common_settings) {
+  std::string bouncing_method;
+
+  if (auto t = pl::find(common_settings, "bouncing method"))
+    bouncing_method = (*t).val;
+
+  return bouncing_method;
+}
+
 pl::BouncingVerticesSettings::BouncingVerticesSettings(const pl::CommonSettingList &common_settings, const pl::FilterList &filters, size_t point_list_size) : BouncingVerticesSettings{} {
   VLOG(3) << "BouncingVerticesSettings";
 
   sampling_grid = getSamplingGrid(common_settings);
   phases = getPhases(common_settings);
   bouncing_radius = getBouncingRadius(common_settings);
-  //bouncing_method = "check-requirements-after-point-creation";
-  bouncing_method = "calculate-possible-bouncing-radius-before";
+  bouncing_method = getBouncingMethod(common_settings);
 
   reflex_point_count = getReflexPointCount(filters);
   reflex_angle_range = getReflexAngleRange(filters);
