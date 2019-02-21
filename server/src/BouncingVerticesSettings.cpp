@@ -121,7 +121,7 @@ pl::BouncingVerticesSettings::BouncingVerticesSettings(const pl::CommonSettingLi
   animation = getAnimation(common_settings);
   out_every_phase = getOutEveryPhase(common_settings);
   keep_orientation = reflex_point_count > -1;
-  keep_angle = (reflex_angle_range.lower_bound > 0 && reflex_angle_range.upper_bound > 0) || (convex_angle_range.lower_bound > 0 && convex_angle_range.upper_bound > 0);
+  keep_angle = (180 < reflex_angle_range.lower_bound && reflex_angle_range.upper_bound < 360) && (0 < convex_angle_range.lower_bound && convex_angle_range.upper_bound < 180);
 
   directory_for_every_phase_out = out_every_phase ? createEveryPhaseDir(point_list_size, reflex_point_count) : "";
 }
