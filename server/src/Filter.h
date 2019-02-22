@@ -56,6 +56,8 @@ struct Filter {
   }
 };
 
+Filter operator-(const double lhs, const Filter &rhs);
+
 using FilterList = std::vector<Filter>;
 
 FilterList createFilterList(nlohmann::json activated_filters);

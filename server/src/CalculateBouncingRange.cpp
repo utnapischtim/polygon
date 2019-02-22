@@ -12,6 +12,7 @@
 
 #include "CalculateBouncingRange.h"
 #include "BouncingVerticesSettings.h"
+#include "Filter.h"
 #include "random.h"
 #include "cgal_helper.h"
 
@@ -44,11 +45,6 @@ cgal::Line_2 pl::CalculateBouncingRange::rotate(const cgal::Point_2 &A, const cg
   return cgal::Line_2(A, ab_rotated);
 }
 
-
-// cgal::Line_2 rotate(const cgal::Segment_2 &s, const double angle) {
-//   return rotate(s.source(), s.target(), angle);
-// }
-
 cgal::Line_2 pl::CalculateBouncingRange::calculateRandomLine(const double angle_in_radian) {
   const auto temporary_point_for_random_line = bouncing_point + cgal::Vector_2(1, 0);
   return rotate(bouncing_point, temporary_point_for_random_line, angle_in_radian);
@@ -62,8 +58,8 @@ cgal::Line_2 pl::CalculateBouncingRange::calculateBisectingLine(const cgal::Poin
 
 // A has to be the point near to the random line
 // the rotation is always done clockwise
-cgal::Point_2 pl::CalculateBouncingRange::calculateIntersectionWithRandomLine(const cgal::Point_2 &A, const cgal::Point_2 &B, const double angle_in_radian) {
-  const auto line = rotate(A, B, angle_in_radian);
+cgal::Point_2 pl::CalculateBouncingRange::calculateIntersectionWithRandomLine(const cgal::Segment_2 &seg, const double angle_in_radian) {
+  const auto line = rotate(seg.source(), seg.target(), angle_in_radian);
   // TODO angle == 90 leads to no intersection;
   const auto intersection = CGAL::intersection(line, random_line);
   return boost::get<cgal::Point_2>(*intersection);
@@ -71,73 +67,84 @@ cgal::Point_2 pl::CalculateBouncingRange::calculateIntersectionWithRandomLine(co
 
 // this is the allowed moving segment constructed by the segment and the allowed
 // range, and its projection to the random_line
-cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedMovingSegment(const cgal::Segment_2 &seg, const double lower, const double upper) {
-  cgal::Point_2 point_1 = calculateIntersectionWithRandomLine(seg.source(), seg.target(), lower);
-  cgal::Point_2 point_2 = calculateIntersectionWithRandomLine(seg.source(), seg.target(), upper);
+cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedMovingSegmentByAngleRange(const cgal::Segment_2 &seg, const pl::Filter range) {
+  cgal::Point_2
+    lower_point = calculateIntersectionWithRandomLine(seg, range.lower_bound_radian()),
+    upper_point = calculateIntersectionWithRandomLine(seg, range.upper_bound_radian());
 
-  cgal::Point_2 near_bouncing_point, far_bouncing_point;
-
-  if (CGAL::squared_distance(bouncing_point, point_1) < CGAL::squared_distance(bouncing_point, point_2)) {
-    near_bouncing_point = point_1;
-    far_bouncing_point = point_2;
-  }
-  else {
-    near_bouncing_point = point_2;
-    far_bouncing_point = point_1;
-  }
-
-  return {near_bouncing_point, far_bouncing_point};
+  return {lower_point, upper_point};
 }
 
-// source() is always near to bouncing point
-// it should also work with check if bouncing point is inside circle with center
-// on prev, next segments
+cgal::Segment_2 pl::CalculateBouncingRange::calculatePreservedAngleRangeInBouncingPoint() {
+  VLOG(3) << "calculatePreservedAngleRangeInBouncingPoint";
+  const auto bisecting_line = calculateBisectingLine(before_point, after_point);
+  const auto mid_point = CGAL::midpoint(before_point, after_point);
+  const auto orientation = CGAL::orientation(before_point, after_point, bouncing_point);
+
+  const std::string state = orientation == CGAL::RIGHT_TURN ? "convex" : "reflex";
+  const auto angle_range = state == "convex" ? bvs.convex_angle_range : bvs.reflex_angle_range;
+
+  const auto point_lower = calculatePointWithAngle(before_point, mid_point, bisecting_line, angle_range.lower_bound);
+  const auto point_upper = calculatePointWithAngle(before_point, mid_point, bisecting_line, angle_range.upper_bound);
+
+  return {point_lower, point_upper};
+}
+
 cgal::Segment_2 pl::CalculateBouncingRange::blend(const cgal::Segment_2 &allowed_seg_prev, const cgal::Segment_2 &allowed_seg_next) {
-  cgal::Point_2 near, far;
+  cgal::Segment_2 allowed_segment;
 
-  VLOG(3) << "blend prev: " << allowed_seg_prev << " next: " << allowed_seg_next;
-
-  if (allowed_seg_prev.source().y() < allowed_seg_next.source().y())
-    near = allowed_seg_next.source();
-  else
-    near = allowed_seg_prev.source();
-
-  if (allowed_seg_prev.target().y() < allowed_seg_next.target().y())
-    far = allowed_seg_prev.target();
-  else
-    far = allowed_seg_next.target();
-
-  return {near, far};
-}
-
-// A has to be the point near to the random line
-//cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedConvexReflexPrevNextSegment(const cgal::Segment_2 &prev_segment, const cgal::Segment_2 &next_segment) {
-cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedConvexReflexPrevNextSegment() {
-
-  // state_prev == RIGHT_TURN => convex, LEFT_TURN => reflex
-  // state_next == LEFT_TURN => convex, RIGHT_TURN => reflex
-  const auto state_prev = CGAL::orientation(prev_segment.source(), prev_segment.target(), bouncing_point);
-  const auto state_next = CGAL::orientation(next_segment.target(), next_segment.source(), bouncing_point);
-
-  std::map<std::string, std::map<std::string, cgal::Segment_2>> allowed_segments;
-
-  allowed_segments["prev"]["convex"] = calculateAllowedMovingSegment(prev_segment, bvs.convex_angle_range.lower_bound_radian(), bvs.convex_angle_range.upper_bound_radian());
-  allowed_segments["prev"]["reflex"] = calculateAllowedMovingSegment(prev_segment, bvs.reflex_angle_range.lower_bound_radian(), bvs.reflex_angle_range.upper_bound_radian());
-
-  allowed_segments["next"]["convex"] = calculateAllowedMovingSegment(next_segment.opposite(), 2*M_PI - bvs.convex_angle_range.lower_bound_radian(), 2*M_PI - bvs.convex_angle_range.upper_bound_radian());
-  allowed_segments["next"]["reflex"] = calculateAllowedMovingSegment(next_segment.opposite(), 2*M_PI - bvs.reflex_angle_range.lower_bound_radian(), 2*M_PI - bvs.reflex_angle_range.upper_bound_radian());
-
-
-  cgal::Segment_2 allowed_segment = blend(allowed_segments["prev"][state_prev == CGAL::RIGHT_TURN ? "convex" : "reflex"], allowed_segments["next"][state_next == CGAL::LEFT_TURN ? "convex" : "reflex"]);
+  if (auto overlap_optional = CGAL::intersection(allowed_seg_prev, allowed_seg_next); overlap_optional) {
+    if (const cgal::Segment_2* overlap = boost::get<cgal::Segment_2>(&*overlap_optional))
+      allowed_segment = *overlap;
+    else {
+      std::cout << "blend does not could create a allowed segment with: " << allowed_seg_prev << " : " << allowed_seg_next << "\n";
+      std::exit(-1);
+    }
+  }
 
   return allowed_segment;
 }
 
-cgal::Point_2 pl::CalculateBouncingRange::calculatePointWithAngle(const cgal::Point_2 &A, const cgal::Point_2 &B, const cgal::Line_2 &bisecting_line, const double angle) {
-  const auto rotation_angle = 2*M_PI - (M_PI / 2 - degreeToRadian(angle));
-  const auto line = rotate(A, B, rotation_angle);
-  const auto center = boost::get<cgal::Point_2>(*CGAL::intersection(line, bisecting_line));
+// this function calculates the allowed segment to preserve the angle on the
+// points before and after the bouncing point. to calculate the allowed segment
+// the segments before and after are rotated and projected to the randomline
+cgal::Segment_2 pl::CalculateBouncingRange::calculatePreservedAngleRangeAroundBouncingPoint() {
+  VLOG(3) << "calculatePreservedAngleRangeAroundBouncingPoint";
 
+  // orientation_prev == RIGHT_TURN => convex, LEFT_TURN => reflex
+  // orientation_next == LEFT_TURN => convex, RIGHT_TURN => reflex
+  const auto
+    orientation_prev = CGAL::orientation(prev_segment.source(), prev_segment.target(), bouncing_point),
+    orientation_next = CGAL::orientation(next_segment.target(), next_segment.source(), bouncing_point);
+
+  const std::string
+    state_prev = orientation_prev == CGAL::RIGHT_TURN ? "convex" : "reflex",
+    state_next = orientation_next == CGAL::LEFT_TURN ? "convex" : "reflex";
+
+  const pl::Filter
+    range_prev = state_prev == "convex" ? bvs.convex_angle_range : bvs.reflex_angle_range,
+    range_next = 2*M_PI - (state_next == "convex" ? bvs.convex_angle_range : bvs.reflex_angle_range);
+
+  const cgal::Segment_2
+    allowed_segment_prev = calculateAllowedMovingSegmentByAngleRange(prev_segment, range_prev),
+    allowed_segment_next = calculateAllowedMovingSegmentByAngleRange(next_segment, range_next);
+
+  return blend(allowed_segment_prev, allowed_segment_next);
+}
+
+cgal::Point_2 pl::CalculateBouncingRange::calculatePointWithAngle(const cgal::Point_2 &A, const cgal::Point_2 &B, const cgal::Line_2 &bisecting_line, const double angle) {
+  VLOG(3) << "calculatePointWithAngle A: " << A << " B: " << B << " bisecting_line: " << bisecting_line << " angle: " << angle;
+
+  auto rotationAngleCalculatedInDependenceToApertureAngle = [](const double a){
+    return 2*M_PI - (M_PI / 2 - degreeToRadian(a));
+  };
+
+  const auto rotation_angle = rotationAngleCalculatedInDependenceToApertureAngle(angle);
+  VLOG(3) << "  rotation_angle: " << rotation_angle;
+  const auto line = rotate(A, B, rotation_angle);
+  VLOG(3) << "  line: " << line;
+  const auto center = boost::get<cgal::Point_2>(*CGAL::intersection(line, bisecting_line));
+  VLOG(3) << "  center: " << center;
   using CircK = CGAL::Exact_circular_kernel_2;
   using Pt2 = CGAL::Point_2<CircK>;
   using Circle_2 = CGAL::Circle_2<CircK>;
@@ -170,26 +177,6 @@ cgal::Point_2 pl::CalculateBouncingRange::calculatePointWithAngle(const cgal::Po
   }
 
   return point;
-}
-
-cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedMovingSegment(const cgal::Point_2 &A, const cgal::Point_2 &B, const pl::Filter &angle_range) {
-  const auto bisecting_line = calculateBisectingLine(A, B);
-  const auto mid_point = CGAL::midpoint(A, B);
-
-  const auto point_lower = calculatePointWithAngle(A, mid_point, bisecting_line, angle_range.lower_bound);
-  const auto point_upper = calculatePointWithAngle(A, mid_point, bisecting_line, angle_range.upper_bound);
-
-  cgal::Point_2 point_near_mid_point, point_far_mid_point;
-
-  if (CGAL::squared_distance(point_lower, mid_point) < CGAL::squared_distance(point_upper, mid_point)) {
-    point_near_mid_point = point_lower;
-    point_far_mid_point = point_upper;
-  } else {
-    point_near_mid_point = point_upper;
-    point_far_mid_point = point_lower;
-  }
-
-  return {point_near_mid_point, point_far_mid_point};
 }
 
 cgal::Segment_2 pl::CalculateBouncingRange::calculateOrientationStability() {
@@ -325,29 +312,16 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculateBouncingInterval(SegmentsIt
 
   VLOG(3) << "calculateBouncingInterval random_angle: " << random_angle << " bouncing_point: " << bouncing_point << " random_line: " << random_line;
 
-  // calculate intersection with other segments
-  const auto allowed_intersection_free_segment = calculateIntersectionFreeRange();
-  allowed_segments.push_back(allowed_intersection_free_segment);
+  allowed_segments.push_back(calculateIntersectionFreeRange());
 
-  // if (bvs.keep_angle) {
-  //   // allowed segments from the angle of the point A, and B, the points before
-  //   // and after the bouncing point
-  //   const auto allowed_convex_reflex_prev_next_segment = calculateAllowedConvexReflexPrevNextSegment(prev_segment, next_segment);
-  //   allowed_segments.push_back(allowed_convex_reflex_prev_next_segment);
-
-  //   // allowed reflex and convex segment in bouncing point
-  //   const auto allowed_reflex_bouncing_point_segment = calculateAllowedMovingSegment(A, B, bvs.reflex_angle_range);
-  //   allowed_segments.push_back(allowed_reflex_bouncing_point_segment);
-
-  //   const auto allowed_convex_bouncing_point_segment = calculateAllowedMovingSegment(A, B, bvs.convex_angle_range);
-  //   allowed_segments.push_back(allowed_convex_bouncing_point_segment);
-  // }
+  if (bvs.keep_angle) {
+    allowed_segments.push_back(calculatePreservedAngleRangeAroundBouncingPoint());
+    allowed_segments.push_back(calculatePreservedAngleRangeInBouncingPoint());
+  }
 
   //calculate smallest/widest by orientation stability
-  if (bvs.keep_orientation) {
-    const auto allowed_orientation_stability_segment = calculateOrientationStability();
-    allowed_segments.push_back(allowed_orientation_stability_segment);
-  }
+  if (bvs.keep_orientation)
+    allowed_segments.push_back(calculateOrientationStability());
 
   return calculateSmallestBouncingInterval(allowed_segments);
 }
@@ -367,7 +341,7 @@ cgal::Point_2 pl::CalculateBouncingRange::calculateShiftedPoint(const cgal::Segm
 }
 
 void pl::CalculateBouncingRange::bounce(SegmentsIterator &sit) {
-  VLOG(3) << "\n\n";
+  VLOG(3) << "CalculateBouncingRange::bounce \n\n";
   const auto allowed_segment = calculateBouncingInterval(sit);
   VLOG(3) << "bounce allowed_segment: " << allowed_segment;
   const auto shifted_point = calculateShiftedPoint(allowed_segment);

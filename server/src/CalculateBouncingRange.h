@@ -6,6 +6,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include "BouncingVerticesSettings.h"
+#include "Filter.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
@@ -34,16 +35,14 @@ struct CalculateBouncingRange {
   cgal::Line_2 calculateRandomLine(const double angle_in_radian);
 
   cgal::Segment_2 calculateIntersectionFreeRange();
-  //cgal::Segment_2 calculateAllowedConvexReflexPrevNextSegment(const cgal::Segment_2 &prev_segment, const cgal::Segment_2 &next_segment);
-  cgal::Segment_2 calculateAllowedConvexReflexPrevNextSegment();
-  //cgal::Segment_2 calculateOrientationStability(const cgal::Segment_2 &prev_segment, const cgal::Segment_2 &next_segment);
   cgal::Segment_2 calculateOrientationStability();
-  cgal::Segment_2 calculateAllowedMovingSegment(const cgal::Segment_2 &seg, const double lower, const double upper);
-  cgal::Segment_2 calculateAllowedMovingSegment(const cgal::Point_2 &A, const cgal::Point_2 &B, const pl::Filter &angle_range);
+  cgal::Segment_2 calculateAllowedMovingSegmentByAngleRange(const cgal::Segment_2 &seg, const pl::Filter range);
+  cgal::Segment_2 calculatePreservedAngleRangeAroundBouncingPoint();
+  cgal::Segment_2 calculatePreservedAngleRangeInBouncingPoint();
   cgal::Segment_2 blend(const cgal::Segment_2 &allowed_seg_prev, const cgal::Segment_2 &allowed_seg_next);
   cgal::Segment_2 calculateSmallestBouncingInterval(const Segments &allowed_segments);
 
-  cgal::Point_2 calculateIntersectionWithRandomLine(const cgal::Point_2 &A, const cgal::Point_2 &B, const double angle_in_radian);
+  cgal::Point_2 calculateIntersectionWithRandomLine(const cgal::Segment_2 &seg, const double angle_in_radian);
   cgal::Point_2 calculatePointWithAngle(const cgal::Point_2 &A, const cgal::Point_2 &B, const cgal::Line_2 &bisecting_line, const double angle);
 
 

@@ -100,3 +100,10 @@ std::optional<pl::Filter> pl::find(const pl::FilterList &filters, std::string na
 
   return *it;
 }
+
+pl::Filter pl::operator-(const double lhs, const pl::Filter &rhs) {
+  pl::Filter result;
+  result.lower_bound = lhs - rhs.lower_bound;
+  result.upper_bound = lhs - rhs.upper_bound;
+  return result;
+}
