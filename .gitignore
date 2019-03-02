@@ -4,6 +4,9 @@ server/build/*
 server/lib/*
 server/logs/*
 server/*.dat
+server/*.gif
+server/*.png
+server/*.svg
 
 *.aux
 *.log
