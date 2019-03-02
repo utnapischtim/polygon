@@ -2,6 +2,8 @@
 #define CALCULATEBOUNCINGRANGE_H_
 
 #include <vector>
+#include <optional>
+#include <variant>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
@@ -39,11 +41,11 @@ struct CalculateBouncingRange {
   cgal::Segment_2 calculateAllowedMovingSegmentByAngleRange(const cgal::Segment_2 &seg, const pl::Filter range);
   cgal::Segment_2 calculatePreservedAngleRangeAroundBouncingPoint();
   cgal::Segment_2 calculatePreservedAngleRangeInBouncingPoint();
-  cgal::Segment_2 blend(const cgal::Segment_2 &allowed_seg_prev, const cgal::Segment_2 &allowed_seg_next);
+  cgal::Segment_2 blend(cgal::Segment_2 allowed_seg_prev, cgal::Segment_2 allowed_seg_next);
   cgal::Segment_2 calculateSmallestBouncingInterval(const Segments &allowed_segments);
 
-  cgal::Point_2 calculateIntersectionWithRandomLine(const cgal::Segment_2 &seg, const double angle_in_radian);
-  cgal::Point_2 calculatePointWithAngle(const cgal::Point_2 &A, const cgal::Point_2 &B, const cgal::Line_2 &bisecting_line, const double angle);
+  std::optional<cgal::Point_2> calculateIntersectionWithRandomLine(const cgal::Segment_2 &seg, const double angle_in_radian);
+  std::variant<std::monostate, cgal::Point_2, cgal::Segment_2> calculatePointWithAngle(const cgal::Point_2 &A, const cgal::Point_2 &B, const cgal::Line_2 &bisecting_line, const double angle);
 
 
   /**
