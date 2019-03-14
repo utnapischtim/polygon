@@ -1,7 +1,7 @@
 #include <thread>
 
-#include "json.hpp"
-#include "easylogging++.h"
+#include <json.hpp>
+#include <easylogging++.h>
 
 #include "WebsocketServer.h"
 #include "Worker.h"

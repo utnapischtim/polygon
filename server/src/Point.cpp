@@ -3,7 +3,7 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "json.hpp"
+#include <json.hpp>
 
 #include "Point.h"
 

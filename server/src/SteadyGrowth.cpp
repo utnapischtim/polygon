@@ -10,8 +10,6 @@
 #include <CGAL/Arr_non_caching_segment_traits_2.h>
 #include <CGAL/Arrangement_2.h>
 
-#include "easylogging++.h"
-
 #include "SteadyGrowth.h"
 #include "Point.h"
 #include "random.h"

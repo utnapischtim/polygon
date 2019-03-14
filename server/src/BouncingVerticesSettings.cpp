@@ -1,8 +1,6 @@
 #include <string>
 #include <filesystem>
 
-#include "easylogging++.h"
-
 #include "BouncingVerticesSettings.h"
 #include "CommonSetting.h"
 #include "SamplingGrid.h"
@@ -107,8 +105,6 @@ static std::string getBouncingMethod(const pl::CommonSettingList &common_setting
 }
 
 pl::BouncingVerticesSettings::BouncingVerticesSettings(const pl::CommonSettingList &common_settings, const pl::FilterList &filters, size_t point_list_size) : BouncingVerticesSettings{} {
-  VLOG(3) << "BouncingVerticesSettings";
-
   sampling_grid = getSamplingGrid(common_settings);
   phases = getPhases(common_settings);
   bouncing_radius = getBouncingRadius(common_settings);

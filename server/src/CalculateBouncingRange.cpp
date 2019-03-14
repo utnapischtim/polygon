@@ -10,7 +10,7 @@
 #include <CGAL/Polygon_2.h>
 #include <CGAL/iterator.h>
 
-#include "easylogging++.h"
+#include <easylogging++.h>
 
 #include "CalculateBouncingRange.h"
 #include "BouncingVerticesSettings.h"

@@ -6,8 +6,8 @@
 #include <string>
 #include <map>
 
-#include "json.hpp"
-#include "docopt.h"
+#include <json.hpp>
+#include <docopt.h>
 
 #include "Point.h"
 #include "Filter.h"

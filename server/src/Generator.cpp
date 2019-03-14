@@ -7,8 +7,7 @@
 #include <string>
 #include <iomanip>
 
-#include "json.hpp"
-#include "easylogging++.h"
+#include <json.hpp>
 
 #include "Generator.h"
 #include "Filter.h"
@@ -118,7 +117,6 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
         random_point_list = pl::random(common_settings, {});
         counter += 1;
       }
-    VLOG(2) << "Generator generatePointList two opt moves counter: " << counter;
   }
     break;
   case 3:

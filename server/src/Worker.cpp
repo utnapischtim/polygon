@@ -1,5 +1,5 @@
-#include "json.hpp"
-#include "easylogging++.h"
+#include <json.hpp>
+#include <easylogging++.h>
 
 #include "Worker.h"
 #include "WebsocketServer.h"

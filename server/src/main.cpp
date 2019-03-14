@@ -8,8 +8,8 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_2_algorithms.h>
 
-#include "docopt.h"
-#include "easylogging++.h"
+#include <docopt.h>
+#include <easylogging++.h>
 
 #include "WebsocketServer.h"
 #include "Worker.h"

@@ -9,8 +9,8 @@
 #  include <Magick++.h>
 #endif
 
-#include "json.hpp"
-#include "gnuplot-iostream.h"
+#include <json.hpp>
+#include <gnuplot-iostream.h>
 
 #include "Output.h"
 #include "Point.h"

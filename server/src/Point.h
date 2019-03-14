@@ -6,7 +6,7 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "json.hpp"
+#include <json.hpp>
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 

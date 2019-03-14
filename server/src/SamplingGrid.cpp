@@ -6,8 +6,6 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <boost/optional/optional_io.hpp>
 
-#include "easylogging++.h"
-
 #include "CommonSetting.h"
 #include "SamplingGrid.h"
 

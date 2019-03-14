@@ -4,8 +4,6 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "easylogging++.h"
-
 #include "BouncingVertices.h"
 #include "BouncingVerticesSettings.h"
 #include "CalculateBouncingRange.h"
@@ -25,8 +23,6 @@ static void createAnimationOutput(const pl::BouncingVerticesSettings &bvs, const
 static void createOutputForPhase(const pl::BouncingVerticesSettings &bvs, const Segments &segments, const int phase);
 
 pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
-  VLOG(3) << "bouncing vertices point_list: " << point_list;
-
   pl::BouncingVerticesSettings bvs(common_settings, filters, point_list.size());
   Segments segments = buildSegments(point_list);
 
@@ -72,7 +68,6 @@ void createAnimationOutput([[maybe_unused]] const pl::BouncingVerticesSettings &
 }
 
 void createOutputForPhase(const pl::BouncingVerticesSettings &bvs, const Segments &segments, const int phase) {
-  VLOG(3) << "createOutputForPhase";
   std::string filename = bvs.directory_for_every_phase_out + "/" + std::to_string(phase) + ".dat";
 
   pl::PointList list;
@@ -81,7 +76,6 @@ void createOutputForPhase(const pl::BouncingVerticesSettings &bvs, const Segment
 }
 
 Segments buildSegments(const pl::PointList &point_list) {
-  VLOG(3) << "buildSegments";
   Segments segments;
 
   for (size_t i = 1, size = point_list.size(); i < size; ++i)

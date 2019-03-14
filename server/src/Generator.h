@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "json.hpp"
+#include <json.hpp>
 
 #include "Filter.h"
 #include "Point.h"
