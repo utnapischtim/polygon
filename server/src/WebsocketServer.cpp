@@ -105,7 +105,7 @@ void pl::WebSocketServer::on_close(ws::connection_hdl hdl) {
     server_.close(hdl, 404, "shutdown");
   } catch (websocketpp::lib::error_code ec) {
     VLOG(2) << "Server on_close websocketpp::lib::error_code: " << ec;
-  } catch (websocketpp::exception e) {
+  } catch (websocketpp::exception &e) {
     VLOG(2) << "Server on_close exception: " << e.m_msg;
   }
 }
