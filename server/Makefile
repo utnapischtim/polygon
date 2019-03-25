@@ -1,6 +1,23 @@
-WS_PORT =
+######
+##
+##  SETTINGS SECTION
+##
+#######
 
-OPENCV_VERSION=3.2.0
+PROGRAM = polygon
+TEST = tests
+BIN_DIR = bin/
+BUILD_DIR = build/
+LIB_DIR = lib/
+SRC_DIR = src/
+TEST_DIR = unittests/
+
+FLYMAKE_TEMP_FILES = build/*flymake
+
+RM = rm -f
+CXX = g++-8.1.0
+
+WS_PORT =
 
 # this could be overriden with make DEFS+=MAGICK to add automation
 # output possibility
@@ -43,50 +60,75 @@ LDFLAGS = -lboost_system \
           -ldocopt \
           $(IM_LDFLAGS)
 
-# -isystem instead of -I to supress warnings from this headers
-INCLUDE_DIRS = -isystem./lib/Catch/single_include \
-               -isystem./lib/gnuplot-iostream \
-               -isystem./lib/json/src \
-               -isystem./lib/easyloggingpp/src \
-               -isystem./lib/websocketpp \
-               -isystem./lib/docopt \
-               -isystem./src/
+ifeq ($(shell which $(CXX)),)
+  $(error $(CXX) does not exist)
+endif
 
-LIB_DIRS = -Llib/docopt \
-           -Wl,-rpath=lib/docopt
+ifeq ($(wildcard $(BIN_DIR)),)
+  mkdir -p $(BIN_DIR)
+endif
 
-PROCESS = polygon
-BIN_DIR = bin/
-BUILD_DIR = build/
-SRC_DIR = src/
-TEST_DIR = unittests/
+ifeq ($(wildcard $(BUILD_DIR)),)
+  mkdir -p $(BUILD_DIR)
+endif
 
-FLYMAKE_TEMP_FILES = build/*flymake
+ifeq ($(wildcard $(LIB_DIR)),)
+  mkdir -p $(LIB_DIR)
+endif
 
-EXE = $(BIN_DIR)$(PROCESS)
+# if directories are created by the dependencies script the local version is
+# used, otherwise the global installed version is used
 
-SRCS = $(filter-out $(shell find src/ -name '*flymake*.cpp'), $(wildcard src/*.cpp))
-OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(SRCS)))))
-DEPS = $(OBJS:.o=.d)
+ifneq ($(wildcard ./lib/Catch),)
+  INCLUDE_DIRS += -isystem./lib/Catch/single_include
+endif
 
-TEST_EXE  = $(BIN_DIR)tests
-TEST_SRCS = $(filter-out $(shell find unittests -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard unittests/*.cpp)) src/Point.cpp
-TEST_OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(TEST_SRCS)))))
-TEST_DEPS = $(TEST_OBJS:.o=.d)
+ifneq ($(wildcard ./lib/gnuplot-iostream),)
+  INCLUDE_DIRS += -isystem./lib/gnuplot-iostream
+endif
 
+ifneq ($(wildcard ./lib/json),)
+  INCLUDE_DIRS += -isystem./lib/json/src
+endif
 
+ifneq ($(wildcard ./lib/easyloggingpp/src),)
+  INCLUDE_DIRS += -isystem./lib/easyloggingpp/src
+endif
 
-RM  = rm -f
-CXX = g++-8.1.0
+ifneq ($(wildcard ./lib/websocketpp),)
+  INCLUDE_DIRS += -isystem./lib/websocketpp
+endif
+
+ifneq ($(wildcard ./lib/docopt),)
+  INCLUDE_DIRS += -isystem./lib/docopt
+
+  LIB_DIRS = -Llib/docopt \
+             -Wl,-rpath=lib/docopt
+endif
+
+ifneq ($(wildcard ./src),)
+  INCLUDE_DIRS += -isystem./src
+endif
 
 COMPILE := $(CXX) $(CPPFLAGS) $(INCLUDE_DIRS) -c
 DEPEND  := $(CXX) -MM $(CPPFLAGS) $(INCLUDE_DIRS)
 LINK    := $(CXX) $(CPPFLAGS)
 
-CXX_COMPILER := $(shell command -v $(CXX) 2> /dev/null)
-
 # Delete the default suffixes
 .SUFFIXES:
+
+
+######
+##
+##  PROGRAM SECTION
+##
+#######
+
+EXE  = $(BIN_DIR)$(PROGRAM)
+SRCS = $(filter-out $(shell find src/ -name '*flymake*.cpp'), $(wildcard src/*.cpp))
+OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(SRCS)))))
+DEPS = $(OBJS:.o=.d)
+
 
 .PHONY: all
 all: $(EXE)
@@ -98,17 +140,8 @@ $(EXE): $(OBJS)
 # help from
 # http://scottmcpeak.com/autodepend/autodepend.html
 $(BUILD_DIR)%.o: $(SRC_DIR)%.cpp
-	@echo "build "$(PROCESS)" file: "$<
+	@echo "build "$(PROGRAM)" file: "$<
 	@$(COMPILE) $< -o $@ $(LIB_DIRS) $(DEFINED)
-	@$(DEPEND)	$< > $(BUILD_DIR)$*.d
-	@mv -f $(BUILD_DIR)$*.d $(BUILD_DIR)$*.d.tmp
-	@sed -e 's|.*:|$*.o:|' < $(BUILD_DIR)$*.d.tmp > $(BUILD_DIR)$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILD_DIR)$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILD_DIR)$*.d
-	@rm -f $(BUILD_DIR)$*.d.tmp
-
-$(BUILD_DIR)%.o: $(TEST_DIR)%.cpp
-	@echo "build "$(PROCESS)" file: "$<
-	@$(COMPILE) $< -o $@ $(LIB_DIRS)
 	@$(DEPEND)	$< > $(BUILD_DIR)$*.d
 	@mv -f $(BUILD_DIR)$*.d $(BUILD_DIR)$*.d.tmp
 	@sed -e 's|.*:|$*.o:|' < $(BUILD_DIR)$*.d.tmp > $(BUILD_DIR)$*.d
@@ -119,35 +152,30 @@ $(BUILD_DIR)%.o: $(TEST_DIR)%.cpp
 clean:
 	$(RM) $(DEPS) $(OBJS) $(EXE) $(FLYMAKE_TEMP_FILES)
 
-check-syntax:
-	$(RM) $(FLYMAKE_TEMP_FILES)
-	$(CXX) $(INCLUDE_DIRS) -o /dev/null $(CPPFLAGS) -S $(CHK_SOURCES) $(LIB_DIRS) $(LDFLAGS)
+
+######
+##
+##  SERVER SECTION
+##
+#######
 
 .PHONY: server
 server:
 	@./$(EXE) $(WS_PORT) &
 
-init: COMPILER
-	@echo "init library"
-	mkdir -p bin/
-	mkdir -p build/
-	mkdir -p lib/
 
-# 9.89 is the last version of easyloggingpp as single header
-	test ! -d lib/websocketpp && cd lib/ && git clone git://github.com/zaphoyd/websocketpp
-	test ! -d lib/Catch && cd lib/ && git clone git://github.com/philsquared/Catch
-	test ! -d lib/json && cd lib/ && git clone git://github.com/nlohmann/json
-	test ! -d lib/easyloggingpp && cd lib/ && git clone git://github.com/easylogging/easyloggingpp && cd easyloggingpp/ && git checkout 9.89
-	test ! -d lib/docopt && cd lib/ && git clone git://github.com/docopt/docopt.cpp docopt && cd docopt/ && cmake . && make
-	test ! -d lib/gnuplot-iostream && cd lib/ && git clone git://github.com/dstahlke/gnuplot-iostream
+######
+##
+##  TEST SECTION
+##
+#######
 
+TEST_EXE  = $(BIN_DIR)$(TEST)
+TEST_SRCS = $(filter-out $(shell find unittests -name '*.cpp' | sed 's/\(.*\).cpp/\1_flymake.cpp/'), $(wildcard unittests/*.cpp)) src/Point.cpp
+TEST_OBJS = $(addprefix $(BUILD_DIR), $(addsuffix .o, $(notdir $(basename $(TEST_SRCS)))))
+TEST_DEPS = $(TEST_OBJS:.o=.d)
 
-COMPILER:
-ifndef CXX_COMPILER
-		$(error $(CXX) does not exist)
-endif
-
-run-test:
+run-test: build-test
 	$(TEST_EXE)
 
 build-test: $(TEST_EXE)
@@ -157,6 +185,34 @@ clean-test:
 
 $(TEST_EXE): $(TEST_OBJS)
 	@$(LINK) $^ -o $@ $(LIB_DIRS) $(LDFLAGS) build/Filter.o build/utilities.o build/random.o build/CommonSetting.o build/Output.o build/SamplingGrid.o
+
+$(BUILD_DIR)%.o: $(TEST_DIR)%.cpp
+	@echo "build "$(PROGRAM)" file: "$<
+	@$(COMPILE) $< -o $@ $(LIB_DIRS)
+	@$(DEPEND)	$< > $(BUILD_DIR)$*.d
+	@mv -f $(BUILD_DIR)$*.d $(BUILD_DIR)$*.d.tmp
+	@sed -e 's|.*:|$*.o:|' < $(BUILD_DIR)$*.d.tmp > $(BUILD_DIR)$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILD_DIR)$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILD_DIR)$*.d
+	@rm -f $(BUILD_DIR)$*.d.tmp
+
+
+######
+##
+##  EMACS SECTION
+##
+#######
+
+# emacs help rule to process file within emacs and return the error messages
+check-syntax:
+	$(RM) $(FLYMAKE_TEMP_FILES)
+	$(CXX) $(INCLUDE_DIRS) -o /dev/null $(CPPFLAGS) -S $(CHK_SOURCES) $(LIB_DIRS) $(LDFLAGS)
+
+
+######
+##
+##  DEBUG SECTION
+##
+#######
 
 debugOut:
 	@echo 'srcs: ' $(SRCS)

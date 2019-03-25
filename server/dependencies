@@ -1,0 +1,62 @@
+#!/bin/bash
+
+mkdir -p lib/
+
+BASE=$(pwd)
+
+for parameter in "$@"
+do
+  case $parameter in
+    --with-websocketpp)
+      if [[ !-d $BASE/lib/websocketpp ]]
+      then
+        cd $BASE/lib
+        git clone git://github.com/zaphoyd/websocketpp
+      fi
+    ;;
+
+    --with-catch)
+      if [[ !-d $BASE/lib/catch ]]
+      then
+        cd $BASE/lib
+        git clone git://github.com/philsquared/Catch
+      fi
+    ;;
+
+    --with-json)
+      if [[ !-d $BASE/lib/json ]]
+      then
+        cd $BASE/lib
+        git clone git://github.com/nlohmann/json
+      fi
+    ;;
+
+    --with-easyloggingpp)
+      if [[ !-d $BASE/lib/easyloggingpp ]]
+      then
+        cd $BASE/lib
+        git clone git://github.com/easylogging/easyloggingpp
+        cd easyloggingpp
+        git checkout 9.89
+      fi
+    ;;
+
+    --with-docopt)
+      if [[ !-d $BASE/lib/docopt ]]
+      then
+        cd $BASE/lib
+        git clone git://github.com/docopt/docopt
+        cd docopt/
+        cmake .
+        make
+      fi
+    ;;
+
+    --with-gnuplot-iostream)
+      if [[ !-d $BASE/lib/gnuplot-iostream ]]
+      then
+        cd $BASE/lib
+        git clone git://github.com/dstahlke/gnuplot-iostream
+      fi
+    ;;
+done
