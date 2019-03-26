@@ -1,3 +1,5 @@
+doc/*
+
 server/bin/polygon
 server/bin/tests
 server/build/*
@@ -17,3 +19,4 @@ server/*.svg
 *.toc
 *.dvi
 *.lof
+
