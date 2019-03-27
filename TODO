@@ -1,0 +1,10 @@
+-*- mode: org -*-
+
+* feature
+* bug
+** BUG #1 convex bottom, does not always function correctly
+   :STATECHANGES:
+   - State "BUG"        from ""           [2017-08-07 Mo 22:56]
+   :END:
+   the problem has to do with the generation of the bottom convex
+   hull.

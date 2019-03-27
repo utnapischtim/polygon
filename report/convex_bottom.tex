@@ -1,0 +1,176 @@
+\subsection{Convex Bottom}
+\subsubsection{Description of the Algorithm}
+Convex Bottom Algorithm uses the Convex Hull principle to create a convex
+polygon. The algorithm starts from a random 2d point cloud.
+\fref{cb:base}.
+\\[12pt]
+Following the description of the algorithm in detail:
+
+\begin{enumerate}
+  \item sort all points along the x-axis.
+  \item choose the lowest and greatest point on x-axis and draw a line between them\fref{cb:line}
+  \item create a list of all points below or on this line \fref{cb:below-line}
+  \item create a convex hull from those points \fref{cb:hull}
+  \item add points not on the convex bottom hull to the polygon \fref{cb:polygon-1}
+  \item add points from the convex bottom hull in reverse order to the polygon
+    \fref{cb:polygon-2}
+\end{enumerate}
+
+\subsubsection{Implementation description}
+\begin{enumerate}
+  \item the function std::sort from the std lib does the sorting
+  \item the sorted point list gives as the possibility to use the first point
+    and the last point as the point with the lowest and the highest x value
+  \item the CGAL::orientation function in combination with a for loop checks if
+    the point lies below the formed line
+  \item the CGAL::convex\_hull\_2 creates the bottom convex hull
+  \item add all points which does not lie on the convex bottom hull to the polygon
+  \item with std::reverse and a for loop the points from the convex bottom hull
+    were added to the final polygon
+\end{enumerate}
+
+\subsubsection{Complexity}
+\begin{enumerate}
+  \item sort all points along the x-axis. $\bigO(nlogn)$
+  \item choose the lowest and greatest point on x-axis and draw a line between them $\bigO(1)$
+  \item create a list of all points below or on this line $\bigO(n)$
+  \item create a convex hull from those points $\bigO(nlogn)$
+  \item add points not on the convex bottom hull to the polygon $\bigO(n)$
+  \item add points from the convex bottom hull in reverse order to the polygon $\bigO(n)$
+\end{enumerate}
+In summarize this leads to $\bigO(nlogn)$.
+
+\subsubsection{Parameters}
+\begin{description}
+  \item [--nodes] how many nodes the polygon have to have. [default: 100]
+  \item [--sampling-grid] the area within the polygon could grow. [default: 1500x800]
+\end{description}
+
+\subsubsection{Examples}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{0}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+    \end{tikzpicture}
+    \caption{Base random point cloud}
+    \label{fig:cb:base}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (12);
+    \end{tikzpicture}
+    \caption{Line from lowest x to highest x}
+    \label{fig:cb:line}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \node[point, fill=red] (1) at (1,11) {};
+      \node[point] (2) at (5,40) {};
+      \node[point] (3) at (10,20) {};
+      \node[point, fill=red] (4) at (21,10) {};
+      \node[point] (5) at (20,18) {};
+      \node[point] (6) at (20,41) {};
+      \node[point] (7) at (33,15) {};
+      \node[point] (8) at (39,22) {};
+      \node[point, fill=red] (9) at (48,9) {};
+      \node[point, fill=red] (10) at (55,17) {};
+      \node[point] (11) at (60,50) {};
+      \node[point, fill=red] (12) at (68,19) {};
+
+      \draw (1) -- (12);
+    \end{tikzpicture}
+    \caption{Points on and below of the line}
+    \label{fig:cb:below-line}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \centering
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (12) -- (9) -- (4) -- (1);
+    \end{tikzpicture}
+    \caption{Convex bottom hull}
+    \label{fig:cb:hull}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (5) -- (6) -- (7) -- (8) -- (10) -- (11) -- (12);
+    \end{tikzpicture}
+    \caption{Polygon from the sorted values}
+    \label{fig:cb:polygon-1}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \centering
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+      \draw (1) -- (2) -- (3) -- (5) -- (6) -- (7) -- (8) -- (10) -- (11) -- (12) -- (9) -- (4) -- (1);
+    \end{tikzpicture}
+    \caption{Polygon from above combined with polygon from below}
+    \label{fig:cb:polygon-2}
+  \end{minipage}
+\end{figure}
+
+\FloatBarrier

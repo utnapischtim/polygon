@@ -1,0 +1,113 @@
+html {
+  background-color: white;
+}
+
+.pl-gui {
+  width: 100%;
+}
+
+h1, h2, h3, h4, h5 {
+  text-align: center;
+}
+
+.pl-visualization {
+  border: 1px solid black;
+  border-radius: 15px;
+  margin: 10px;
+}
+
+.pl-polygon {
+  border: 1px solid #e7dddd;
+  border-radius: 10px;
+  display: block;
+  margin: 20px auto;
+  width: 1500px;
+}
+
+.pl-settings {
+  border: 1px solid black;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 20px;
+  vertical-align: top;
+}
+
+.pl-filter-list-local,
+.pl-filter-list-global {
+  float: left;
+}
+
+.pl-filter-list-global {
+  border-left: 1px solid #d4cccc;
+  padding-left: 10px;
+}
+
+.pl-filter-list {
+  border: 1px solid #e0d4d4;
+  border-radius: 10px;
+  float: left;
+  margin-right: 10px;
+  padding: 10px;
+}
+.pl-common-setting,
+.pl-filter,
+.pl-generator {
+  cursor: pointer;
+  padding: 5px;
+}
+
+.pl-input-checkbox {
+  margin-right: 7px;
+  padding: 0;
+  position: relative;
+  top: -2px;
+  vertical-align: bottom;
+}
+
+.pl-input-number {
+  -moz-appearance: textfield;
+  margin-right: 6px;
+  position: relative;
+  width: 45px;
+  top: -1px;
+}
+
+.pl-input-text {
+  margin-right: 6px;
+  position: relative;
+  width: 100px;
+  top: -2px;
+}
+
+.pl-input-radio {
+  margin-right: 6px;
+  position: relative;
+  top: 3px;
+}
+
+.pl-generator-list {
+  border: 1px solid #e0d4d4;
+  border-radius: 10px;
+  float: left;
+  margin-right: 10px;
+  padding: 10px;
+}
+
+.pl-generator {
+  cursor: pointer;
+  padding: 5px;
+}
+
+.pl-common-setting-list {
+  border: 1px solid #e0d4d4;
+  border-radius: 10px;
+  float: left;
+  margin-right: 10px;
+  padding: 10px;
+}
+
+.pl-menu {
+  clear: both;
+  margin-top: 20px;
+}
+

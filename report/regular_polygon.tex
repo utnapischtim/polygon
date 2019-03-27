@@ -1,0 +1,103 @@
+\subsection{Regular Polygon}
+\subsubsection{Description of the Algorithm}
+The main idea behind this algorithm is to rotate a vector around a point
+\textit{n} times.
+
+Following a detailed description of the algorithm:
+
+\begin{enumerate}
+  \item calculate the parameters
+  \item from 1 .. node\_counts calculate the points
+  \item reverse the order of points
+\end{enumerate}
+
+\subsubsection{Implementation description}
+The calculation of the parameters is the first part to do. The
+parameter characterize the regular polygon about the position on the
+sampling grid, the radius, the winding number and the node count.
+There is room for further improvements or more parameters, like to
+set the segment length and calculate the possible radius and the
+center.
+
+Trigonometric functions like Sinus and Cosinus helps to calculate the points.
+
+\begin{lstlisting}[basicstyle=\scriptsize]
+  auto gamma = 2 * \pi * winding_number / node_count;
+  auto rotation_angle = -gamma / 2;
+
+  auto x = radius * std::cos(seg_counter * gamma + rotation_angle) + center.x();
+  auto y = radius * std::sin(seg_counter * gamma + rotation_angle) + center.y();
+\end{lstlisting}
+
+The rotation angle is not necessary for the algorithm. But it helps to perform
+calculations during other algorithms easier. The rotation angle $ - gamma / 2$
+rotates the whole polygon in a way, that the first segment lies vertically.
+
+The final step revers the order of the points. This is also not really necessary
+for the algorithm, but it produces a polygon which has the same direction as the
+polygons from all other algorithms.
+
+\subsubsection{Complexity}
+The $n$ in the complexity analysis stands for the node count.
+
+\begin{enumerate}
+  \item calculate the parameters $\bigO(1)$
+  \item from 1 .. node\_counts calculate the points $\bigO(n)$
+  \item reverse the order of points $\bigO(n)$
+\end{enumerate}
+
+This leads to the sum of $\bigO(1) + \bigO(n) + \bigO(n) \Rightarrow \bigO(n)$
+
+
+\subsubsection{Parameters}
+\begin{description}
+  \item [--nodes] how many nodes the polygon has to have. [default: 100]
+  \item [--sampling-grid] the area within the polygon could grow. [default: 1500x800]
+  %% \item [--winding-number]
+  \item [--segment-length] set the segment length. [default: 0]
+  \item [--radius] the radius for regular polygon. [default: 60]
+\end{description}
+
+\subsubsection{Examples}
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(40,80), (70,58), (70, 22), (40,0), (10,22), (10,58)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (1);
+    \end{tikzpicture}
+    \caption{Regular polygon with 6 points}
+    \label{fig:rp:points-6}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(33,70), (70,60), (70, 20), (33,10), (0,40)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (1);
+    \end{tikzpicture}
+    \caption{Regular polygon with 5 points}
+    \label{fig:rp:points-5}
+  \end{minipage}
+\end{figure}
+
+\FloatBarrier

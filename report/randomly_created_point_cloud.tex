@@ -1,0 +1,63 @@
+\subsection{Randomly Created Point Cloud}
+\subsubsection{Description of the Algorithm}
+The algorithm creates a point cloud where the x and y values for every point
+where calculated by a random function.
+
+\subsubsection{Implementation description}
+The implementation uses the std::uniform\_real\_distribution function from the
+c++ standard. It creates values from 0 to width and 0 to height.
+
+\subsubsection{Complexity}
+The complexity is $\bigO(n)$ where $n$ is the number of point count.
+
+\subsubsection{Parameters}
+\begin{description}
+  \item [--nodes] how many nodes the polygon has to have. [default: 100]
+  \item [--sampling-grid] the area within the polygon could grow. [default: 1500x800]
+\end{description}
+
+
+\subsubsection{Examples}
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(18, 7),(1, 39),(77, 48),(56, 13),(77, 51),(56, 27),(61, 9),(56, 12),(69, 63),(45, 53)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (7) -- (8) -- (9) -- (10)
+      -- (1);
+    \end{tikzpicture}
+    \caption{Example point cloud used as a polygon with 10 points}
+    \label{fig:rcpc:points-10}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(70,60), (33,70), (33,10), (70, 20), (0,40)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (1);
+    \end{tikzpicture}
+    \caption{Example point cloud used as a polygon with 5 points}
+    \label{fig:rcpc:points-2}
+  \end{minipage}
+\end{figure}
+
+\FloatBarrier

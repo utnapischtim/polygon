@@ -1,0 +1,173 @@
+\subsection{Random Two Peasants}
+\subsubsection{Description of the Algorithm}
+The main idea for the random two peasants algorithm is to sort the points along
+a axis. The algorithm start from a random 2d point cloud \fref{rtp:base}
+
+\begin{enumerate}
+  \item sort all points along the x-axis.
+  \item use the line \fref{rtp:line} from lowest point to greatest point
+    on x-axis to divide the points in a upper \fref{rtp:upper} and a lower
+    \fref{rtp:lower} point cloud.
+  \item add sequential all points from the upper list to the polygon
+    \fref{rtp:polygon-upper}
+  \item add in reverse order all points from the lower list to the
+    polygon \fref{rtp:polygon}
+\end{enumerate}
+
+\subsubsection{Implementation description}
+
+\begin{enumerate}
+  \item the function std::sort from the std lib does the sorting
+  \item iterate over all points and perform the CGAL::orientation function to
+    get the orientation of all points aligned at the line between the lowest
+    point and the highest point.
+  \item iterate over all points from the upper list and add it to the polygon
+  \item iterate over all points from the lower list in reverse direction and add
+    it to the polygon.
+\end{enumerate}
+
+\subsubsection{Complexitiy}
+
+\begin{enumerate}
+  \item sort all points along the x-axis. $\bigO(nlogn)$
+  \item use the line from lowest point to greatest point on x-axis to divide the
+    points in a upper and a lower point cloud. $\bigO(n)$
+  \item add sequential all points from the upper list to the polygon $\bigO(n)$
+  \item add in reverse order all points from the lower list to the polygon $\bigO(n)$
+\end{enumerate}
+
+This leads to $max(\bigO(nlogn) + \bigO(n) + \bigO(n) + \bigO(n) \Rightarrow \bigO(nlogn))$.
+
+\subsubsection{Parameters}
+\begin{description}
+  \item [--nodes] how many nodes the polygon has to have. [default: 100]
+  \item [--sampling-grid] the area within the polygon could grow. [default: 1500x800]
+\end{description}
+
+\subsubsection{Examples}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+    \end{tikzpicture}
+    \caption{Base random point cloud}
+    \label{fig:rtp:base}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[blue] (1) -- (12);
+    \end{tikzpicture}
+    \caption{Dividing Line}
+    \label{fig:rtp:line}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(20,18),(20,41),(33,15),(39,22),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \foreach \p in {(21,10),(48,9),(55,17)} {
+        \node[point, fill=red] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[blue] (1) -- (9);
+    \end{tikzpicture}
+    \caption{Lower List}
+    \label{fig:rtp:lower}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(21,10),(48,9),(55,17),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \foreach \p in {(5,40),(10,20),(20,18),(20,41),(33,15),(39,22),(60,50)} {
+        \node[point, fill=red] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[blue] (1) -- (5);
+    \end{tikzpicture}
+    \caption{Upper list}
+    \label{fig:rtp:upper}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+      \draw (1) -- (2) -- (3) -- (5) -- (6) -- (7) -- (8) -- (11) -- (12);
+    \end{tikzpicture}
+    \caption{The Upper polygon}
+    \label{fig:rtp:polygon-upper}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(5,40),(10,20),(21,10),(20,18),(20,41),(33,15),(39,22),(48,9),(55,17),(60,50),(68,19)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (5) -- (6) -- (7) -- (8) -- (11) -- (12) -- (10) -- (9) -- (4) -- (1);
+    \end{tikzpicture}
+    \caption{Final polygon}
+    \label{fig:rtp:polygon}
+  \end{minipage}
+\end{figure}
+
+\FloatBarrier

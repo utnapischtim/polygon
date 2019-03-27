@@ -1,0 +1,129 @@
+\documentclass[
+  titlepage
+]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage[section]{placeins}
+\usepackage{enumitem}
+\usepackage{todonotes}
+\usepackage{hyperref}
+\usepackage{ifthen}
+
+\hypersetup{
+  hidelinks
+}
+
+\captionsetup[figure]{
+  format=hang,
+  singlelinecheck=false,
+  justification=RaggedRight
+}
+
+\lstset{
+  captionpos=b,
+  language=C++
+}
+
+\usetikzlibrary{calc, intersections}
+
+\tikzset{
+  font=\footnotesize,
+  point/.style = {
+    circle,
+    radius=4pt,
+    fill=black,
+    scale=0.5 % place 2 pt on radius without scale does not work!
+  },
+  placeholder/.style = {
+    inner sep=0pt,
+    minimum size=0pt
+  }
+}
+
+\setlength{\parindent}{0pt}
+
+\newcounter{i}
+
+\newcommand{\lref}[1]{see Listing \ref{lst:#1}}
+\newcommand{\fref}[1]{see Figure \ref{fig:#1}}
+\newcommand{\eref}[1]{Point \ref{en:#1}}
+\newcommand{\bigO}{\mathcal{O}}
+
+%% https://tex.stackexchange.com/a/153198
+\addto\captionsenglish{\renewcommand{\contentsname}{Table of Contents}}
+
+\title{Creating Simple Polygon Algorithms}
+\author{Ladurner, Christoph (0330979)}
+\date{\today}
+
+\begin{document}
+
+%% to get rid of warning: ``destination with the same identifier
+%% (name{page.1}) has been already used, duplicate ignored''
+\hypersetup{pageanchor=false}
+\thispagestyle{empty}
+\maketitle
+
+\pagenumbering{roman}
+
+\tableofcontents
+\listoffigures
+
+\pagebreak
+\hypersetup{pageanchor=true}
+\pagenumbering{arabic}
+
+\section{Free Algorithms}
+The first three algorithms are
+\begin{enumerate}
+  \item Randomly created point cloud
+  \item Regular polygon
+  \item Fix Local Orientation
+\end{enumerate}
+
+They have in common
+\begin{enumerate}
+  \item They are used as starting point for other algorithms.
+  \item They are created with only the settings as input
+\end{enumerate}
+
+\input{randomly_created_point_cloud}
+\input{regular_polygon}
+\input{fix_local_orientation}
+
+\pagebreak
+
+\section{Algorithms bound to point cloud}
+The following algorithms starts the calculation of the simple
+polygon with a randomly created point cloud.
+
+\begin{enumerate}
+  \item Random Two Peasants
+  \item Convex Bottom
+  \item Steady Growth
+  \item Space Partitioning
+  \item 2-Opt Moves
+\end{enumerate}
+
+\input{random_two_peasants}
+\input{convex_bottom}
+\input{steady_growth}
+\input{space_partitioning}
+\input{two_opt_moves}
+
+\clearpage
+
+\section{Algorithms bound to simple polygon}
+The following algorithm needs a simple polygon to work.
+
+\input{bouncing_vertices}
+
+\end{document}

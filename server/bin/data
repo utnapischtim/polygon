@@ -1,0 +1,45 @@
+#!/bin/bash
+
+
+#  0    random two peasants
+#  1          steady growth
+#  2          two opt moves
+#  4          convex bottom
+#  5     space partitioning
+#  7                 random
+#  8      bouncing vertices
+#  9        regular polygon
+# 10  fix local orientation
+
+generators_simple="0 1 2 4 5 9"
+generators_complex="8 10"
+
+list_of_nodes=$(seq 100 200)
+indices=$(seq 1 20)
+
+if [ "$1" = "sequential" ]
+then
+  for key in $generators
+  do
+    for nodes in $list_of_nodes
+    do
+      for index in $indices
+      do
+        ./bin/polygon --generator=$key --output-format=gnuplot --file-base=polygon-$index --nodes=$nodes --output-dir=out
+      done
+    done
+  done
+elif [ "$1" = "parallel" ]
+then
+  if [ "$2" = "all" ]
+  then
+    parallel -j8 ./bin/polygon --generator={1} --output-format=gnuplot --file-base=polygon-{3} --nodes={2} --output-dir=out ::: $generators_simple ::: $list_of_nodes ::: $indices
+  elif [ $2 = 2 ]
+  then
+    parallel -j8 ./bin/polygon --generator=$2 --output-format=gnuplot --file-base=polygon-{2} --nodes={1} --output-dir=$3 ::: $(seq 10 3 40) ::: $(seq 1 3 20)
+  else
+    parallel -j2 ./bin/polygon --generator=$2 --output-format=gnuplot --file-base=polygon-{2} --nodes={1} --output-dir=$3 ::: $list_of_nodes ::: $indices
+  fi
+else
+  echo "not implemented parameter"
+fi

@@ -1,0 +1,213 @@
+\subsection{2-Opt Moves}
+\subsubsection{Description of the Algorithm}
+The main idea behind this algorithm is to construct the simply polygon
+by resolving the intersections.
+
+\begin{enumerate}
+  \item create segments from a random polygon
+  \item calculate all intersections of segments
+  \item iterate over all intersections
+	\begin{enumerate}
+    \item choose a intersection
+    \item remove all intersections where one of the two segments are
+      involved
+    \item remove the segments from the intersection from the segments
+      list
+    \item create new segments from those two segments
+    \item calculate all intersection that occure by the new segments
+    \item add the two segments to the segments list
+  \end{enumerate}
+  \item calculate the final list of the segments list
+\end{enumerate}
+
+\subsubsection{Implementation description}
+\begin{enumerate}
+  \item the creation of the segments is trivial
+  \item the calculation of the intersections consists of two nested
+    loops over all segments. The important part is to have no
+    duplicates of intersections. This is implemented with a map and a
+    duplicate check. The map was choosen because of the O(log(n))
+    complexity to search and add elements.
+  \begin{enumerate}
+    \item the random function chooses the random intersection
+    \item a for loop to iterate over the intersections and remove the
+      intersections which have one or both segments in common
+    \item remove the segments from the segments list with a simple erase from
+      the vector class
+    \item the creation of the new segments is difficult. The
+      difficulty is to reorder the segments in a way that the polygon
+      is still closed and does not decay in two independed polygons.
+      This is guaranteed by a creation of the polygon, the same as the
+      creation of the final polygon and to check if the size is equal
+      of the size of the segments list.
+    \item the new intersections with the new segments are calculated
+      by a loop over all segments and a insert into the intersections
+      map.
+    \item add the segments to the segments list
+  \end{enumerate}
+  \item to create the final list of the segments are two loops
+    necessary. the first loop builds two maps with a source -> target
+    combination as key -> value, both ends of the segments were added
+    as key respective value. The second map is necessary because a key
+    could be occure twice but only twice and therefore two maps. The
+    second loop iterates from 1 to N where N is the number of points
+    in the polygon and builds the polygon by moving from source to
+    target and to use the old target for the new source.
+\end{enumerate}
+
+\subsubsection{Complexity}
+The implemented complexity is $\bigO(n^2*log(n))$.
+
+\subsubsection{Parameters}
+\begin{description}
+  \item [--nodes] how many nodes the polygon has to have. [default: 100]
+  \item [--sampling-grid] the area within the polygon could grow. [default: 1500x800]
+\end{description}
+
+\subsubsection{Examples}
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(33,15),(10,20),(21,10),(39,22),(48,9),(20,41)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (2) -- (3) -- (4) -- (5) -- (6) -- (7) -- (1);
+    \end{tikzpicture}
+    \caption{Random polygon}
+    \label{fig:tom:base}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(33,15),(10,20),(21,10),(39,22),(48,9),(20,41)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[dotted] (1) -- (2);
+      \draw[dotted] (3) -- (4);
+      \draw[red] (1) -- (3);
+      \draw[red] (2) -- (4);
+      \draw (2) -- (3);
+      \draw (4) -- (5) -- (6) -- (7) -- (1);
+    \end{tikzpicture}
+    \caption{First step of resolving}
+    \label{fig:tom:res1}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(33,15),(10,20),(21,10),(39,22),(48,9),(20,41)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[dotted] (2) -- (3);
+      \draw[dotted] (4) -- (5);
+      \draw[red] (3) -- (4);
+      \draw[red] (2) -- (5);
+      \draw (1) -- (3);
+      \draw (4) -- (2);
+      \draw (5) -- (6) -- (7) -- (1);
+    \end{tikzpicture}
+    \caption{Second step of resolving}
+    \label{fig:tom:res2}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(33,15),(10,20),(21,10),(39,22),(48,9),(20,41)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[dotted] (2) -- (5);
+      \draw[dotted] (6) -- (7);
+      \draw[red] (2) -- (6);
+      \draw[red] (5) -- (7);
+      \draw (1) -- (3) -- (4) -- (2);
+      \draw (6) -- (5);
+      \draw (7) -- (1);
+    \end{tikzpicture}
+    \caption{Third step of resolving}
+    \label{fig:tom:res3}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(33,15),(10,20),(21,10),(39,22),(48,9),(20,41)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw[dotted] (2) -- (5);
+      \draw[dotted] (6) -- (7);
+      \draw[red] (2) -- (7);
+      \draw[red] (5) -- (6);
+      \draw (1) -- (3) -- (4) -- (2);
+      \draw (7) -- (1);
+    \end{tikzpicture}
+    \caption{Wrong resolving, because of two reasons. First: two segments exists before. Second: the polygon is not more complete nor simple}
+    \label{fig:tom:wrong}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.4\textwidth}
+    \begin{tikzpicture}[yscale=0.05,xscale=0.05]
+
+      \setcounter{i}{1}
+
+      \draw[->] (0,0) -- (80,0) node[below] {$x$};
+      \draw[->] (0,0) -- (0,70) node[left] {$y$};
+
+      \foreach \p in {(1,11),(33,15),(10,20),(21,10),(39,22),(48,9),(20,41)} {
+        \node[point] (\arabic{i}) at \p {};
+        \stepcounter{i}
+      }
+
+      \draw (1) -- (3) -- (4) -- (2) -- (6) -- (5) -- (7) -- (1);
+    \end{tikzpicture}
+    \caption{Final simple polygon}
+    \label{fig:tom:final}
+  \end{minipage}
+\end{figure}
+
+\FloatBarrier

@@ -1,0 +1,79 @@
+#!/bin/bash
+
+mkdir -p lib/
+
+BASE=$(pwd)
+
+read -r -d '' USAGE << EOM
+usage: ./dependencies [options]
+
+OPTIONS:
+  --with-local-websocketpp
+  --with-local-catch
+  --with-local-json
+  --with-local-easyloggingpp
+  --with-local-docopt
+  --with-local-gnuplot-iostream
+EOM
+
+for parameter in "$@"
+do
+  case $parameter in
+    --with-local-websocketpp)
+      if [ !-d $BASE/lib/websocketpp ]
+      then
+        cd $BASE/lib
+        git clone git://github.com/zaphoyd/websocketpp
+      fi
+    ;;
+
+    --with-local-catch)
+      if [ !-d $BASE/lib/catch ]
+      then
+        cd $BASE/lib
+        git clone git://github.com/philsquared/Catch
+      fi
+    ;;
+
+    --with-local-json)
+      if [ !-d $BASE/lib/json ]
+      then
+        cd $BASE/lib
+        git clone git://github.com/nlohmann/json
+      fi
+    ;;
+
+    --with-local-easyloggingpp)
+      if [ !-d $BASE/lib/easyloggingpp ]
+      then
+        cd $BASE/lib
+        git clone git://github.com/easylogging/easyloggingpp
+        cd easyloggingpp
+        git checkout 9.89
+      fi
+    ;;
+
+    --with-local-docopt)
+      if [ !-d $BASE/lib/docopt ]
+      then
+        cd $BASE/lib
+        git clone git://github.com/docopt/docopt
+        cd docopt/
+        cmake .
+        make
+      fi
+    ;;
+
+    --with-local-gnuplot-iostream)
+      if [ !-d $BASE/lib/gnuplot-iostream ]
+      then
+        cd $BASE/lib
+        git clone git://github.com/dstahlke/gnuplot-iostream
+      fi
+    ;;
+
+    --help|-h)
+      echo "$USAGE"
+    ;;
+  esac
+done
