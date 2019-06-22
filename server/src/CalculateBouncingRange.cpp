@@ -14,7 +14,7 @@
 
 #include "CalculateBouncingRange.h"
 #include "BouncingVerticesSettings.h"
-#include "Filter.h"
+#include "AngleRange.h"
 #include "random.h"
 #include "cgal_helper.h"
 
@@ -76,7 +76,7 @@ std::optional<cgal::Point_2> pl::CalculateBouncingRange::calculateIntersectionWi
 
 // this is the allowed moving segment constructed by the segment and the allowed
 // range, and its projection to the random_line
-cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedMovingSegmentByAngleRange(const cgal::Segment_2 &seg, const pl::Filter range) {
+cgal::Segment_2 pl::CalculateBouncingRange::calculateAllowedMovingSegmentByAngleRange(const cgal::Segment_2 &seg, const pl::AngleRange range) {
   std::optional<cgal::Point_2>
     lower_point = calculateIntersectionWithRandomLine(seg, range.lower_bound_radian()),
     upper_point = calculateIntersectionWithRandomLine(seg, range.upper_bound_radian());
@@ -176,7 +176,7 @@ cgal::Segment_2 pl::CalculateBouncingRange::calculatePreservedAngleRangeAroundBo
     state_prev = orientation_prev == CGAL::RIGHT_TURN ? "convex" : "reflex",
     state_next = orientation_next == CGAL::LEFT_TURN ? "convex" : "reflex";
 
-  const pl::Filter
+  const pl::AngleRange
     range_prev = state_prev == "convex" ? bvs.convex_angle_range : bvs.reflex_angle_range,
     range_next = 360 - (state_next == "convex" ? bvs.convex_angle_range : bvs.reflex_angle_range);
 

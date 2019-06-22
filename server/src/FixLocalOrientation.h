@@ -3,8 +3,13 @@
 
 #include <iostream>
 
-#include "CommonSetting.h"
-#include "Filter.h"
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
+#include <docopt.h>
+
+#include "Point.h"
+
+using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 namespace pl {
 
@@ -17,10 +22,10 @@ struct FixLocalOrientationSettings {
   cgal::Vector_2 distance_to_center_of_reflex_circle;
 
   FixLocalOrientationSettings() : reflex_point_count{}, reflex_chain_max_count{}, reflex_point_count_per_segment{}, convex_stretch{}, iota{}, distance_to_center_of_reflex_circle{} {}
-  FixLocalOrientationSettings(const CommonSettingList &common_settings, const FilterList &filters);
+  FixLocalOrientationSettings(const std::map<std::string, docopt::value> &args);
 };
 
-PointList fixLocalOrientation(CommonSettingList &common_settings, const FilterList &filters);
+PointList fixLocalOrientation(const std::map<std::string, docopt::value> &args);
 
 std::ostream &operator<<(std::ostream &out, const FixLocalOrientationSettings &flos);
 

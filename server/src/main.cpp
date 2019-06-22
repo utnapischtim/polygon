@@ -11,12 +11,14 @@
 #include <docopt.h>
 #include <easylogging++.h>
 
-#include "WebsocketServer.h"
-#include "Worker.h"
-#include "Filter.h"
+#ifndef SERVER
+#  include "WebsocketServer.h"
+#  include "Worker.h"
+#endif
+
+
 #include "Point.h"
 #include "Generator.h"
-#include "CommonSetting.h"
 #include "Output.h"
 #include "Statistics.h"
 
@@ -33,10 +35,13 @@ INITIALIZE_EASYLOGGINGPP
 pl::WebSocketServer websocket_server;
 pl::Worker worker;
 
+#ifndef SERVER
 static void initWebsocketServer(int port);
 static void initWorker();
 static void terminate(int);
 static void server(docopt::Arguments &args);
+#endif
+
 static void run(docopt::Arguments &args);
 static std::string buildCustomFilename(docopt::Arguments &args);
 static void collectSimpleStats(std::function<void(docopt::Arguments &)> func, docopt::Arguments &args);
@@ -105,6 +110,7 @@ R"(polygon generation
                               [default: 0]
     --is-simple               check if the files contains simple polygons
     --input-dir=DIR           the input directory to check if files contains simple polygons
+    --winding-number          winding number [default: 1.0]
 
     --v=K                     set the verbosity level. [default: 0]
 )";
@@ -124,18 +130,15 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-
+#ifndef SERVER
   if (args["--server"].asBool())
     server(args);
 
-  else if (args["--list-generator"].asBool())
+  else
+#endif
+
+  if (args["--list-generator"].asBool())
     pl::printGenerators();
-
-  else if (args["--list-filter"].asBool())
-    pl::printFilters();
-
-  else if (args["--list-common-setting"].asBool())
-    pl::printCommonSettings();
 
   else if (args["--list-output-format"].asBool())
     pl::printOutputFormats();
@@ -161,9 +164,7 @@ int main(int argc, char *argv[]) {
 void run(docopt::Arguments &args) {
   // it is guaranted by docopt that --generator has a value
   pl::Generator chosen_generator = pl::Generator(args["--generator"].asLong());
-  pl::CommonSettingList common_settings = pl::createCommonSettingList(args);
-  pl::FilterList filters = pl::createFilterList(args);
-  pl::PointList list = pl::generatePointList(chosen_generator, common_settings, filters);
+  pl::PointList list = pl::generatePointList(chosen_generator, args);
 
   std::string filename;
   if (args["--file"])
@@ -184,6 +185,7 @@ void run(docopt::Arguments &args) {
   }
 }
 
+#ifndef SERVER
 void server(docopt::Arguments &args) {
   int port = args["--port"].asLong();
 
@@ -213,6 +215,8 @@ void initWorker() {
 void terminate(int) {
   std::terminate();
 }
+
+#endif
 
 std::string buildCustomFilename(docopt::Arguments &args) {
   pl::Generator generator = pl::createGenerator(args["--generator"].asLong());

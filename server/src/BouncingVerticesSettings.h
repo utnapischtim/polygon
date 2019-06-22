@@ -3,9 +3,10 @@
 
 #include <string>
 
-#include "CommonSetting.h"
+#include <docopt.h>
+
 #include "SamplingGrid.h"
-#include "Filter.h"
+#include "AngleRange.h"
 
 namespace pl {
 
@@ -16,8 +17,8 @@ struct BouncingVerticesSettings {
   std::string bouncing_method;
 
   int reflex_point_count;
-  Filter reflex_angle_range;
-  Filter convex_angle_range;
+  AngleRange reflex_angle_range;
+  AngleRange convex_angle_range;
 
   bool animation;
   bool out_every_phase;
@@ -33,7 +34,7 @@ struct BouncingVerticesSettings {
     directory_for_every_phase_out{}
     {}
 
-  BouncingVerticesSettings(const CommonSettingList &common_settings, const pl::FilterList &filters, size_t point_list_size);
+  BouncingVerticesSettings(const std::map<std::string, docopt::value> &args, size_t point_list_size);
 };
 
 }

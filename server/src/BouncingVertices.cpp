@@ -3,14 +3,13 @@
 #include <string>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <docopt.h>
 
 #include "BouncingVertices.h"
 #include "BouncingVerticesSettings.h"
 #include "CalculateBouncingRange.h"
 #include "CalculateMovingPermit.h"
 #include "Point.h"
-#include "CommonSetting.h"
-#include "Filter.h"
 #include "Output.h"
 #include "cgal_helper.h"
 
@@ -22,8 +21,9 @@ static Segments buildSegments(const pl::PointList &point_list);
 static void createAnimationOutput(const pl::BouncingVerticesSettings &bvs, const Segments &segments, const int phase);
 static void createOutputForPhase(const pl::BouncingVerticesSettings &bvs, const Segments &segments, const int phase);
 
-pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
-  pl::BouncingVerticesSettings bvs(common_settings, filters, point_list.size());
+pl::PointList pl::bouncingVertices(const pl::PointList &point_list, const std::map<std::string, docopt::value> &args) {
+
+  pl::BouncingVerticesSettings bvs(args, point_list.size());
   Segments segments = buildSegments(point_list);
 
   CalculateBouncingRange cbr{bvs, segments};

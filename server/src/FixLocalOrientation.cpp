@@ -5,12 +5,11 @@
 #include <iomanip>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <docopt.h>
 
 #include "FixLocalOrientation.h"
 #include "RegularPolygon.h"
 #include "Point.h"
-#include "CommonSetting.h"
-#include "Filter.h"
 #include "random.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
@@ -19,9 +18,9 @@ static pl::PointList createRegularPolygon(pl::RegularPolygonSettings &rps);
 static void enrichWithReflexPoints(pl::PointList &final_list, const pl::RegularPolygonSettings &rps, const pl::FixLocalOrientationSettings &flos);
 static void stretch(pl::PointList &final_list, const pl::RegularPolygonSettings &rps, const pl::FixLocalOrientationSettings &flos);
 
-pl::PointList pl::fixLocalOrientation(pl::CommonSettingList &common_settings, const pl::FilterList &filters) {
-  pl::RegularPolygonSettings rps(common_settings);
-  pl::FixLocalOrientationSettings flos(common_settings, filters);
+pl::PointList pl::fixLocalOrientation(const std::map<std::string, docopt::value> &args) {
+  pl::RegularPolygonSettings rps(args);
+  pl::FixLocalOrientationSettings flos(args);
 
   // the regular polygon node count is the whole node count without
   // the reflex node counts. this is a design decision
@@ -171,33 +170,6 @@ void stretch(pl::PointList &final_list, const pl::RegularPolygonSettings &rps, c
   }
 }
 
-int getReflexPointCount(const pl::FilterList &filters) {
-  int reflex_point_count = 0;
-
-  if (auto t = pl::find(filters, "reflex points"))
-    reflex_point_count = (*t).val;
-
-  return reflex_point_count;
-}
-
-int getReflexChainMaxCount(const pl::FilterList &filters) {
-  int reflex_chain_max_count = getReflexPointCount(filters);
-
-  if (auto t = pl::find(filters, "reflex chain max"); 0 <= (*t).val)
-    reflex_chain_max_count = (*t).val;
-
-  return reflex_chain_max_count;
-}
-
-double getConvexStretch(const pl::FilterList &filters) {
-  int convex_stretch;
-
-  if (auto t = pl::find(filters, "convex stretch"))
-    convex_stretch = (*t).val;
-
-  return convex_stretch;
-}
-
 std::vector<int> initReflexPointsPerSegment(const int node_counts, const int reflex_counts, const int reflex_chain_max) {
   std::vector<int> reflex_points_per_segment(node_counts, 0);
 
@@ -213,15 +185,15 @@ std::vector<int> initReflexPointsPerSegment(const int node_counts, const int ref
   return reflex_points_per_segment;
 }
 
-pl::FixLocalOrientationSettings::FixLocalOrientationSettings(const CommonSettingList &common_settings, const FilterList &filters)
+pl::FixLocalOrientationSettings::FixLocalOrientationSettings(const std::map<std::string, docopt::value> &args)
   : FixLocalOrientationSettings{}
 {
-  pl::RegularPolygonSettings rps(common_settings);
+  pl::RegularPolygonSettings rps(args);
 
-  reflex_point_count = getReflexPointCount(filters);
-  reflex_chain_max_count = getReflexChainMaxCount(filters);
+  reflex_point_count = args.at("--reflex-points").asLong();
+  reflex_chain_max_count = args.at("--reflex-chain-max").asLong() < 0 ? reflex_point_count : args.at("--reflex-chain-max").asLong();
   reflex_point_count_per_segment = initReflexPointsPerSegment(rps.node_count - reflex_point_count, reflex_point_count, reflex_chain_max_count);
-  convex_stretch = getConvexStretch(filters);
+  convex_stretch = args.at("--convex-stretch").asLong();
   iota = (2*M_PI) - M_PI - rps.gamma;
 
   // calculate distance from center of the regular polygon center to

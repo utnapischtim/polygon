@@ -5,10 +5,9 @@
 #include <string>
 
 #include <json.hpp>
+#include <docopt.h>
 
-#include "Filter.h"
 #include "Point.h"
-#include "CommonSetting.h"
 
 namespace pl {
 
@@ -39,7 +38,7 @@ void printGenerators();
 Generator createGenerator(nlohmann::json obj);
 Generator createGenerator(int key);
 
-PointList generatePointList(Generator generator, CommonSettingList common_settings, FilterList local_filters);
+PointList generatePointList(pl::Generator generator, const std::map<std::string, docopt::value> &args);
 
 }
 

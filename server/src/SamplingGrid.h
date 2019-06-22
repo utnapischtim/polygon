@@ -3,11 +3,10 @@
 
 #include <tuple>
 #include <vector>
+#include <string>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <boost/optional/optional_io.hpp>
-
-#include "CommonSetting.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
@@ -19,7 +18,7 @@ struct SamplingGrid {
 
   SamplingGrid();
   SamplingGrid(int w, int h);
-  SamplingGrid(CommonSetting common_setting);
+  SamplingGrid(const std::string sampling_grid);
   SamplingGrid &operator=(const SamplingGrid &cs);
 
   bool isOutOfArea(const cgal::Point_2 p) const;

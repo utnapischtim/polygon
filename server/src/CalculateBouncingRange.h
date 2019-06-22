@@ -8,7 +8,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include "BouncingVerticesSettings.h"
-#include "Filter.h"
+#include "AngleRange.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
@@ -38,7 +38,7 @@ struct CalculateBouncingRange {
 
   cgal::Segment_2 calculateIntersectionFreeRange();
   cgal::Segment_2 calculateOrientationStability();
-  cgal::Segment_2 calculateAllowedMovingSegmentByAngleRange(const cgal::Segment_2 &seg, const pl::Filter range);
+  cgal::Segment_2 calculateAllowedMovingSegmentByAngleRange(const cgal::Segment_2 &seg, const pl::AngleRange range);
   cgal::Segment_2 calculatePreservedAngleRangeAroundBouncingPoint();
   cgal::Segment_2 calculatePreservedAngleRangeInBouncingPoint();
   cgal::Segment_2 blend(cgal::Segment_2 allowed_seg_prev, cgal::Segment_2 allowed_seg_next);

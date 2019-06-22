@@ -8,11 +8,10 @@
 #include <iomanip>
 
 #include <json.hpp>
+#include <docopt.h>
 
 #include "Generator.h"
-#include "Filter.h"
 #include "Point.h"
-#include "CommonSetting.h"
 #include "SpacePartitioning.h"
 #include "ConvexBottom.h"
 #include "SteadyGrowth.h"
@@ -88,11 +87,11 @@ pl::Generator pl::createGenerator(int key) {
   return generator;
 }
 
-pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingList common_settings, pl::FilterList local_filters) {
+pl::PointList pl::generatePointList(pl::Generator generator, const std::map<std::string, docopt::value> &args) {
 #ifdef DETERMINISTIC
-  pl::PointList random_point_list = pl::det::deterministic(common_settings, {});
+  pl::PointList random_point_list = pl::det::deterministic();
 #else
-  pl::PointList random_point_list = pl::random(common_settings, {});
+  pl::PointList random_point_list = pl::random(args);
 #endif
 
   pl::PointList point_list;
@@ -114,7 +113,7 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
         point_list = pl::twoOptMoves(random_point_list);
         exit = true;
       } catch (const std::runtime_error &e) {
-        random_point_list = pl::random(common_settings, {});
+        random_point_list = pl::random(args);
         counter += 1;
       }
   }
@@ -133,31 +132,31 @@ pl::PointList pl::generatePointList(pl::Generator generator, pl::CommonSettingLi
 #ifdef DETERMINISTIC
     point_list = random_point_list;
 #else
-    point_list = pl::random(common_settings, local_filters);
+    point_list = pl::random(args);
 #endif
     point_list.push_back(point_list[0]);
     break;
   case 8:
 
 #ifdef DETERMINISTIC
-    point_list = pl::det::deterministic(common_settings, {});
+    point_list = pl::det::deterministic();
 #else
     // TODO would be nice to have a choice here!
     // point_list = pl::convexBottom(random_point_list);
     // point_list = pl::regularPolygon(common_settings);
-    point_list = pl::fixLocalOrientation(common_settings, local_filters);
+    point_list = pl::fixLocalOrientation(args);
 #endif
 
     // remove the last point, it is the same as the beginning.
     point_list.pop_back();
 
-    point_list = pl::bouncingVertices(point_list, common_settings, local_filters);
+    point_list = pl::bouncingVertices(point_list, args);
     break;
   case 9:
-    point_list = pl::regularPolygon(common_settings);
+    point_list = pl::regularPolygon(args);
     break;
   case 10:
-    point_list = pl::fixLocalOrientation(common_settings, local_filters);
+    point_list = pl::fixLocalOrientation(args);
     break;
     // TODO
     // handle default ;)

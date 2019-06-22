@@ -1,10 +1,8 @@
 
 #include "deterministic.h"
-#include "CommonSetting.h"
-#include "Filter.h"
 #include "Point.h"
 
-pl::PointList pl::det::deterministic(pl::CommonSettingList /*common_settings*/, pl::FilterList /*local_filters*/) {
+pl::PointList pl::det::deterministic() {
   // there for debugging, to have a point list that is not random!
 
   // pl::PointList point_list = {

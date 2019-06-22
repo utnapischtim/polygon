@@ -5,10 +5,10 @@
 #include <iomanip>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <docopt.h>
 
 #include "RegularPolygon.h"
 #include "Point.h"
-#include "CommonSetting.h"
 #include "SamplingGrid.h"
 #include "random.h"
 
@@ -16,8 +16,8 @@ using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
 static pl::PointList calculateRegularPolygonPoints(const pl::RegularPolygonSettings &rps);
 
-pl::PointList pl::regularPolygon(pl::CommonSettingList &common_settings) {
-  RegularPolygonSettings rps(common_settings);
+pl::PointList pl::regularPolygon(const std::map<std::string, docopt::value> &args) {
+  RegularPolygonSettings rps(args);
   pl::PointList final_list = pl::regularPolygon(rps);
   return final_list;
 }
@@ -47,47 +47,11 @@ pl::PointList calculateRegularPolygonPoints(const pl::RegularPolygonSettings &rp
   return final_list;
 }
 
-pl::SamplingGrid getSamplingGrid(const pl::CommonSettingList &common_settings) {
-  pl::SamplingGrid sampling_grid;
-
-  if (auto t = pl::find(common_settings, "sampling grid"))
-    sampling_grid = {*t};
-  else {
-    std::string msg = std::string("essential common setting 'sampling grid' not set to generate random pointList");
-    throw std::runtime_error(msg);
-  }
-
-  return sampling_grid;
-}
-
-unsigned getNodeCount(const pl::CommonSettingList &common_settings) {
-  unsigned node_count;
-
-  if (auto t = pl::find(common_settings, "nodes"))
-    node_count = std::stoi((*t).val);
-  else {
-    std::string msg = std::string("essential common setting nodes not set to generate random pointList");
-    throw std::runtime_error(msg);
-  }
-
-  return node_count;
-}
-
-double getWindingNumber(const pl::CommonSettingList &common_settings) {
-  double winding_number = 1.0;
-
-  if (auto t = pl::find(common_settings, "winding number"))
-    winding_number = std::stod((*t).val);
-
-  return winding_number;
-}
-
-
-double calculateSegmentLength(const pl::CommonSettingList &common_settings, double radius, double gamma) {
+double calculateSegmentLength(const std::map<std::string, docopt::value> &args, double radius, double gamma) {
   double segment_length = 0;
 
-  if (auto t = pl::find(common_settings, "segment length")) {
-    segment_length = std::stod((*t).val);
+  if (double length = args.at("--segment-length").asLong(); 0 < length) {
+    segment_length = length;
   } else {
     // TODO:
     // maybe there is a better place to do that the segment length is
@@ -100,23 +64,6 @@ double calculateSegmentLength(const pl::CommonSettingList &common_settings, doub
   }
 
   return segment_length;
-}
-
-
-double getRadius(const pl::CommonSettingList &common_settings) {
-  // the centre and the radius are also dependent from the segment
-  // length, if the segment length is given, then the rest has to be
-  // calculated arround those two values!
-
-  double radius = 60; // default value
-
-  if (auto t = pl::find(common_settings, "radius"))
-    radius = std::stod((*t).val);
-
-  if (radius < 0)
-    throw std::runtime_error("radius should be positive");
-
-  return radius;
 }
 
 cgal::Point_2 calculateCenter(const double radius, const pl::SamplingGrid &sampling_grid) {
@@ -134,21 +81,22 @@ cgal::Point_2 calculateCenter(const double radius, const pl::SamplingGrid &sampl
   return {x, y};
 }
 
-pl::RegularPolygonSettings::RegularPolygonSettings(const pl::CommonSettingList &common_settings)
+pl::RegularPolygonSettings::RegularPolygonSettings(const std::map<std::string, docopt::value> &args)
   : RegularPolygonSettings{}
 {
-  pl::SamplingGrid sampling_grid = getSamplingGrid(common_settings);
+  pl::SamplingGrid sampling_grid(args.at("--sampling-grid").asString());
 
-  winding_number = getWindingNumber(common_settings);
-  node_count = getNodeCount(common_settings);
+  winding_number = args.at("--winding-number").asLong();
+  node_count = args.at("--nodes").asLong();
   gamma = 2 * M_PI * winding_number / node_count;
-  radius = getRadius(common_settings);
+  radius = args.at("--radius").asLong();
   center = calculateCenter(radius, sampling_grid);
+
 
   // this has the effect, that the middle line of the first segment
   // lies on the positive x-axis
   rotation_angle = - gamma / 2;
-  segment_length = calculateSegmentLength(common_settings, radius, gamma);
+  segment_length = calculateSegmentLength(args, radius, gamma);
 }
 
 void pl::RegularPolygonSettings::updateNodeCount(const size_t nc) {

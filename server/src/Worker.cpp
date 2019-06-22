@@ -41,15 +41,19 @@ void pl::Worker::run() {
         pl::CommonSettingList common_setting_list = pl::createCommonSettingList(opts["commonSettings"]);
         auto filters = pl::createFilterList(opts["activatedFilters"]);
 
-        pl::PointList list = pl::generatePointList(chosen_generator, common_setting_list, filters);
+        // TODO:
+        // commented because not more valid code. no time to refactore,
+        // concentrate on the implementation of algorithms. in the future a new
+        // gui should be implemented. then this part should be overthought
+        // pl::PointList list = pl::generatePointList(chosen_generator, common_setting_list, filters);
 
-        resp[sync_id] = pl::to_json(list);
+        // resp[sync_id] = pl::to_json(list);
       }
 
       else
         resp[sync_id] = {{"error", "wrong job"}};
 
-    } catch (nlohmann::detail::type_error e) {
+    } catch (nlohmann::detail::type_error &e) {
       VLOG(1) << "Worker::run exception: " << e.what();
     }
 

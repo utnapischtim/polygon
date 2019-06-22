@@ -6,8 +6,8 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <boost/optional/optional_io.hpp>
 
-#include "CommonSetting.h"
 #include "SamplingGrid.h"
+#include "utilities.h"
 
 using cgal = CGAL::Exact_predicates_inexact_constructions_kernel;
 
@@ -15,9 +15,7 @@ pl::SamplingGrid::SamplingGrid() : width(0), height(0) {}
 
 pl::SamplingGrid::SamplingGrid(int w, int h) : width(w), height(h) {}
 
-pl::SamplingGrid::SamplingGrid(CommonSetting common_setting) : SamplingGrid() {
-  std::string sampling_grid = common_setting.val;
-
+pl::SamplingGrid::SamplingGrid(const std::string sampling_grid) : SamplingGrid() {
   auto t = pl::split(sampling_grid, 'x');
   width = std::stoi(t[0]);
   height = std::stoi(t[1]);

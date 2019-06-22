@@ -4,9 +4,9 @@
 #include <random>
 #include <iterator>
 
-#include "CommonSetting.h"
+#include <docopt.h>
+
 #include "Point.h"
-#include "Filter.h"
 
 namespace pl {
 
@@ -40,8 +40,7 @@ private:
 double randomValueOfRange(double start, double end);
 int randomValueOfRange(int start, int end);
 unsigned randomValueOfRange(unsigned start, unsigned end);
-PointList random(CommonSettingList common_settings, FilterList local_filters);
-
+PointList random(const std::map<std::string, docopt::value> &args);
 }
 
 #endif
